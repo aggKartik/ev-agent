@@ -1,0 +1,42 @@
+/* GT America Font Loading */
+/* Note: You need to provide GT America font files in public/fonts/gt-america/ */
+/* Expected files: GTAmerica-Regular.woff2, GTAmerica-Medium.woff2, GTAmerica-Semibold.woff2, GTAmerica-Bold.woff2 */
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/gt-america/GTAmerica-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/gt-america/GTAmerica-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/gt-america/GTAmerica-Semibold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/gt-america/GTAmerica-Bold.woff2") format("woff2");
+}
+
+/* Base styles */
+body {
+  font-family: "GT America", system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
