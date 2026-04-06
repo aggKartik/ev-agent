@@ -1,4 +1,19 @@
 import { defineConfig } from "@pandacss/dev";
+import {
+  colors,
+  semanticColors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  lineHeights,
+  spacing,
+  sizes,
+  radii,
+  shadows,
+  semanticShadows,
+  durations,
+  easings,
+} from "./src/styles/tokens";
 
 export default defineConfig({
   // Whether to use css reset
@@ -15,7 +30,25 @@ export default defineConfig({
 
   // Useful for theme customization
   theme: {
-    extend: {},
+    extend: {
+      tokens: {
+        colors,
+        fonts,
+        fontSizes,
+        fontWeights,
+        lineHeights,
+        spacing,
+        sizes,
+        radii,
+        shadows,
+        durations,
+        easings,
+      },
+      semanticTokens: {
+        colors: semanticColors,
+        shadows: semanticShadows,
+      },
+    },
   },
 
   // The output directory for your css system
