@@ -5,8 +5,7 @@ import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { useState } from 'react';
 import { trpc, trpcClient } from '#/lib/trpc';
-import Footer from '../components/Footer';
-import Header from '../components/Header';
+import '../styles/global.css';
 
 import appCss from '../styles.css?url';
 
@@ -48,9 +47,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <Header />
             {children}
-            <Footer />
             <TanStackDevtools
               config={{
                 position: 'bottom-right',
