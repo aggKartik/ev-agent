@@ -29,3 +29,6 @@ export const lineHeights = {
   normal: { value: 1.5 },
   relaxed: { value: 1.75 },
 };
+
+export type TypographySizeToken = keyof typeof fontSizes;
+export type TypographyWeightToken = keyof typeof fontWeights;
