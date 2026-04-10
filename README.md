@@ -7,6 +7,8 @@ A modern full-stack React application built with cutting-edge technologies for t
 - **[TanStack Start](https://tanstack.com/start)** - Full-stack React framework with file-based routing and SSR
 - **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager  
 - **[tRPC](https://trpc.io)** - End-to-end type-safe API layer
+- **[Kysely](https://kysely.dev)** - Type-safe SQL query builder
+- **[PostgreSQL](https://www.postgresql.org)** - Relational database
 - **[TanStack Query](https://tanstack.com/query)** - Powerful data fetching and caching
 - **[Ark UI](https://ark-ui.com)** - Headless component library for accessible UI primitives
 - **[Panda CSS](https://panda-css.com)** - CSS-in-JS with zero runtime overhead
@@ -21,7 +23,7 @@ ev-agent/
 │   │   ├── __root.tsx             # Root layout with providers
 │   │   ├── index.tsx              # Home page
 │   │   ├── about.tsx              # About page
-│   │   └── api.trpc.$trpc.ts      # tRPC API handler
+│   │   └── -api.trpc.$trpc.ts     # tRPC API handler (ignored by route tree)
 │   ├── server/                    # Server-side code
 │   │   ├── routers/               # Feature-based tRPC routers
 │   │   │   ├── index.ts           # Root router (combines all routers)
@@ -86,6 +88,7 @@ http://localhost:3000
 - `bun dev` - Start development server on port 3000
 - `bun run build` - Build for production
 - `bun run preview` - Preview production build
+- `bun run start` - Run Bun-native production server
 - `bun run prepare` - Generate Panda CSS styled-system
 - `bun run lint` - Run Biome linter
 - `bun run format` - Format code with Biome
@@ -170,6 +173,32 @@ console.log(env.NODE_ENV); // Fully typed!
 ```
 
 Add new variables to `.env` and update the schema in `src/lib/env.ts`.
+
+For Postgres, configure:
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ev_agent
+```
+
+The database client is initialized in `src/server/db/index.ts` and injected into tRPC context via `src/server/context.ts`.
+
+Run migrations:
+
+```bash
+bun run db:migrate
+```
+
+For a lightweight local Postgres using Docker Compose:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Stop it with:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
 
 ## 🔧 Adding New Features
 
@@ -257,6 +286,12 @@ bun run build
 ```
 
 The production build will be output to the `dist/` directory.
+
+Run the production server with Bun:
+
+```bash
+bun run start
+```
 
 ## 🔍 Code Quality
 

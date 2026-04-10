@@ -5,7 +5,7 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   PORT: z.string().default('3000'),
-  // Add more environment variables here as needed
+  DATABASE_URL: z.string().url(),
 });
 
 export const env = envSchema.parse(process.env);
