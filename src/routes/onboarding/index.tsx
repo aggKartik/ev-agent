@@ -1,12 +1,47 @@
+import { useForm } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
+import { type ReactNode, useState } from 'react';
 import { Stack } from 'styled-system/jsx';
-import { Text } from '../../components/Text';
+import IntroStep from '#/components/onboarding/IntroStep';
 
 export const Route = createFileRoute('/onboarding/')({
   component: OnboardingComponent,
 });
 
+const steps = [
+  'INTRO',
+  'MAKE',
+  'MODEL',
+  'YEAR',
+  'BATTERY_CAPACITY',
+  'RANGE',
+] as const;
+
+type Step = (typeof steps)[number];
+
 function OnboardingComponent() {
+  const form = useForm({
+    defaultValues: {
+      make: '',
+      model: '',
+      year: '',
+      batteryCapacity: '',
+      range: '',
+    },
+  });
+  void form;
+
+  const [currentStep] = useState<Step>('INTRO');
+
+  const componentMap: Partial<Record<Step, ReactNode>> = {
+    INTRO: <IntroStep />,
+    // MAKE: <MakeStep />,
+    // MODEL: <ModelStep />,
+    // YEAR: <YearStep />,
+    // BATTERY_CAPACITY: <BatteryCapacityStep />,
+    // RANGE: <RangeStep />,
+  };
+
   return (
     <Stack
       height="screen"
@@ -16,34 +51,7 @@ function OnboardingComponent() {
       bg="bg.default"
       color="text.default"
     >
-      <Text
-        as="h1"
-        size="5xl"
-        weight="bold"
-        lineHeight="tight"
-        color="text.default"
-        mb="sm"
-      >
-        Let&apos;s Get Started
-      </Text>
-
-      {/* Subheading */}
-      <Text as="h2" size="lg" weight="semibold" color="text.muted" mb="md">
-        Tell us about your car
-      </Text>
-
-      {/* Description text */}
-      <Text
-        as="p"
-        size="md"
-        lineHeight="relaxed"
-        color="text.subtle"
-        maxWidth="24rem"
-        mb="xl"
-      >
-        This helps us understand your vehicle&apos;s charging needs and plan
-        perfect charging trips for you.
-      </Text>
+      {componentMap[currentStep] ?? null}
     </Stack>
   );
 }

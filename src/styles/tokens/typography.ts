@@ -1,7 +1,11 @@
 export const fonts = {
-  sans: { value: 'GT America, system-ui, -apple-system, sans-serif' },
+  sans: {
+    value:
+      'JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  },
   mono: {
-    value: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    value:
+      'JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
   },
 };
 
@@ -18,10 +22,12 @@ export const fontSizes = {
 };
 
 export const fontWeights = {
+  light: { value: 300 },
   normal: { value: 400 },
   medium: { value: 500 },
   semibold: { value: 600 },
   bold: { value: 700 },
+  extrabold: { value: 800 },
 };
 
 export const lineHeights = {

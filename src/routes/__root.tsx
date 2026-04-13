@@ -4,12 +4,31 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { useState } from 'react';
+import Header from '#/components/Header';
 import { trpc, trpcClient } from '#/lib/trpc';
+import { css } from '../../styled-system/css';
 import '../styles/global.css';
 
 import appCss from '../styles.css?url';
 
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var root=document.documentElement;root.classList.remove('light');root.classList.add('dark');root.setAttribute('data-theme','dark');root.style.colorScheme='dark';window.localStorage.setItem('theme','dark');}catch(e){}})();`;
+
+const bodyClass = css({
+  fontFamily: 'sans',
+  fontSmoothing: 'antialiased',
+  overflowWrap: 'anywhere',
+  '&::selection': {
+    background: 'hsl(250 85% 65% / 0.24)',
+    color: 'hsl(0 0% 100%)',
+  },
+});
+
+const mainClass = css({
+  margin: '0 auto',
+  padding: '2rem',
+  paddingTop: '6rem',
+  width: '100%',
+});
 
 export const Route = createRootRoute({
   head: () => ({
@@ -39,15 +58,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+      <body className={bodyClass}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            {children}
+            <Header />
+            <main className={mainClass}>{children}</main>
             <TanStackDevtools
               config={{
                 position: 'bottom-right',

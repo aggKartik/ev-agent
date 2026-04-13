@@ -1,22 +1,88 @@
+import { css } from '../../styled-system/css';
+
+const footerClass = css({
+  marginTop: '5rem',
+  borderTopWidth: '1px',
+  borderTopStyle: 'solid',
+  borderTopColor: 'var(--line)',
+  paddingInline: '1rem',
+  paddingTop: '2.5rem',
+  paddingBottom: '3.5rem',
+  color: 'var(--sea-ink-soft)',
+});
+
+const containerClass = css({
+  marginInline: 'auto',
+  maxWidth: '72rem',
+  display: 'flex',
+  flexDirection: { base: 'column', sm: 'row' },
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '1rem',
+  textAlign: { base: 'center', sm: 'left' },
+});
+
+const copyrightClass = css({
+  margin: '0',
+  fontSize: '0.875rem',
+});
+
+const kickerClass = css({
+  margin: '0',
+  color: 'var(--sea-ink-soft)',
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+});
+
+const linksRowClass = css({
+  marginTop: '1rem',
+  display: 'flex',
+  justifyContent: 'center',
+  gap: '1rem',
+});
+
+const iconLinkClass = css({
+  borderRadius: '0.75rem',
+  padding: '0.5rem',
+  color: 'var(--sea-ink-soft)',
+  transition: 'color 180ms ease, background-color 180ms ease',
+  _hover: {
+    background: 'var(--link-bg-hover)',
+    color: 'var(--sea-ink)',
+  },
+});
+
+const srOnlyClass = css({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: '0',
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  borderWidth: '0',
+});
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-20 border-t border-[var(--line)] px-4 pb-14 pt-10 text-[var(--sea-ink-soft)]">
-      <div className="page-wrap flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-        <p className="m-0 text-sm">
+    <footer className={footerClass}>
+      <div className={containerClass}>
+        <p className={copyrightClass}>
           &copy; {year} Your name here. All rights reserved.
         </p>
-        <p className="island-kicker m-0">Built with TanStack Start</p>
+        <p className={kickerClass}>Built with TanStack Start</p>
       </div>
-      <div className="mt-4 flex justify-center gap-4">
+      <div className={linksRowClass}>
         <a
           href="https://x.com/tan_stack"
           target="_blank"
           rel="noreferrer"
-          className="rounded-xl p-2 text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+          className={iconLinkClass}
         >
-          <span className="sr-only">Follow TanStack on X</span>
+          <span className={srOnlyClass}>Follow TanStack on X</span>
           <svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
             <path
               fill="currentColor"
@@ -28,9 +94,9 @@ export default function Footer() {
           href="https://github.com/TanStack"
           target="_blank"
           rel="noreferrer"
-          className="rounded-xl p-2 text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+          className={iconLinkClass}
         >
-          <span className="sr-only">Go to TanStack GitHub</span>
+          <span className={srOnlyClass}>Go to TanStack GitHub</span>
           <svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
             <path
               fill="currentColor"

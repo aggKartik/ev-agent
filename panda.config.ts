@@ -13,11 +13,15 @@ import {
   semanticShadows,
   durations,
   easings,
+  keyframes,
+  animationStyles,
 } from "./src/styles/tokens";
+import { buttonRecipe, iconRecipe } from "./src/styles/recipes";
 
 export default defineConfig({
   // Whether to use css reset
   preflight: true,
+  
 
   // Where to look for your css declarations
   include: ["./src/**/*.{js,jsx,ts,tsx}"],
@@ -44,9 +48,15 @@ export default defineConfig({
         durations,
         easings,
       },
+      keyframes,
+      animationStyles,
       semanticTokens: {
         colors: semanticColors,
         shadows: semanticShadows,
+      },
+      recipes: {
+        button: buttonRecipe,
+        icon: iconRecipe,
       },
     },
   },

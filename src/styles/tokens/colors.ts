@@ -1,50 +1,50 @@
 // Base color palettes
 export const colors = {
-  // Grays
+  // Core neutrals
   white: { value: '#FFFFFF' },
   black: { value: '#000000' },
   gray: {
-    50: { value: '#F9FAFB' },
-    100: { value: '#F3F4F6' },
-    200: { value: '#E5E7EB' },
-    300: { value: '#D1D5DB' },
-    400: { value: '#9CA3AF' },
-    500: { value: '#6B7280' },
-    600: { value: '#4B5563' },
-    700: { value: '#374151' },
-    800: { value: '#1F2937' },
-    900: { value: '#111827' },
-    950: { value: '#030712' },
+    50: { value: '#F2F2F2' },
+    100: { value: '#DBDEE6' },
+    200: { value: '#BDC4D2' },
+    300: { value: '#9BA3B5' },
+    400: { value: '#838A9B' },
+    500: { value: '#6A7284' },
+    600: { value: '#495063' },
+    700: { value: '#232838' },
+    800: { value: '#1D2233' },
+    900: { value: '#111520' },
+    950: { value: '#090B10' },
   },
 
-  // Primary (Blue)
+  // Primary (Cool violet)
   primary: {
-    50: { value: '#EFF6FF' },
-    100: { value: '#DBEAFE' },
-    200: { value: '#BFDBFE' },
-    300: { value: '#93C5FD' },
-    400: { value: '#60A5FA' },
-    500: { value: '#3B82F6' },
-    600: { value: '#2563EB' },
-    700: { value: '#1D4ED8' },
-    800: { value: '#1E40AF' },
-    900: { value: '#1E3A8A' },
-    950: { value: '#172554' },
+    50: { value: '#F1EEFF' },
+    100: { value: '#E4DEFF' },
+    200: { value: '#CFC4FF' },
+    300: { value: '#B6A7FF' },
+    400: { value: '#9782F8' },
+    500: { value: '#7C6BF0' },
+    600: { value: '#6656D6' },
+    700: { value: '#5244B4' },
+    800: { value: '#3E348F' },
+    900: { value: '#2D1A66' },
+    950: { value: '#1D113F' },
   },
 
-  // Accent (Purple)
+  // Accent (Deep violet)
   accent: {
-    50: { value: '#FAF5FF' },
-    100: { value: '#F3E8FF' },
-    200: { value: '#E9D5FF' },
-    300: { value: '#D8B4FE' },
-    400: { value: '#C084FC' },
-    500: { value: '#A855F7' },
-    600: { value: '#9333EA' },
-    700: { value: '#7E22CE' },
-    800: { value: '#6B21A8' },
-    900: { value: '#581C87' },
-    950: { value: '#3B0764' },
+    50: { value: '#EFEAFF' },
+    100: { value: '#DED3FF' },
+    200: { value: '#C6B6FF' },
+    300: { value: '#A98FFF' },
+    400: { value: '#8A69EC' },
+    500: { value: '#2D1A66' },
+    600: { value: '#261651' },
+    700: { value: '#211346' },
+    800: { value: '#1B0F38' },
+    900: { value: '#150B2C' },
+    950: { value: '#0C0619' },
   },
 
   // Success (Green)
@@ -77,19 +77,19 @@ export const colors = {
     950: { value: '#451A03' },
   },
 
-  // Error (Red)
+  // Error (Muted dark red)
   error: {
     50: { value: '#FEF2F2' },
     100: { value: '#FEE2E2' },
     200: { value: '#FECACA' },
     300: { value: '#FCA5A5' },
-    400: { value: '#F87171' },
-    500: { value: '#EF4444' },
-    600: { value: '#DC2626' },
-    700: { value: '#B91C1C' },
-    800: { value: '#991B1B' },
-    900: { value: '#7F1D1D' },
-    950: { value: '#450A0A' },
+    400: { value: '#B45353' },
+    500: { value: '#7F1D1D' },
+    600: { value: '#6B1717' },
+    700: { value: '#581212' },
+    800: { value: '#450E0E' },
+    900: { value: '#320909' },
+    950: { value: '#1F0505' },
   },
 
   // Info (Light Blue)
@@ -106,6 +106,15 @@ export const colors = {
     900: { value: '#0C4A6E' },
     950: { value: '#082F49' },
   },
+
+  // Charts
+  chart: {
+    1: { value: '#6D28D9' },
+    2: { value: '#2EB88A' },
+    3: { value: '#E6853A' },
+    4: { value: '#B061DB' },
+    5: { value: '#D93680' },
+  },
 };
 
 // Semantic color tokens with light/dark mode support
@@ -113,7 +122,7 @@ export const semanticColors = {
   // Backgrounds
   bg: {
     canvas: {
-      value: { base: '{colors.white}', _dark: '{colors.black}' },
+      value: { base: '{colors.white}', _dark: '{colors.gray.950}' },
     },
     default: {
       value: { base: '{colors.white}', _dark: '{colors.gray.950}' },
@@ -123,6 +132,12 @@ export const semanticColors = {
     },
     muted: {
       value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+    },
+    secondary: {
+      value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+    },
+    card: {
+      value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' },
     },
   },
 
@@ -135,23 +150,35 @@ export const semanticColors = {
       value: { base: '{colors.gray.600}', _dark: '{colors.gray.400}' },
     },
     subtle: {
-      value: { base: '{colors.gray.500}', _dark: '{colors.gray.500}' },
+      value: { base: '{colors.gray.500}', _dark: '{colors.gray.400}' },
     },
     inverted: {
       value: { base: '{colors.white}', _dark: '{colors.gray.900}' },
+    },
+    card: {
+      value: { base: '{colors.gray.900}', _dark: '{colors.gray.50}' },
     },
   },
 
   // Borders
   border: {
     default: {
-      value: { base: '{colors.gray.200}', _dark: '{colors.gray.800}' },
+      value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' },
     },
     subtle: {
-      value: { base: '{colors.gray.100}', _dark: '{colors.gray.900}' },
+      value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
     },
     muted: {
+      value: { base: '{colors.gray.300}', _dark: '{colors.gray.600}' },
+    },
+    input: {
       value: { base: '{colors.gray.300}', _dark: '{colors.gray.700}' },
+    },
+  },
+
+  ring: {
+    default: {
+      value: { base: '{colors.primary.600}', _dark: '{colors.primary.500}' },
     },
   },
 
@@ -161,10 +188,10 @@ export const semanticColors = {
       value: { base: '{colors.primary.600}', _dark: '{colors.primary.500}' },
     },
     contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.white}' },
+      value: { base: '{colors.white}', _dark: '{colors.gray.50}' },
     },
     muted: {
-      value: { base: '{colors.primary.100}', _dark: '{colors.primary.900}' },
+      value: { base: '{colors.primary.100}', _dark: '{colors.accent.500}' },
     },
   },
 
@@ -174,7 +201,7 @@ export const semanticColors = {
       value: { base: '{colors.accent.600}', _dark: '{colors.accent.500}' },
     },
     contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.white}' },
+      value: { base: '{colors.white}', _dark: '{colors.gray.50}' },
     },
     muted: {
       value: { base: '{colors.accent.100}', _dark: '{colors.accent.900}' },

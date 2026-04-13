@@ -1,42 +1,177 @@
-/* GT America Font Loading */
-/* Note: You need to provide GT America font files in public/fonts/gt-america/ */
-/* Expected files: GTAmerica-Regular.woff2, GTAmerica-Medium.woff2, GTAmerica-Semibold.woff2, GTAmerica-Bold.woff2 */
+/* JetBrains Mono Font Loading */
+/* Note: You need to provide JetBrains Mono font files in public/fonts/jetbrains-mono/ */
+/* Expected files: JetBrainsMono-Light.woff2, JetBrainsMono-Regular.woff2, JetBrainsMono-Medium.woff2, JetBrainsMono-SemiBold.woff2, JetBrainsMono-Bold.woff2, JetBrainsMono-ExtraBold.woff2 */
 
 @font-face {
-  font-family: "GT America";
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-Light.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/gt-america/GTAmerica-Regular.woff2") format("woff2");
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-Regular.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "GT America";
+  font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/fonts/gt-america/GTAmerica-Medium.woff2") format("woff2");
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-Medium.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "GT America";
+  font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/gt-america/GTAmerica-Semibold.woff2") format("woff2");
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-SemiBold.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "GT America";
+  font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/fonts/gt-america/GTAmerica-Bold.woff2") format("woff2");
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-ExtraBold.woff2")
+    format("woff2");
 }
 
 /* Base styles */
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(220 25% 12%);
+  --card: hsl(220 30% 97%);
+  --secondary: hsl(220 20% 92%);
+  --muted-foreground: hsl(220 10% 45%);
+  --border: hsl(220 15% 82%);
+  --primary: hsl(250 85% 65%);
+  --accent: hsl(250 50% 20%);
+
+  --line: var(--border);
+  --header-bg: hsl(0 0% 100% / 0.8);
+  --chip-bg: hsl(220 20% 94% / 0.9);
+  --chip-line: hsl(220 15% 80%);
+  --sea-ink: var(--foreground);
+  --sea-ink-soft: var(--muted-foreground);
+  --link-bg-hover: hsl(250 85% 65% / 0.12);
+}
+
+.dark {
+  --background: hsl(220 20% 4%);
+  --foreground: hsl(0 0% 95%);
+  --card: hsl(220 15% 8%);
+  --secondary: hsl(220 15% 14%);
+  --muted-foreground: hsl(220 10% 55%);
+  --border: hsl(220 15% 16%);
+  --primary: hsl(250 85% 65%);
+  --accent: hsl(250 50% 20%);
+
+  --line: var(--border);
+  --header-bg: hsl(220 20% 4% / 0.75);
+  --chip-bg: hsl(220 15% 8% / 0.82);
+  --chip-line: hsl(220 15% 16%);
+  --sea-ink: var(--foreground);
+  --sea-ink-soft: var(--muted-foreground);
+  --link-bg-hover: hsl(250 85% 65% / 0.16);
+}
+
 body {
-  font-family: "GT America", system-ui, -apple-system, sans-serif;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   font-size: 1rem;
   line-height: 1.5;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.page-wrap {
+  margin: 0 auto;
+  max-width: 72rem;
+}
+
+.nav-link {
+  border-radius: 999px;
+  color: var(--sea-ink-soft);
+  padding: 0.38rem 0.78rem;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.nav-link:hover {
+  background: var(--link-bg-hover);
+  color: var(--sea-ink);
+}
+
+.nav-link.is-active {
+  background: hsl(250 85% 65% / 0.2);
+  color: var(--sea-ink);
+}
+
+.island-kicker {
+  color: var(--sea-ink-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.gradient-text {
+  background-image: linear-gradient(
+    135deg,
+    hsl(250 85% 65%),
+    hsl(280 80% 70%),
+    hsl(220 90% 70%)
+  );
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-primary {
+  box-shadow: 0 0 40px -10px hsl(250 85% 65% / 0.3);
+}
+
+.glow-subtle {
+  box-shadow: 0 0 60px -15px hsl(250 85% 65% / 0.15);
 }

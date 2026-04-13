@@ -1,4 +1,4 @@
-export { durations, easings } from './animations';
+export { animationStyles, durations, easings, keyframes } from './animations';
 export { colors, semanticColors } from './colors';
 export { radii } from './radii';
 export { semanticShadows, shadows } from './shadows';
