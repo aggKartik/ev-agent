@@ -6,13 +6,18 @@ import { Text } from '@/components/Text';
 import { css } from '../../../styled-system/css';
 
 const containerClass = css({
+  width: 'full',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: 'sm',
+  gap: 'xl',
 });
 
-const IntroStep = () => {
+type IntroStepProps = {
+  onContinue: () => void;
+};
+
+const IntroStep = ({ onContinue }: IntroStepProps) => {
   return (
     <div className={containerClass}>
       <Text
@@ -40,6 +45,7 @@ const IntroStep = () => {
       </Text>
       <Box animationStyle="introButton">
         <Button
+          onClick={onContinue}
           trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
         >
           Get Started
