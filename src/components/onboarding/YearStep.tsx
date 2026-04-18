@@ -2,10 +2,11 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
-import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
+import { Text } from '@/components/Text';
+import { css, cx } from '../../../styled-system/css';
+import { chip } from '../../../styled-system/recipes/chip';
 import { step } from '../../../styled-system/recipes/step';
-import { input } from '../../../styled-system/recipes/input';
 
 type YearStepProps = {
   value: string;
@@ -26,6 +27,37 @@ export default function YearStep({
 }: YearStepProps) {
   const stepClasses = step();
   const canAdvance = value.length === 4;
+  const years = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017];
+
+  const yearGridClass = css({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    gap: '2',
+    maxWidth: '500px',
+    mdDown: {
+      gridTemplateColumns: 'repeat(4, 1fr)',
+    },
+  });
+
+  const yearChipClass = (selected: boolean) =>
+    cx(
+      chip({ selected }),
+      css({
+        borderRadius: 'sm',
+        justifyContent: 'center',
+        paddingX: '2',
+        paddingY: '3',
+        fontFamily: 'mono',
+        fontSize: '15px',
+        letterSpacing: '0.04em',
+        width: 'full',
+        borderColor: selected ? 'peach.400' : 'alpha.cream-18',
+        background: selected
+          ? 'linear-gradient(180deg, {colors.peach.400}, {colors.peach.500})'
+          : 'alpha.cream-03',
+        color: selected ? 'night.900' : 'cream.200',
+      }),
+    );
 
   return (
     <Box className={stepClasses.card}>
@@ -35,21 +67,26 @@ export default function YearStep({
           Lastly, the <Box as="em">model year</Box>.
         </Text>
         <Text className={stepClasses.desc}>
-          Manufacturers tweak battery packs between years. We'll use this to
-          pull the exact EPA range.
+          Battery chemistry and software updates change year to year. This helps
+          us tighten range forecasts and stop timing.
         </Text>
 
         <Box className={stepClasses.field}>
-          <input
-            className={input()}
-            type="number"
-            placeholder="YYYY"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && canAdvance) onNext();
-            }}
-          />
+          <Box className={yearGridClass}>
+            {years.map((year) => {
+              const selected = value === String(year);
+              return (
+                <button
+                  type="button"
+                  key={year}
+                  onClick={() => onChange(String(year))}
+                  className={yearChipClass(selected)}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </Box>
         </Box>
 
         <Stack direction="row" className={stepClasses.actions}>

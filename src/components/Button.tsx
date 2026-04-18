@@ -42,6 +42,7 @@ export default function Button(props: ButtonProps) {
     loadingText,
     leadingIcon,
     trailingIcon,
+    type,
     ...rest
   } = localProps;
 
@@ -49,7 +50,7 @@ export default function Button(props: ButtonProps) {
 
   return (
     <ark.button
-      type="button"
+      type={type ?? 'button'}
       className={cx(button(recipeProps), className)}
       disabled={isDisabled}
       aria-busy={loading || undefined}

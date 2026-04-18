@@ -1,26 +1,71 @@
-import { Stack } from 'styled-system/jsx';
+import { Box, Stack } from 'styled-system/jsx';
 import { css } from '../../styled-system/css';
 import EVAgentLogo from './EVAgentLogo';
 
 const headerClass = css({
-  position: 'fixed',
-  top: '0',
-  left: '0',
-  right: '0',
-  zIndex: '50',
-  background: 'var(--header-bg)',
-  paddingInline: '1rem',
-  paddingBlock: '0.75rem',
-  minHeight: '4rem',
-  backdropFilter: 'blur(16px)',
+  position: 'relative',
+  zIndex: 10,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingInline: { base: '5', md: '10' },
+  paddingTop: { base: '5', md: '6' },
+  paddingBottom: '3.5',
+  flexShrink: 0,
 });
 
-export default function Header() {
+const metaClass = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4',
+  fontFamily: 'mono',
+  fontSize: '11px',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  color: 'cream.600',
+  mdDown: {
+    display: 'none',
+  },
+});
+
+const dotClass = css({
+  width: '6px',
+  height: '6px',
+  borderRadius: 'full',
+  background: 'lime.300',
+  boxShadow: '0 0 10px {colors.lime.300}',
+  animation: 'pulse 1.6s ease-in-out infinite',
+});
+
+const metaSeparatorClass = css({
+  color: 'cream.200',
+  opacity: 0.6,
+});
+
+type HeaderProps = {
+  sessionLabel?: string;
+  buildLabel?: string;
+  showMeta?: boolean;
+};
+
+export default function Header({
+  sessionLabel = 'SESSION · 00/00',
+  buildLabel = 'v1.0 BETA',
+  showMeta = true,
+}: HeaderProps) {
   return (
     <header className={headerClass}>
-      <Stack direction="row" align="center" justify="between">
-        <EVAgentLogo />
-      </Stack>
+      <EVAgentLogo showSub />
+      {showMeta ? (
+        <Stack direction="row" align="center" className={metaClass}>
+          <Box as="span" className={dotClass} />
+          <Box as="span">{sessionLabel}</Box>
+          <Box as="span" className={metaSeparatorClass}>
+            ·
+          </Box>
+          <Box as="span">{buildLabel}</Box>
+        </Stack>
+      ) : null}
     </header>
   );
 }

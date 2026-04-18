@@ -1,5 +1,6 @@
-import { Box } from 'styled-system/jsx';
+import { Box, Center, Flex, Grid } from 'styled-system/jsx';
 import { css } from '../../../styled-system/css';
+import { Text } from '@/components/Text';
 
 type VisualPanelProps = {
   kind:
@@ -21,39 +22,12 @@ const visualClass = css({
   maxHeight: '520px',
   borderRadius: '24px',
   overflow: 'hidden',
-  border: '1px solid {colors.alpha.cream-12}',
+  borderWidth: '1px',
+  borderColor: 'alpha.cream.12',
   background: 'linear-gradient(160deg, {colors.night.300}, {colors.night.400})',
   mdDown: {
     minHeight: '200px',
     maxHeight: '240px',
-  },
-});
-
-const visualLabelClass = css({
-  position: 'absolute',
-  top: '16px',
-  left: '16px',
-  fontFamily: 'mono',
-  fontSize: '10px',
-  color: 'rgba(245, 234, 208, 0.55)',
-  letterSpacing: '0.24em',
-  textTransform: 'uppercase',
-  zIndex: 3,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '8px',
-  background: 'rgba(15, 10, 36, 0.7)',
-  padding: '5px 10px',
-  borderRadius: '99px',
-  border: '1px solid {colors.alpha.cream-06}',
-  backdropFilter: 'blur(8px)',
-  '&::before': {
-    content: '""',
-    width: '6px',
-    height: '6px',
-    background: 'lime.400',
-    borderRadius: '50%',
-    boxShadow: '0 0 8px {colors.lime.400}',
   },
 });
 
@@ -62,28 +36,6 @@ const photoPlaceholderClass = css({
   inset: 0,
   backgroundImage:
     'repeating-linear-gradient(45deg, rgba(245,234,208,0.06) 0 10px, rgba(245,234,208,0.02) 10px 20px)',
-});
-
-const metaStripClass = css({
-  position: 'absolute',
-  bottom: '16px',
-  right: '16px',
-  display: 'flex',
-  gap: '6px',
-  zIndex: 3,
-});
-
-const metaPillClass = css({
-  fontFamily: 'mono',
-  fontSize: '9px',
-  color: 'cream.200',
-  letterSpacing: '0.2em',
-  textTransform: 'uppercase',
-  padding: '4px 9px',
-  background: 'rgba(15, 10, 36, 0.7)',
-  border: '1px solid {colors.alpha.cream-06}',
-  borderRadius: '99px',
-  backdropFilter: 'blur(8px)',
 });
 
 const cornerCropClass = css({
@@ -101,8 +53,68 @@ const cornerCropClass = css({
 
 function VLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Box as="span" className={visualLabelClass}>
+    <Flex
+      position="absolute"
+      top="4"
+      left="4"
+      alignItems="center"
+      gap="2"
+      bg="rgba(15, 10, 36, 0.7)"
+      px="2.5"
+      py="1.5"
+      borderRadius="full"
+      borderWidth="1px"
+      borderColor="alpha.cream.06"
+      backdropFilter="blur(8px)"
+      zIndex={3}
+      _before={{
+        content: '""',
+        width: '6px',
+        height: '6px',
+        bg: 'lime.400',
+        borderRadius: 'full',
+        boxShadow: '0 0 8px {colors.lime.400}',
+      }}
+    >
+      <Text
+        variant="mono-meta"
+        fontSize="10px"
+        color="alpha.cream.55"
+        letterSpacing="0.24em"
+      >
+        {children}
+      </Text>
+    </Flex>
+  );
+}
+
+function MetaStrip({ children }: { children: React.ReactNode }) {
+  return (
+    <Flex position="absolute" bottom="4" right="4" gap="1.5" zIndex={3}>
       {children}
+    </Flex>
+  );
+}
+
+function MetaPill({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      bg="rgba(15, 10, 36, 0.7)"
+      px="2"
+      py="1"
+      borderRadius="full"
+      borderWidth="1px"
+      borderColor="alpha.cream.06"
+      backdropFilter="blur(8px)"
+    >
+      <Text
+        variant="mono-meta"
+        fontSize="9px"
+        color="cream.200"
+        letterSpacing="0.2em"
+      >
+        {children}
+      </Text>
     </Box>
   );
 }
@@ -111,22 +123,23 @@ function WelcomeVisual() {
   return (
     <>
       <VLabel>LIVE · ROUTE PREVIEW</VLabel>
-      <Box style={{ position: 'absolute', inset: 0 }}>
+      <Box position="absolute" inset={0}>
         <svg
           width="100%"
           height="100%"
           viewBox="0 0 500 500"
           preserveAspectRatio="xMidYMid slice"
         >
+          <title>Route Preview</title>
           <defs>
             <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#2a1e5c" />
-              <stop offset="0.6" stopColor="#7b4bd1" />
-              <stop offset="1" stopColor="#e94a8c" />
+              <stop offset="0" stopColor="var(--colors-night-400)" />
+              <stop offset="0.6" stopColor="var(--colors-magenta-500)" />
+              <stop offset="1" stopColor="var(--colors-peach-400)" />
             </linearGradient>
             <linearGradient id="sun2" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#ffcb6b" />
-              <stop offset="1" stopColor="#e94a8c" />
+              <stop offset="0" stopColor="var(--colors-peach-300)" />
+              <stop offset="1" stopColor="var(--colors-peach-400)" />
             </linearGradient>
           </defs>
           <rect width="500" height="500" fill="url(#sky)" />
@@ -138,7 +151,7 @@ function WelcomeVisual() {
               y={255 + i * 12}
               width="220"
               height="3"
-              fill="#0f0a24"
+              fill="var(--colors-night-500)"
               opacity={0.55 + i * 0.05}
             />
           ))}
@@ -150,7 +163,7 @@ function WelcomeVisual() {
                 y1={360 + i * 20}
                 x2="500"
                 y2={360 + i * 20}
-                stroke="#e94a8c"
+                stroke="var(--colors-peach-400)"
                 strokeWidth="0.5"
               />
             ))}
@@ -161,7 +174,7 @@ function WelcomeVisual() {
                 y1="360"
                 x2={i * 50}
                 y2="500"
-                stroke="#e94a8c"
+                stroke="var(--colors-peach-400)"
                 strokeWidth="0.5"
                 opacity="0.6"
               />
@@ -169,25 +182,21 @@ function WelcomeVisual() {
           </g>
           <path
             d="M50 430 Q180 380 250 400 T460 370"
-            stroke="#d6ff3d"
+            stroke="var(--colors-lime-400)"
             strokeWidth="2.5"
             fill="none"
             strokeLinecap="round"
           />
-          <circle cx="50" cy="430" r="5" fill="#d6ff3d" />
-          <circle cx="460" cy="370" r="5" fill="#d6ff3d" />
-          <circle cx="220" cy="395" r="3" fill="#ff9566" />
-          <circle cx="340" cy="385" r="3" fill="#ff9566" />
+          <circle cx="50" cy="430" r="5" fill="var(--colors-lime-400)" />
+          <circle cx="460" cy="370" r="5" fill="var(--colors-lime-400)" />
+          <circle cx="220" cy="395" r="3" fill="var(--colors-peach-400)" />
+          <circle cx="340" cy="385" r="3" fill="var(--colors-peach-400)" />
         </svg>
       </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          LA → BIG SUR
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          3 STOPS
-        </Box>
-      </Box>
+      <MetaStrip>
+        <MetaPill>LA → BIG SUR</MetaPill>
+        <MetaPill>3 STOPS</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -197,20 +206,13 @@ function NameVisual() {
     <>
       <VLabel>DRIVER · PROFILE</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: '0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <Center position="absolute" inset="0">
         <svg width="75%" height="75%" viewBox="0 0 300 300">
+          <title>Driver Profile</title>
           <defs>
             <linearGradient id="cardg" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stopColor="#ff9566" />
-              <stop offset="1" stopColor="#7b4bd1" />
+              <stop offset="0" stopColor="var(--colors-peach-400)" />
+              <stop offset="1" stopColor="var(--colors-magenta-400)" />
             </linearGradient>
           </defs>
           <rect
@@ -226,9 +228,9 @@ function NameVisual() {
           <text
             x="48"
             y="108"
-            fontFamily="JetBrains Mono, monospace"
+            fontFamily="var(--fonts-mono)"
             fontSize="10"
-            fill="#f5ead0"
+            fill="var(--colors-cream-200)"
             opacity="0.5"
             letterSpacing="4"
           >
@@ -237,9 +239,9 @@ function NameVisual() {
           <text
             x="48"
             y="160"
-            fontFamily="Bricolage Grotesque, sans-serif"
+            fontFamily="var(--fonts-display)"
             fontSize="28"
-            fill="#f5ead0"
+            fill="var(--colors-cream-200)"
             fontWeight="700"
           >
             —————
@@ -247,27 +249,25 @@ function NameVisual() {
           <text
             x="48"
             y="195"
-            fontFamily="JetBrains Mono, monospace"
+            fontFamily="var(--fonts-mono)"
             fontSize="9"
-            fill="#8a7fb5"
+            fill="var(--colors-peach-300)"
             letterSpacing="2"
           >
             MEMBER · PACIFIC HIGHWAY
           </text>
-          <circle cx="240" cy="115" r="10" fill="#d6ff3d" />
+          <circle cx="240" cy="115" r="10" fill="var(--colors-lime-400)" />
           <path
             d="M236 112 L242 112 L238 116 L242 116 L236 122"
-            stroke="#1a1438"
+            stroke="var(--colors-night-500)"
             strokeWidth="1.5"
             fill="none"
           />
         </svg>
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          MEMBER #00001
-        </Box>
-      </Box>
+      </Center>
+      <MetaStrip>
+        <MetaPill>MEMBER #00001</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -278,57 +278,47 @@ function MakeVisual({ data }: { data: any }) {
     <>
       <VLabel>MANUFACTURER · GARAGE</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: 0,
-          padding: '50px 30px 30px 30px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}
+      <Flex
+        position="absolute"
+        inset="0"
+        pt="12"
+        pb="8"
+        px="8"
+        direction="column"
+        justify="center"
       >
-        <Box
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 12,
-            opacity: 0.85,
-          }}
-        >
+        <Grid columns={3} gap="3" opacity={0.85}>
           {badges.map((b) => {
             const sel = data?.make && data.make.toUpperCase() === b;
             return (
-              <Box
+              <Center
                 key={b}
-                style={{
-                  aspectRatio: '1.4',
-                  borderRadius: 10,
-                  border:
-                    '1px solid ' + (sel ? '#ff9566' : 'rgba(245,234,208,0.15)'),
-                  background: sel
+                aspectRatio="1.4"
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor={sel ? 'peach.400' : 'alpha.cream.15'}
+                bg={
+                  sel
                     ? 'linear-gradient(180deg, rgba(255,149,102,0.15), rgba(233,74,140,0.1))'
-                    : 'rgba(245,234,208,0.04)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 11,
-                  letterSpacing: '0.16em',
-                  color: sel ? '#ff9566' : 'rgba(245,234,208,0.7)',
-                }}
+                    : 'alpha.cream.04'
+                }
               >
-                {b}
-              </Box>
+                <Text
+                  variant="mono-meta"
+                  fontSize="11px"
+                  letterSpacing="0.16em"
+                  color={sel ? 'peach.400' : 'alpha.cream.70'}
+                >
+                  {b}
+                </Text>
+              </Center>
             );
           })}
-        </Box>
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          {data?.make ? 'SELECTED' : 'CHOOSE ONE'}
-        </Box>
-      </Box>
+        </Grid>
+      </Flex>
+      <MetaStrip>
+        <MetaPill>{data?.make ? 'SELECTED' : 'CHOOSE ONE'}</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -339,20 +329,13 @@ function ModelVisual({ data }: { data: any }) {
     <>
       <VLabel>SILHOUETTE · {modelLabel}</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <Center position="absolute" inset="0">
         <svg width="80%" height="80%" viewBox="0 0 400 300">
+          <title>Car Silhouette</title>
           <defs>
             <linearGradient id="carg" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#f5ead0" />
-              <stop offset="1" stopColor="#8a7fb5" />
+              <stop offset="0" stopColor="var(--colors-cream-200)" />
+              <stop offset="1" stopColor="var(--colors-peach-300)" />
             </linearGradient>
           </defs>
           <line
@@ -360,7 +343,7 @@ function ModelVisual({ data }: { data: any }) {
             y1="200"
             x2="400"
             y2="200"
-            stroke="#e94a8c"
+            stroke="var(--colors-peach-400)"
             strokeWidth="1"
             opacity="0.5"
           />
@@ -373,21 +356,21 @@ function ModelVisual({ data }: { data: any }) {
             cx="110"
             cy="205"
             r="18"
-            fill="#0f0a24"
-            stroke="#f5ead0"
+            fill="var(--colors-night-500)"
+            stroke="var(--colors-cream-200)"
             strokeWidth="1.5"
           />
           <circle
             cx="290"
             cy="205"
             r="18"
-            fill="#0f0a24"
-            stroke="#f5ead0"
+            fill="var(--colors-night-500)"
+            stroke="var(--colors-cream-200)"
             strokeWidth="1.5"
           />
           <path
             d="M130 165 Q170 150 200 148 L240 150 L270 165 Z"
-            fill="#1a1438"
+            fill="var(--colors-night-400)"
             opacity="0.5"
           />
           <ellipse
@@ -395,7 +378,7 @@ function ModelVisual({ data }: { data: any }) {
             cy="230"
             rx="160"
             ry="8"
-            fill="#ff9566"
+            fill="var(--colors-peach-400)"
             opacity="0.3"
           />
           <rect
@@ -403,35 +386,29 @@ function ModelVisual({ data }: { data: any }) {
             y="120"
             width="400"
             height="1"
-            fill="#d6ff3d"
+            fill="var(--colors-lime-400)"
             opacity="0.4"
           />
         </svg>
+      </Center>
+      <Box position="absolute" bottom="14" left="4.5">
+        <Text
+          variant="mono-meta"
+          fontSize="10px"
+          color="alpha.cream.55"
+          letterSpacing="0.08em"
+          lineHeight="1.6"
+          textTransform="none"
+        >
+          {'// model render placeholder'}
+          <br />
+          {'// real shot swaps in later'}
+        </Text>
       </Box>
-      <Box
-        style={{
-          position: 'absolute',
-          bottom: 56,
-          left: 18,
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 10,
-          color: 'rgba(245,234,208,0.55)',
-          letterSpacing: '0.08em',
-          lineHeight: 1.6,
-        }}
-      >
-        {'// model render placeholder'}
-        <br />
-        {'// real shot swaps in later'}
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          {data?.make || '—'}
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          {data?.model ? 'SEL' : '—'}
-        </Box>
-      </Box>
+      <MetaStrip>
+        <MetaPill>{data?.make || '—'}</MetaPill>
+        <MetaPill>{data?.model ? 'SEL' : '—'}</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -443,66 +420,48 @@ function YearVisual({ data }: { data: any }) {
     <>
       <VLabel>MODEL YEAR · RANGE LOOKUP</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box style={{ textAlign: 'center' }}>
+      <Center position="absolute" inset="0">
+        <Box textAlign="center">
           <Box
+            fontFamily="display"
+            fontSize="110px"
+            fontWeight="heavy"
+            lineHeight="1"
+            bg="linear-gradient(180deg, {colors.peach.300}, {colors.peach.400})"
             style={{
-              fontFamily: 'Bricolage Grotesque, sans-serif',
-              fontSize: 110,
-              fontWeight: 800,
-              lineHeight: 1,
-              background: 'linear-gradient(180deg, #ffcb6b, #e94a8c)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
-              color: 'transparent',
-              letterSpacing: '-0.04em',
             }}
+            color="transparent"
+            letterSpacing="-0.04em"
           >
             {yearStr}
           </Box>
-          <Box
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 11,
-              color: '#8a7fb5',
-              letterSpacing: '0.3em',
-              marginTop: 12,
-            }}
+          <Text
+            variant="mono-meta"
+            fontSize="11px"
+            color="peach.300"
+            letterSpacing="0.3em"
+            mt="3"
           >
             EPA RANGE · {hasFacts ? '312 MI' : '— MI'}
-          </Box>
-          <Box
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 11,
-              color: '#8a7fb5',
-              letterSpacing: '0.3em',
-              marginTop: 6,
-            }}
+          </Text>
+          <Text
+            variant="mono-meta"
+            fontSize="11px"
+            color="peach.300"
+            letterSpacing="0.3em"
+            mt="1.5"
           >
             DC FAST · {data?.year ? '250 KW' : '— KW'}
-          </Box>
+          </Text>
         </Box>
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          {data?.make || '—'}
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          {data?.model || '—'}
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          {data?.year || '—'}
-        </Box>
-      </Box>
+      </Center>
+      <MetaStrip>
+        <MetaPill>{data?.make || '—'}</MetaPill>
+        <MetaPill>{data?.model || '—'}</MetaPill>
+        <MetaPill>{data?.year || '—'}</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -512,20 +471,21 @@ function ConnectVisual() {
     <>
       <VLabel>TELEMETRY · LIVE LINK</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <Center position="absolute" inset="0">
         <svg width="82%" height="82%" viewBox="0 0 400 400">
+          <title>Telemetry Live Link</title>
           <defs>
             <radialGradient id="pulse-g">
-              <stop offset="0" stopColor="#d6ff3d" stopOpacity="0.4" />
-              <stop offset="1" stopColor="#d6ff3d" stopOpacity="0" />
+              <stop
+                offset="0"
+                stopColor="var(--colors-lime-400)"
+                stopOpacity="0.4"
+              />
+              <stop
+                offset="1"
+                stopColor="var(--colors-lime-400)"
+                stopOpacity="0"
+              />
             </radialGradient>
           </defs>
           {[60, 100, 140, 180].map((r, i) => (
@@ -535,7 +495,7 @@ function ConnectVisual() {
               cy="200"
               r={r}
               fill="none"
-              stroke="#e94a8c"
+              stroke="var(--colors-peach-400)"
               strokeWidth="0.5"
               opacity={0.2 + i * 0.12}
             />
@@ -545,24 +505,24 @@ function ConnectVisual() {
             cx="200"
             cy="200"
             r="40"
-            fill="#1a1438"
-            stroke="#d6ff3d"
+            fill="var(--colors-night-400)"
+            stroke="var(--colors-lime-400)"
             strokeWidth="1.5"
           />
           <path
             d="M205 180 L190 205 L200 205 L195 222 L215 195 L205 195 Z"
-            fill="#d6ff3d"
+            fill="var(--colors-lime-400)"
           />
-          <circle cx="140" cy="140" r="4" fill="#ff9566" />
-          <circle cx="260" cy="150" r="4" fill="#ff9566" />
-          <circle cx="280" cy="260" r="4" fill="#ff9566" />
-          <circle cx="130" cy="250" r="4" fill="#ff9566" />
+          <circle cx="140" cy="140" r="4" fill="var(--colors-peach-400)" />
+          <circle cx="260" cy="150" r="4" fill="var(--colors-peach-400)" />
+          <circle cx="280" cy="260" r="4" fill="var(--colors-peach-400)" />
+          <circle cx="130" cy="250" r="4" fill="var(--colors-peach-400)" />
           <line
             x1="200"
             y1="200"
             x2="140"
             y2="140"
-            stroke="#ff9566"
+            stroke="var(--colors-peach-400)"
             strokeWidth="0.8"
             strokeDasharray="2 4"
           />
@@ -571,7 +531,7 @@ function ConnectVisual() {
             y1="200"
             x2="260"
             y2="150"
-            stroke="#ff9566"
+            stroke="var(--colors-peach-400)"
             strokeWidth="0.8"
             strokeDasharray="2 4"
           />
@@ -580,7 +540,7 @@ function ConnectVisual() {
             y1="200"
             x2="280"
             y2="260"
-            stroke="#ff9566"
+            stroke="var(--colors-peach-400)"
             strokeWidth="0.8"
             strokeDasharray="2 4"
           />
@@ -589,20 +549,16 @@ function ConnectVisual() {
             y1="200"
             x2="130"
             y2="250"
-            stroke="#ff9566"
+            stroke="var(--colors-peach-400)"
             strokeWidth="0.8"
             strokeDasharray="2 4"
           />
         </svg>
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          OPTIONAL
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          OAUTH 2.0
-        </Box>
-      </Box>
+      </Center>
+      <MetaStrip>
+        <MetaPill>OPTIONAL</MetaPill>
+        <MetaPill>OAUTH 2.0</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -624,70 +580,56 @@ function PrefsVisual({ data }: { data: any }) {
     <>
       <VLabel>WANDER · PROFILE</VLabel>
       <Box className={photoPlaceholderClass} />
-      <Box
-        style={{
-          position: 'absolute',
-          inset: 0,
-          padding: '50px 28px 40px 28px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          gap: 12,
-        }}
+      <Flex
+        position="absolute"
+        inset="0"
+        pt="12"
+        pb="10"
+        px="7"
+        direction="column"
+        justify="center"
+        gap="3"
       >
         {rows.map((row, i) => (
-          <Box
-            key={i}
-            style={{ display: 'flex', alignItems: 'center', gap: 10 }}
-          >
-            <Box
-              style={{
-                width: 96,
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 9,
-                color: '#8a7fb5',
-                letterSpacing: '0.18em',
-              }}
+          <Flex key={i} alignItems="center" gap="2.5">
+            <Text
+              variant="mono-meta"
+              fontSize="9px"
+              color="peach.300"
+              letterSpacing="0.18em"
+              width="96px"
             >
               {row.label}
-            </Box>
+            </Text>
             <Box
-              style={{
-                flex: 1,
-                height: 4,
-                background: 'rgba(245,234,208,0.08)',
-                borderRadius: 4,
-                overflow: 'hidden',
-              }}
+              flex="1"
+              height="4px"
+              bg="alpha.cream.08"
+              borderRadius="sm"
+              overflow="hidden"
             >
               <Box
-                style={{
-                  width: row.val * 100 + '%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #ff9566, #e94a8c)',
-                  transition: 'width 0.6s',
-                }}
+                width={`${row.val * 100}%`}
+                height="100%"
+                bg="linear-gradient(90deg, {colors.peach.400}, {colors.peach.300})"
+                transition="width 0.6s"
               />
             </Box>
-            <Box
-              style={{
-                width: 24,
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: '#f5ead0',
-                textAlign: 'right',
-              }}
+            <Text
+              variant="mono-meta"
+              fontSize="10px"
+              color="cream.200"
+              width="24px"
+              textAlign="right"
             >
               {Math.round(row.val * 100)}
-            </Box>
-          </Box>
+            </Text>
+          </Flex>
         ))}
-      </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          {prefs.length} SELECTED
-        </Box>
-      </Box>
+      </Flex>
+      <MetaStrip>
+        <MetaPill>{prefs.length} SELECTED</MetaPill>
+      </MetaStrip>
     </>
   );
 }
@@ -696,22 +638,23 @@ function SuccessVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>READY · DEPART</VLabel>
-      <Box style={{ position: 'absolute', inset: 0 }}>
+      <Box position="absolute" inset="0">
         <svg
           width="100%"
           height="100%"
           viewBox="0 0 500 500"
           preserveAspectRatio="xMidYMid slice"
         >
+          <title>Success</title>
           <defs>
             <linearGradient id="skyS" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#2a1e5c" />
-              <stop offset="0.5" stopColor="#7b4bd1" />
-              <stop offset="1" stopColor="#e94a8c" />
+              <stop offset="0" stopColor="var(--colors-night-400)" />
+              <stop offset="0.5" stopColor="var(--colors-magenta-400)" />
+              <stop offset="1" stopColor="var(--colors-peach-400)" />
             </linearGradient>
             <linearGradient id="sunS" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#ffcb6b" />
-              <stop offset="1" stopColor="#d6ff3d" />
+              <stop offset="0" stopColor="var(--colors-peach-300)" />
+              <stop offset="1" stopColor="var(--colors-lime-400)" />
             </linearGradient>
           </defs>
           <rect width="500" height="500" fill="url(#skyS)" />
@@ -723,13 +666,13 @@ function SuccessVisual({ data }: { data: any }) {
               y={240 + i * 14}
               width="240"
               height="3"
-              fill="#0f0a24"
+              fill="var(--colors-night-500)"
               opacity={0.4 + i * 0.08}
             />
           ))}
           <path
             d="M40 440 Q120 400 180 410 T260 400 T360 380 T470 360"
-            stroke="#d6ff3d"
+            stroke="var(--colors-lime-400)"
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
@@ -738,52 +681,48 @@ function SuccessVisual({ data }: { data: any }) {
             cx="40"
             cy="440"
             r="7"
-            fill="#d6ff3d"
-            stroke="#1a1438"
+            fill="var(--colors-lime-400)"
+            stroke="var(--colors-night-400)"
             strokeWidth="2"
           />
           <circle
             cx="180"
             cy="410"
             r="6"
-            fill="#ff9566"
-            stroke="#1a1438"
+            fill="var(--colors-peach-400)"
+            stroke="var(--colors-night-400)"
             strokeWidth="2"
           />
           <circle
             cx="260"
             cy="400"
             r="6"
-            fill="#ff9566"
-            stroke="#1a1438"
+            fill="var(--colors-peach-400)"
+            stroke="var(--colors-night-400)"
             strokeWidth="2"
           />
           <circle
             cx="360"
             cy="380"
             r="6"
-            fill="#ff9566"
-            stroke="#1a1438"
+            fill="var(--colors-peach-400)"
+            stroke="var(--colors-night-400)"
             strokeWidth="2"
           />
           <circle
             cx="470"
             cy="360"
             r="7"
-            fill="#d6ff3d"
-            stroke="#1a1438"
+            fill="var(--colors-lime-400)"
+            stroke="var(--colors-night-400)"
             strokeWidth="2"
           />
         </svg>
       </Box>
-      <Box className={metaStripClass}>
-        <Box as="span" className={metaPillClass}>
-          {data?.model || '—'}
-        </Box>
-        <Box as="span" className={metaPillClass}>
-          ALL SYSTEMS GO
-        </Box>
-      </Box>
+      <MetaStrip>
+        <MetaPill>{data?.model || '—'}</MetaPill>
+        <MetaPill>ALL SYSTEMS GO</MetaPill>
+      </MetaStrip>
     </>
   );
 }
