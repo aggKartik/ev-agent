@@ -21,6 +21,7 @@ export const welcomeRecipe = defineSlotRecipe({
       textAlign: 'center',
       margin: 0,
       color: 'cream.200',
+      overflow: 'visible',
       '& .it': {
         fontFamily: 'serif',
         fontStyle: 'italic',
@@ -31,6 +32,11 @@ export const welcomeRecipe = defineSlotRecipe({
         backgroundClip: 'text',
         color: 'transparent',
         display: 'inline-block',
+        lineHeight: '1.08',
+        paddingBottom: '0.08em',
+        marginBottom: '-0.08em',
+        paddingRight: '0.16em',
+        marginRight: '-0.16em',
       },
     },
     sub: {

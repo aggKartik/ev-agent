@@ -40,6 +40,7 @@ export const stepRecipe = defineSlotRecipe({
       color: 'cream.200',
       margin: '0 0 14px 0',
       textWrap: 'balance',
+      overflow: 'visible',
       '& em': {
         fontStyle: 'italic',
         fontFamily: 'serif',
@@ -49,6 +50,12 @@ export const stepRecipe = defineSlotRecipe({
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
         color: 'transparent',
+        display: 'inline-block',
+        lineHeight: '1.08',
+        paddingBottom: '0.08em',
+        marginBottom: '-0.08em',
+        paddingRight: '0.16em',
+        marginRight: '-0.16em',
       },
     },
     desc: {
