@@ -1,25 +1,15 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
-import Button from '@/components/Button';
-import Icon from '@/components/Icon';
-import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
-import { step } from '../../../styled-system/recipes/step';
+import { Text } from '@/components/Text';
 import { connect } from '../../../styled-system/recipes/connect';
+import { step } from '../../../styled-system/recipes/step';
 
 type ConnectStepProps = {
   value: string;
   onChange: (value: string) => void;
-  onNext: () => void;
-  onBack: () => void;
 };
 
-export default function ConnectStep({
-  value,
-  onChange,
-  onNext,
-  onBack,
-}: ConnectStepProps) {
+export default function ConnectStep({ value, onChange }: ConnectStepProps) {
   const stepClasses = step();
 
   const providers = [
@@ -86,22 +76,6 @@ export default function ConnectStep({
             })}
           </Stack>
         </Box>
-
-        <Stack direction="row" className={stepClasses.actions}>
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
-          >
-            Back
-          </Button>
-          <Button
-            onClick={onNext}
-            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-          >
-            {value ? 'Connect' : 'Skip for now'}
-          </Button>
-        </Stack>
       </Stack>
       <VisualPanel kind="connect" />
     </Box>

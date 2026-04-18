@@ -1,6 +1,6 @@
 import { Box, Center, Flex, Grid } from 'styled-system/jsx';
-import { css } from '../../../styled-system/css';
 import { Text } from '@/components/Text';
+import { css } from '../../../styled-system/css';
 
 type VisualPanelProps = {
   kind:

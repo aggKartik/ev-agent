@@ -2,7 +2,7 @@ import { defineSlotRecipe } from '@pandacss/dev';
 
 export const stepRecipe = defineSlotRecipe({
   className: 'step',
-  slots: ['card', 'kicker', 'title', 'desc', 'field', 'actions'],
+  slots: ['card', 'kicker', 'title', 'desc', 'field'],
   base: {
     card: {
       width: '100%',
@@ -62,13 +62,6 @@ export const stepRecipe = defineSlotRecipe({
       marginTop: '1.5',
       maxWidth: '520px',
     },
-    actions: {
-      marginTop: '5.5',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '3',
-      flexWrap: 'wrap',
-    },
   },
   variants: {
     single: {
@@ -86,9 +79,6 @@ export const stepRecipe = defineSlotRecipe({
         field: {
           marginLeft: 'auto',
           marginRight: 'auto',
-        },
-        actions: {
-          justifyContent: 'center',
         },
       },
     },

@@ -1,8 +1,7 @@
-import { ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
-import Icon from '@/components/Icon';
 import { Text } from '@/components/Text';
+import { css } from '../../../styled-system/css';
 import { step } from '../../../styled-system/recipes/step';
 import { welcome } from '../../../styled-system/recipes/welcome';
 
@@ -13,6 +12,14 @@ type WelcomeStepProps = {
 const WelcomeStep = ({ onContinue }: WelcomeStepProps) => {
   const stepClasses = step({ single: true });
   const welcomeClasses = welcome();
+  const actionsClass = css({
+    marginTop: '5.5',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  });
   return (
     <Box className={stepClasses.card}>
       <Stack textAlign="center" alignItems="center" gap="0">
@@ -31,13 +38,8 @@ const WelcomeStep = ({ onContinue }: WelcomeStepProps) => {
           Tell us where you're going and what you love. We'll plan stops around
           coffee, trails and tacos — not random plugs in parking lots.
         </Text>
-        <Stack direction="row" className={stepClasses.actions}>
-          <Button
-            onClick={onContinue}
-            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-          >
-            Start the tour
-          </Button>
+        <Stack direction="row" className={actionsClass}>
+          <Button onClick={onContinue}>Start the tour</Button>
           <Button variant="ghost">I have an account</Button>
         </Stack>
       </Stack>

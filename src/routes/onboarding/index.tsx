@@ -1,4 +1,4 @@
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
@@ -48,6 +48,39 @@ const formSteps = steps.filter(
 );
 
 type FormStep = (typeof formSteps)[number];
+
+type FormStepNavConfig = {
+  canAdvance: (values: OnboardingFormValues) => boolean;
+  getPrimaryActionLabel?: (values: OnboardingFormValues) => string;
+};
+
+const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
+  NAME: {
+    canAdvance: (values) => values.name.trim().length > 0,
+  },
+  MAKE: {
+    canAdvance: (values) => Boolean(values.make),
+  },
+  MODEL: {
+    canAdvance: (values) => Boolean(values.model),
+  },
+  YEAR: {
+    canAdvance: (values) => values.year.length === 4,
+  },
+  CONNECT: {
+    canAdvance: () => true,
+    getPrimaryActionLabel: (values) =>
+      values.connect ? 'Connect' : 'Skip for now',
+  },
+  PREFS: {
+    canAdvance: () => true,
+    getPrimaryActionLabel: () => 'Review Route',
+  },
+};
+
+const defaultFormStepNavConfig: FormStepNavConfig = {
+  canAdvance: () => true,
+};
 
 const pageClass = css({
   width: 'full',
@@ -101,15 +134,12 @@ const stageClass = css({
   flex: 1,
   minHeight: 0,
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   justifyContent: 'center',
   px: { base: '5', md: '10' },
-  pt: { base: '5', md: '3' },
-  pb: { base: '24', md: '20' },
+  pt: { base: '6', md: '6' },
+  pb: { base: '40', md: '36' },
   overflowY: 'auto',
-  lg: {
-    alignItems: 'center',
-  },
 });
 
 const stepTransitionClass = css({
@@ -124,13 +154,36 @@ const stepTransitionClass = css({
   },
 });
 
-const navEdgesClass = css({
+const formNavBarClass = css({
   position: 'fixed',
-  right: { base: '5', md: '10' },
-  bottom: { base: '5', md: '10' },
+  left: 0,
+  right: 0,
+  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+  zIndex: 25,
+  pointerEvents: 'none',
+  px: { base: '5', md: '10' },
+});
+
+const formNavInnerClass = css({
+  width: 'full',
+  maxWidth: '74rem',
+  marginInline: 'auto',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '3',
+  pointerEvents: 'auto',
+});
+
+const formNavButtonsClass = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '3',
+});
+
+const navEdgesClass = css({
   display: 'flex',
   gap: '2',
-  zIndex: 20,
 });
 
 const navEdgeButtonClass = css({
@@ -196,6 +249,8 @@ function OnboardingComponent() {
   const [transitionKey, setTransitionKey] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
 
+  const formValues = useStore(form.store, (state) => state.values);
+
   const goToNextStep = useCallback(() => {
     setDirection('forward');
     setCurrentStep((step) => getNextStep(step));
@@ -215,12 +270,11 @@ function OnboardingComponent() {
     currentStep !== 'INTRO_CAR' &&
     currentStep !== 'SUCCESS';
 
-  const showEdgeNav =
-    currentStep !== 'WELCOME' &&
-    currentStep !== 'INTRO_CAR' &&
-    currentStep !== 'SUCCESS';
+  const isFormStep = formSteps.includes(currentStep as FormStep);
 
-  const showSun = currentStep === 'INTRO_CAR';
+  const showPinnedFormNav = isFormStep;
+
+  const showWelcomeAtmosphere = currentStep === 'WELCOME';
 
   const stepIndex = steps.indexOf(currentStep);
   const currentProgressIndex = showProgress
@@ -234,6 +288,20 @@ function OnboardingComponent() {
         ? 'COMPLETE'
         : `STEP ${currentProgressIndex + 1} OF ${formSteps.length}`;
 
+  const currentFormStepConfig = isFormStep
+    ? (formStepNavConfig[currentStep as FormStep] ?? defaultFormStepNavConfig)
+    : defaultFormStepNavConfig;
+
+  const canAdvance = isFormStep
+    ? currentFormStepConfig.canAdvance(formValues)
+    : true;
+
+  const primaryActionLabel =
+    (isFormStep && currentFormStepConfig.getPrimaryActionLabel?.(formValues)) ||
+    'Continue';
+
+  const shouldTopAlignStage = currentStep === 'PREFS';
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -241,18 +309,18 @@ function OnboardingComponent() {
       const tag = target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
-      if (event.key === 'ArrowLeft' && showEdgeNav) {
+      if (event.key === 'ArrowLeft' && showPinnedFormNav) {
         goToPreviousStep();
       }
 
-      if (event.key === 'ArrowRight' && showEdgeNav) {
+      if (event.key === 'ArrowRight' && showPinnedFormNav && canAdvance) {
         goToNextStep();
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [goToNextStep, goToPreviousStep, showEdgeNav]);
+  }, [canAdvance, goToNextStep, goToPreviousStep, showPinnedFormNav]);
 
   const handleSubmit = () => {
     void form.handleSubmit();
@@ -261,8 +329,8 @@ function OnboardingComponent() {
   return (
     <Box className={overlayClass}>
       <Box className="app-container">
-        <Box className="stars" />
-        {showSun ? <Box className="sun" /> : null}
+        {showWelcomeAtmosphere ? <Box className="stars" /> : null}
+        {showWelcomeAtmosphere ? <Box className="sun" /> : null}
         <Box className="horizon">
           <Box className="horizon-grid" />
         </Box>
@@ -289,7 +357,12 @@ function OnboardingComponent() {
             </Box>
           ) : null}
 
-          <Box className={stageClass}>
+          <Box
+            className={stageClass}
+            style={{
+              alignItems: shouldTopAlignStage ? 'flex-start' : 'center',
+            }}
+          >
             <Box
               key={transitionKey}
               data-direction={direction}
@@ -317,7 +390,6 @@ function OnboardingComponent() {
                       <NameStep
                         value={field.state.value}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
                         onNext={() => {
                           field.handleBlur();
                           goToNextStep();
@@ -332,13 +404,8 @@ function OnboardingComponent() {
                     {(field) => (
                       <MakeStep
                         value={field.state.value}
-                        nameState={form.getFieldValue('name')}
+                        nameState={formValues.name}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
                       />
                     )}
                   </form.Field>
@@ -349,13 +416,8 @@ function OnboardingComponent() {
                     {(field) => (
                       <ModelStep
                         value={field.state.value}
-                        makeState={form.getFieldValue('make')}
+                        makeState={formValues.make}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
                       />
                     )}
                   </form.Field>
@@ -366,14 +428,9 @@ function OnboardingComponent() {
                     {(field) => (
                       <YearStep
                         value={field.state.value}
-                        makeState={form.getFieldValue('make')}
-                        modelState={form.getFieldValue('model')}
+                        makeState={formValues.make}
+                        modelState={formValues.model}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
                       />
                     )}
                   </form.Field>
@@ -385,11 +442,6 @@ function OnboardingComponent() {
                       <ConnectStep
                         value={field.state.value}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
                       />
                     )}
                   </form.Field>
@@ -401,11 +453,6 @@ function OnboardingComponent() {
                       <PrefsStep
                         value={field.state.value}
                         onChange={field.handleChange}
-                        onBack={goToPreviousStep}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
                       />
                     )}
                   </form.Field>
@@ -413,8 +460,8 @@ function OnboardingComponent() {
 
                 {currentStep === 'SUCCESS' ? (
                   <SuccessStep
-                    makeState={form.getFieldValue('make')}
-                    modelState={form.getFieldValue('model')}
+                    makeState={formValues.make}
+                    modelState={formValues.model}
                     onNext={() => {
                       handleSubmit();
                     }}
@@ -424,26 +471,39 @@ function OnboardingComponent() {
             </Box>
           </Box>
 
-          {showEdgeNav ? (
-            <Box className={navEdgesClass}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={navEdgeButtonClass}
-                aria-label="Back step"
-                onClick={goToPreviousStep}
-              >
-                {'←'}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={navEdgeButtonClass}
-                aria-label="Next step"
-                onClick={goToNextStep}
-              >
-                {'→'}
-              </Button>
+          {showPinnedFormNav ? (
+            <Box className={formNavBarClass}>
+              <Box className={formNavInnerClass}>
+                <Box className={formNavButtonsClass}>
+                  <Button variant="ghost" onClick={goToPreviousStep}>
+                    Back
+                  </Button>
+                  <Button disabled={!canAdvance} onClick={goToNextStep}>
+                    {primaryActionLabel}
+                  </Button>
+                </Box>
+                <Box className={navEdgesClass}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={navEdgeButtonClass}
+                    aria-label="Back step"
+                    onClick={goToPreviousStep}
+                  >
+                    {'←'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={navEdgeButtonClass}
+                    aria-label="Next step"
+                    disabled={!canAdvance}
+                    onClick={goToNextStep}
+                  >
+                    {'→'}
+                  </Button>
+                </Box>
+              </Box>
             </Box>
           ) : null}
         </Stack>

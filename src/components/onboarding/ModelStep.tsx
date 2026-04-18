@@ -1,18 +1,13 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
-import Button from '@/components/Button';
-import Icon from '@/components/Icon';
-import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
-import { step } from '../../../styled-system/recipes/step';
+import { Text } from '@/components/Text';
 import { option } from '../../../styled-system/recipes/option';
+import { step } from '../../../styled-system/recipes/step';
 
 type ModelStepProps = {
   value: string;
   makeState?: string;
   onChange: (value: string) => void;
-  onNext: () => void;
-  onBack: () => void;
 };
 
 const MODELS: Record<string, string[]> = {
@@ -31,8 +26,6 @@ export default function ModelStep({
   value,
   makeState,
   onChange,
-  onNext,
-  onBack,
 }: ModelStepProps) {
   const stepClasses = step();
   const optionClasses = option();
@@ -74,23 +67,6 @@ export default function ModelStep({
             })}
           </Box>
         </Box>
-
-        <Stack direction="row" className={stepClasses.actions}>
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
-          >
-            Back
-          </Button>
-          <Button
-            disabled={!value}
-            onClick={onNext}
-            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-          >
-            Continue
-          </Button>
-        </Stack>
       </Stack>
       <VisualPanel kind="model" data={{ make: makeState, model: value }} />
     </Box>

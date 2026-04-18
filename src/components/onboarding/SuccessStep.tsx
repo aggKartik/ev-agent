@@ -2,8 +2,9 @@ import { ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
-import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
+import { Text } from '@/components/Text';
+import { css } from '../../../styled-system/css';
 import { step } from '../../../styled-system/recipes/step';
 
 type SuccessStepProps = {
@@ -18,6 +19,13 @@ export default function SuccessStep({
   onNext,
 }: SuccessStepProps) {
   const stepClasses = step();
+  const actionsClass = css({
+    marginTop: '5.5',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3',
+    flexWrap: 'wrap',
+  });
 
   return (
     <Box className={stepClasses.card}>
@@ -31,7 +39,7 @@ export default function SuccessStep({
           Generating your first smart itinerary...
         </Text>
 
-        <Stack direction="row" className={stepClasses.actions}>
+        <Stack direction="row" className={actionsClass}>
           <Button
             onClick={onNext}
             trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}

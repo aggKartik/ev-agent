@@ -1,7 +1,4 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Box, Stack } from 'styled-system/jsx';
-import Button from '@/components/Button';
-import Icon from '@/components/Icon';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { css, cx } from '../../../styled-system/css';
@@ -13,8 +10,6 @@ type YearStepProps = {
   makeState?: string;
   modelState?: string;
   onChange: (value: string) => void;
-  onNext: () => void;
-  onBack: () => void;
 };
 
 export default function YearStep({
@@ -22,11 +17,8 @@ export default function YearStep({
   makeState,
   modelState,
   onChange,
-  onNext,
-  onBack,
 }: YearStepProps) {
   const stepClasses = step();
-  const canAdvance = value.length === 4;
   const years = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017];
 
   const yearGridClass = css({
@@ -88,23 +80,6 @@ export default function YearStep({
             })}
           </Box>
         </Box>
-
-        <Stack direction="row" className={stepClasses.actions}>
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
-          >
-            Back
-          </Button>
-          <Button
-            disabled={!canAdvance}
-            onClick={onNext}
-            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-          >
-            Continue
-          </Button>
-        </Stack>
       </Stack>
       <VisualPanel
         kind="year"

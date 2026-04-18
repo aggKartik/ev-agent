@@ -1,8 +1,5 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
-import Button from '@/components/Button';
-import Icon from '@/components/Icon';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { css, cx } from '../../../styled-system/css';
@@ -12,8 +9,6 @@ import { step } from '../../../styled-system/recipes/step';
 type PrefsStepProps = {
   value: string[];
   onChange: (value: string[]) => void;
-  onNext: () => void;
-  onBack: () => void;
 };
 
 const PREF_OPTIONS = [
@@ -31,12 +26,7 @@ const PREF_OPTIONS = [
   { label: 'Local bakeries', e: '🥐' },
 ];
 
-export default function PrefsStep({
-  value,
-  onChange,
-  onNext,
-  onBack,
-}: PrefsStepProps) {
+export default function PrefsStep({ value, onChange }: PrefsStepProps) {
   const stepClasses = step();
   const optionClasses = option({ twoCols: true });
   const [pace, setPace] = useState(50);
@@ -144,22 +134,6 @@ export default function PrefsStep({
             </Stack>
           </Box>
         </Box>
-
-        <Stack direction="row" className={stepClasses.actions}>
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
-          >
-            Back
-          </Button>
-          <Button
-            onClick={onNext}
-            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-          >
-            Review Route
-          </Button>
-        </Stack>
       </Stack>
       <VisualPanel kind="prefs" data={{ prefs: value }} />
     </Box>
