@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
+import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { step } from '../../../styled-system/recipes/step';
 import { option } from '../../../styled-system/recipes/option';
@@ -39,19 +41,19 @@ export default function PrefsStep({
   };
 
   return (
-    <div className={stepClasses.card}>
-      <div>
-        <div className={stepClasses.kicker}>06 · THE VIBE</div>
-        <h1 className={stepClasses.title}>
-          What are your <em>ideal stops</em>?
-        </h1>
-        <p className={stepClasses.desc}>
+    <Box className={stepClasses.card}>
+      <Stack gap="0">
+        <Box className={stepClasses.kicker}>06 · THE VIBE</Box>
+        <Text as="h1" className={stepClasses.title}>
+          What are your <Box as="em">ideal stops</Box>?
+        </Text>
+        <Text className={stepClasses.desc}>
           We'll factor these into your routing logic. Instead of a Walmart
           parking lot, maybe charge near an indie roaster.
-        </p>
+        </Text>
 
-        <div className={stepClasses.field}>
-          <div className={optionClasses.grid}>
+        <Box className={stepClasses.field}>
+          <Box className={optionClasses.grid}>
             {PREF_OPTIONS.map((o) => {
               const sel = value.includes(o.label);
               const cardClasses = option({ selected: sel });
@@ -68,15 +70,15 @@ export default function PrefsStep({
                     padding: 16,
                   }}
                 >
-                  <div className={cardClasses.blob}>{o.e}</div>
-                  <div>{o.label}</div>
+                  <Box className={cardClasses.blob}>{o.e}</Box>
+                  <Box>{o.label}</Box>
                 </button>
               );
             })}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div className={stepClasses.actions}>
+        <Stack direction="row" className={stepClasses.actions}>
           <Button
             variant="ghost"
             onClick={onBack}
@@ -90,9 +92,9 @@ export default function PrefsStep({
           >
             Review Route
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
       <VisualPanel kind="prefs" data={{ prefs: value }} />
-    </div>
+    </Box>
   );
 }

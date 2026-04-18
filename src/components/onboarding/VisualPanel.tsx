@@ -1,3 +1,4 @@
+import { Box } from 'styled-system/jsx';
 import { css } from '../../../styled-system/css';
 
 type VisualPanelProps = {
@@ -99,14 +100,18 @@ const cornerCropClass = css({
 });
 
 function VLabel({ children }: { children: React.ReactNode }) {
-  return <span className={visualLabelClass}>{children}</span>;
+  return (
+    <Box as="span" className={visualLabelClass}>
+      {children}
+    </Box>
+  );
 }
 
 function WelcomeVisual() {
   return (
     <>
       <VLabel>LIVE · ROUTE PREVIEW</VLabel>
-      <div style={{ position: 'absolute', inset: 0 }}>
+      <Box style={{ position: 'absolute', inset: 0 }}>
         <svg
           width="100%"
           height="100%"
@@ -174,11 +179,15 @@ function WelcomeVisual() {
           <circle cx="220" cy="395" r="3" fill="#ff9566" />
           <circle cx="340" cy="385" r="3" fill="#ff9566" />
         </svg>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>LA → BIG SUR</span>
-        <span className={metaPillClass}>3 STOPS</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          LA → BIG SUR
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          3 STOPS
+        </Box>
+      </Box>
     </>
   );
 }
@@ -187,8 +196,8 @@ function NameVisual() {
   return (
     <>
       <VLabel>DRIVER · PROFILE</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: '0',
@@ -253,10 +262,12 @@ function NameVisual() {
             fill="none"
           />
         </svg>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>MEMBER #00001</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          MEMBER #00001
+        </Box>
+      </Box>
     </>
   );
 }
@@ -266,8 +277,8 @@ function MakeVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>MANUFACTURER · GARAGE</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: 0,
@@ -277,7 +288,7 @@ function MakeVisual({ data }: { data: any }) {
           justifyContent: 'center',
         }}
       >
-        <div
+        <Box
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -288,7 +299,7 @@ function MakeVisual({ data }: { data: any }) {
           {badges.map((b) => {
             const sel = data?.make && data.make.toUpperCase() === b;
             return (
-              <div
+              <Box
                 key={b}
                 style={{
                   aspectRatio: '1.4',
@@ -308,16 +319,16 @@ function MakeVisual({ data }: { data: any }) {
                 }}
               >
                 {b}
-              </div>
+              </Box>
             );
           })}
-        </div>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>
+        </Box>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
           {data?.make ? 'SELECTED' : 'CHOOSE ONE'}
-        </span>
-      </div>
+        </Box>
+      </Box>
     </>
   );
 }
@@ -327,8 +338,8 @@ function ModelVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>SILHOUETTE · {modelLabel}</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: 0,
@@ -396,8 +407,8 @@ function ModelVisual({ data }: { data: any }) {
             opacity="0.4"
           />
         </svg>
-      </div>
-      <div
+      </Box>
+      <Box
         style={{
           position: 'absolute',
           bottom: 56,
@@ -412,11 +423,15 @@ function ModelVisual({ data }: { data: any }) {
         {'// model render placeholder'}
         <br />
         {'// real shot swaps in later'}
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>{data?.make || '—'}</span>
-        <span className={metaPillClass}>{data?.model ? 'SEL' : '—'}</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          {data?.make || '—'}
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          {data?.model ? 'SEL' : '—'}
+        </Box>
+      </Box>
     </>
   );
 }
@@ -427,8 +442,8 @@ function YearVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>MODEL YEAR · RANGE LOOKUP</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: 0,
@@ -437,8 +452,8 @@ function YearVisual({ data }: { data: any }) {
           justifyContent: 'center',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <div
+        <Box style={{ textAlign: 'center' }}>
+          <Box
             style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 110,
@@ -452,8 +467,8 @@ function YearVisual({ data }: { data: any }) {
             }}
           >
             {yearStr}
-          </div>
-          <div
+          </Box>
+          <Box
             style={{
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 11,
@@ -463,8 +478,8 @@ function YearVisual({ data }: { data: any }) {
             }}
           >
             EPA RANGE · {hasFacts ? '312 MI' : '— MI'}
-          </div>
-          <div
+          </Box>
+          <Box
             style={{
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 11,
@@ -474,14 +489,20 @@ function YearVisual({ data }: { data: any }) {
             }}
           >
             DC FAST · {data?.year ? '250 KW' : '— KW'}
-          </div>
-        </div>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>{data?.make || '—'}</span>
-        <span className={metaPillClass}>{data?.model || '—'}</span>
-        <span className={metaPillClass}>{data?.year || '—'}</span>
-      </div>
+          </Box>
+        </Box>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          {data?.make || '—'}
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          {data?.model || '—'}
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          {data?.year || '—'}
+        </Box>
+      </Box>
     </>
   );
 }
@@ -490,8 +511,8 @@ function ConnectVisual() {
   return (
     <>
       <VLabel>TELEMETRY · LIVE LINK</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: 0,
@@ -573,11 +594,15 @@ function ConnectVisual() {
             strokeDasharray="2 4"
           />
         </svg>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>OPTIONAL</span>
-        <span className={metaPillClass}>OAUTH 2.0</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          OPTIONAL
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          OAUTH 2.0
+        </Box>
+      </Box>
     </>
   );
 }
@@ -598,8 +623,8 @@ function PrefsVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>WANDER · PROFILE</VLabel>
-      <div className={photoPlaceholderClass} />
-      <div
+      <Box className={photoPlaceholderClass} />
+      <Box
         style={{
           position: 'absolute',
           inset: 0,
@@ -611,11 +636,11 @@ function PrefsVisual({ data }: { data: any }) {
         }}
       >
         {rows.map((row, i) => (
-          <div
+          <Box
             key={i}
             style={{ display: 'flex', alignItems: 'center', gap: 10 }}
           >
-            <div
+            <Box
               style={{
                 width: 96,
                 fontFamily: 'JetBrains Mono, monospace',
@@ -625,8 +650,8 @@ function PrefsVisual({ data }: { data: any }) {
               }}
             >
               {row.label}
-            </div>
-            <div
+            </Box>
+            <Box
               style={{
                 flex: 1,
                 height: 4,
@@ -635,7 +660,7 @@ function PrefsVisual({ data }: { data: any }) {
                 overflow: 'hidden',
               }}
             >
-              <div
+              <Box
                 style={{
                   width: row.val * 100 + '%',
                   height: '100%',
@@ -643,8 +668,8 @@ function PrefsVisual({ data }: { data: any }) {
                   transition: 'width 0.6s',
                 }}
               />
-            </div>
-            <div
+            </Box>
+            <Box
               style={{
                 width: 24,
                 fontFamily: 'JetBrains Mono, monospace',
@@ -654,13 +679,15 @@ function PrefsVisual({ data }: { data: any }) {
               }}
             >
               {Math.round(row.val * 100)}
-            </div>
-          </div>
+            </Box>
+          </Box>
         ))}
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>{prefs.length} SELECTED</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          {prefs.length} SELECTED
+        </Box>
+      </Box>
     </>
   );
 }
@@ -669,7 +696,7 @@ function SuccessVisual({ data }: { data: any }) {
   return (
     <>
       <VLabel>READY · DEPART</VLabel>
-      <div style={{ position: 'absolute', inset: 0 }}>
+      <Box style={{ position: 'absolute', inset: 0 }}>
         <svg
           width="100%"
           height="100%"
@@ -748,22 +775,26 @@ function SuccessVisual({ data }: { data: any }) {
             strokeWidth="2"
           />
         </svg>
-      </div>
-      <div className={metaStripClass}>
-        <span className={metaPillClass}>{data?.model || '—'}</span>
-        <span className={metaPillClass}>ALL SYSTEMS GO</span>
-      </div>
+      </Box>
+      <Box className={metaStripClass}>
+        <Box as="span" className={metaPillClass}>
+          {data?.model || '—'}
+        </Box>
+        <Box as="span" className={metaPillClass}>
+          ALL SYSTEMS GO
+        </Box>
+      </Box>
     </>
   );
 }
 
 export function VisualPanel({ kind, data }: VisualPanelProps) {
   return (
-    <div className={visualClass}>
-      <span className={`${cornerCropClass} tl`} />
-      <span className={`${cornerCropClass} tr`} />
-      <span className={`${cornerCropClass} bl`} />
-      <span className={`${cornerCropClass} br`} />
+    <Box className={visualClass}>
+      <Box as="span" className={`${cornerCropClass} tl`} />
+      <Box as="span" className={`${cornerCropClass} tr`} />
+      <Box as="span" className={`${cornerCropClass} bl`} />
+      <Box as="span" className={`${cornerCropClass} br`} />
       {kind === 'welcome' && <WelcomeVisual />}
       {kind === 'name' && <NameVisual />}
       {kind === 'make' && <MakeVisual data={data} />}
@@ -772,6 +803,6 @@ export function VisualPanel({ kind, data }: VisualPanelProps) {
       {kind === 'connect' && <ConnectVisual />}
       {kind === 'prefs' && <PrefsVisual data={data} />}
       {kind === 'success' && <SuccessVisual data={data} />}
-    </div>
+    </Box>
   );
 }

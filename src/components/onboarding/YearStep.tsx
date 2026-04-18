@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
+import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { step } from '../../../styled-system/recipes/step';
 import { input } from '../../../styled-system/recipes/input';
@@ -26,18 +28,18 @@ export default function YearStep({
   const canAdvance = value.length === 4;
 
   return (
-    <div className={stepClasses.card}>
-      <div>
-        <div className={stepClasses.kicker}>04 · THE YEAR</div>
-        <h1 className={stepClasses.title}>
-          Lastly, the <em>model year</em>.
-        </h1>
-        <p className={stepClasses.desc}>
+    <Box className={stepClasses.card}>
+      <Stack gap="0">
+        <Box className={stepClasses.kicker}>04 · THE YEAR</Box>
+        <Text as="h1" className={stepClasses.title}>
+          Lastly, the <Box as="em">model year</Box>.
+        </Text>
+        <Text className={stepClasses.desc}>
           Manufacturers tweak battery packs between years. We'll use this to
           pull the exact EPA range.
-        </p>
+        </Text>
 
-        <div className={stepClasses.field}>
+        <Box className={stepClasses.field}>
           <input
             className={input()}
             type="number"
@@ -48,9 +50,9 @@ export default function YearStep({
               if (e.key === 'Enter' && canAdvance) onNext();
             }}
           />
-        </div>
+        </Box>
 
-        <div className={stepClasses.actions}>
+        <Stack direction="row" className={stepClasses.actions}>
           <Button
             variant="ghost"
             onClick={onBack}
@@ -65,12 +67,12 @@ export default function YearStep({
           >
             Continue
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
       <VisualPanel
         kind="year"
         data={{ make: makeState, model: modelState, year: value }}
       />
-    </div>
+    </Box>
   );
 }

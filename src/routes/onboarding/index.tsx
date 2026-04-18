@@ -131,7 +131,8 @@ function OnboardingComponent() {
       py={{ base: '8', md: '12' }}
       color="text.default"
     >
-      <form
+      <Box
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
@@ -140,12 +141,12 @@ function OnboardingComponent() {
       >
         {showProgress ? (
           <Box className={progressClass}>
-            <div className={progress().track} aria-hidden="true">
-              <div
+            <Box className={progress().track} aria-hidden="true">
+              <Box
                 className={progress({ fill: 'default' }).fill}
                 style={{ width: `${progressValue}%` }}
               />
-            </div>
+            </Box>
           </Box>
         ) : null}
 
@@ -266,7 +267,7 @@ function OnboardingComponent() {
             }}
           />
         ) : null}
-      </form>
+      </Box>
     </Stack>
   );
 }

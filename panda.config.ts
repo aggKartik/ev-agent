@@ -24,7 +24,6 @@ import {
   zIndex,
   blurs,
   breakpoints,
-  transitions,
 } from "./src/styles/tokens";
 import { 
   buttonRecipe, 
@@ -66,7 +65,6 @@ export default defineConfig({
         opacity,
         zIndex,
         blurs,
-        transitions,
       },
       textStyles,
       keyframes,

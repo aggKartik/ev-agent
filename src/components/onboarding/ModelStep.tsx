@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
+import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { step } from '../../../styled-system/recipes/step';
 import { option } from '../../../styled-system/recipes/option';
@@ -43,19 +45,19 @@ export default function ModelStep({
   ];
 
   return (
-    <div className={stepClasses.card}>
-      <div>
-        <div className={stepClasses.kicker}>03 · THE MODEL</div>
-        <h1 className={stepClasses.title}>
-          Which <em>{makeState || 'model'}</em> is it?
-        </h1>
-        <p className={stepClasses.desc}>
+    <Box className={stepClasses.card}>
+      <Stack gap="0">
+        <Box className={stepClasses.kicker}>03 · THE MODEL</Box>
+        <Text as="h1" className={stepClasses.title}>
+          Which <Box as="em">{makeState || 'model'}</Box> is it?
+        </Text>
+        <Text className={stepClasses.desc}>
           Battery sizes and efficiencies vary by model. We need this to gauge
           how far you can go on a full charge.
-        </p>
+        </Text>
 
-        <div className={stepClasses.field}>
-          <div className={optionClasses.grid}>
+        <Box className={stepClasses.field}>
+          <Box className={optionClasses.grid}>
             {options.map((m) => {
               const sel = value === m;
               const cardClasses = option({ selected: sel });
@@ -66,14 +68,14 @@ export default function ModelStep({
                   className={cardClasses.card}
                   onClick={() => onChange(m)}
                 >
-                  <div style={{ margin: 'auto' }}>{m}</div>
+                  <Box margin="auto">{m}</Box>
                 </button>
               );
             })}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div className={stepClasses.actions}>
+        <Stack direction="row" className={stepClasses.actions}>
           <Button
             variant="ghost"
             onClick={onBack}
@@ -88,9 +90,9 @@ export default function ModelStep({
           >
             Continue
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
       <VisualPanel kind="model" data={{ make: makeState, model: value }} />
-    </div>
+    </Box>
   );
 }

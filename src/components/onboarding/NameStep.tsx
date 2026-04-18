@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
+import { Text } from '@/components/Text';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { step } from '../../../styled-system/recipes/step';
 import { input } from '../../../styled-system/recipes/input';
@@ -22,17 +24,17 @@ export default function NameStep({
   const canAdvance = (value || '').trim().length > 0;
 
   return (
-    <div className={stepClasses.card}>
-      <div>
-        <div className={stepClasses.kicker}>01 · WHO'S DRIVING</div>
-        <h1 className={stepClasses.title}>
-          What should we <em>call you</em>?
-        </h1>
-        <p className={stepClasses.desc}>
+    <Box className={stepClasses.card}>
+      <Stack gap="0">
+        <Box className={stepClasses.kicker}>01 · WHO'S DRIVING</Box>
+        <Text as="h1" className={stepClasses.title}>
+          What should we <Box as="em">call you</Box>?
+        </Text>
+        <Text className={stepClasses.desc}>
           Just your first name is fine — we'll use it on your trip plans and
           when we text route changes.
-        </p>
-        <div className={stepClasses.field}>
+        </Text>
+        <Box className={stepClasses.field}>
           <input
             className={input()}
             type="text"
@@ -44,8 +46,8 @@ export default function NameStep({
               if (e.key === 'Enter' && canAdvance) onNext();
             }}
           />
-        </div>
-        <div className={stepClasses.actions}>
+        </Box>
+        <Stack direction="row" className={stepClasses.actions}>
           <Button
             variant="ghost"
             onClick={onBack}
@@ -60,9 +62,9 @@ export default function NameStep({
           >
             Continue
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
       <VisualPanel kind="name" />
-    </div>
+    </Box>
   );
 }
