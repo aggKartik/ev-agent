@@ -2,10 +2,12 @@ import { defineConfig } from "@pandacss/dev";
 import {
   colors,
   semanticColors,
+  gradients,
   fonts,
   fontSizes,
   fontWeights,
   lineHeights,
+  letterSpacings,
   spacing,
   sizes,
   radii,
@@ -15,39 +17,58 @@ import {
   easings,
   keyframes,
   animationStyles,
+  textStyles,
+  borderWidths,
+  borders,
+  opacity,
+  zIndex,
+  blurs,
+  breakpoints,
+  transitions,
 } from "./src/styles/tokens";
-import { buttonRecipe, iconRecipe } from "./src/styles/recipes";
+import { 
+  buttonRecipe, 
+  iconRecipe, 
+  cardRecipe, 
+  inputRecipe, 
+  chipRecipe, 
+  progressRecipe,
+  stepRecipe, 
+  optionRecipe, 
+  connectRecipe, 
+  welcomeRecipe 
+} from "./src/styles/recipes";
 
 export default defineConfig({
-  // Whether to use css reset
   preflight: true,
-  
-
-  // Where to look for your css declarations
   include: ["./src/**/*.{js,jsx,ts,tsx}"],
-
-  // Files to exclude
   exclude: [],
-
-  // Generates JSX utilities with options of React, Preact, Qwik, Solid, Vue
   jsxFramework: "react",
-
-  // Useful for theme customization
   theme: {
+    breakpoints,
     extend: {
       tokens: {
         colors,
+        gradients,
         fonts,
         fontSizes,
         fontWeights,
         lineHeights,
+        letterSpacings,
         spacing,
         sizes,
         radii,
         shadows,
         durations,
         easings,
+        borderWidths,
+        borders,
+        opacity,
+        zIndex,
+        blurs,
+        transitions,
       },
+      textStyles,
       keyframes,
       animationStyles,
       semanticTokens: {
@@ -57,10 +78,18 @@ export default defineConfig({
       recipes: {
         button: buttonRecipe,
         icon: iconRecipe,
+        card: cardRecipe,
+        input: inputRecipe,
+        chip: chipRecipe,
+        progress: progressRecipe,
       },
+      slotRecipes: {
+        step: stepRecipe,
+        option: optionRecipe,
+        connect: connectRecipe,
+        welcome: welcomeRecipe,
+      }
     },
   },
-
-  // The output directory for your css system
   outdir: "styled-system",
 });

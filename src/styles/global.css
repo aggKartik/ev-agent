@@ -1,177 +1,145 @@
-/* JetBrains Mono Font Loading */
-/* Note: You need to provide JetBrains Mono font files in public/fonts/jetbrains-mono/ */
-/* Expected files: JetBrainsMono-Light.woff2, JetBrainsMono-Regular.woff2, JetBrainsMono-Medium.woff2, JetBrainsMono-SemiBold.woff2, JetBrainsMono-Bold.woff2, JetBrainsMono-ExtraBold.woff2 */
+@import "@fontsource/bricolage-grotesque";
+@import "@fontsource/instrument-serif";
+@import "@fontsource/inter-tight";
+@import "@fontsource/jetbrains-mono";
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-Light.woff2") format("woff2");
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--colors-night-800);
+    color: var(--colors-cream-200);
+    font-family: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    height: 100vh;
+  }
 }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-Regular.woff2") format("woff2");
-}
+@layer utilities {
+  .app-container {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        ellipse 120% 80% at 50% 100%,
+        rgba(233, 74, 140, 0.35) 0%,
+        rgba(123, 75, 209, 0.18) 30%,
+        transparent 60%
+      ),
+      var(--colors-night-800);
+    display: flex;
+    flex-direction: column;
+  }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-Medium.woff2") format("woff2");
-}
+  .app-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+    z-index: 1;
+  }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-SemiBold.woff2") format("woff2");
-}
+  .horizon {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 45%;
+    pointer-events: none;
+    z-index: 0;
+    perspective: 400px;
+    overflow: hidden;
+    opacity: 0.55;
+  }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-Bold.woff2") format("woff2");
-}
+  .horizon-grid {
+    position: absolute;
+    left: -50%;
+    right: -50%;
+    bottom: -40%;
+    width: 200%;
+    height: 180%;
+    background-image:
+      linear-gradient(to right, rgba(233, 74, 140, 0.55) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(233, 74, 140, 0.55) 1px, transparent 1px);
+    background-size: 6% 10%;
+    transform: rotateX(62deg);
+    mask-image: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0) 90%
+    );
+    -webkit-mask-image: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0) 90%
+    );
+    animation: grid-drift 6s linear infinite;
+  }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono/JetBrainsMono-ExtraBold.woff2")
-    format("woff2");
-}
+  .sun {
+    position: absolute;
+    left: 50%;
+    bottom: 32%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffcb6b 0%, #ff7a59 45%, #e94a8c 100%);
+    z-index: 0;
+    pointer-events: none;
+    mask-image: repeating-linear-gradient(
+      to bottom,
+      #000 0 16px,
+      transparent 16px 22px,
+      #000 22px 38px,
+      transparent 38px 46px,
+      #000 46px 76px,
+      transparent 76px 88px,
+      #000 88px 160px
+    );
+    -webkit-mask-image: repeating-linear-gradient(
+      to bottom,
+      #000 0 16px,
+      transparent 16px 22px,
+      #000 22px 38px,
+      transparent 38px 46px,
+      #000 46px 76px,
+      transparent 76px 88px,
+      #000 88px 160px
+    );
+    opacity: 0.75;
+  }
 
-/* Base styles */
-:root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(220 25% 12%);
-  --card: hsl(220 30% 97%);
-  --secondary: hsl(220 20% 92%);
-  --muted-foreground: hsl(220 10% 45%);
-  --border: hsl(220 15% 82%);
-  --primary: hsl(250 85% 65%);
-  --accent: hsl(250 50% 20%);
+  .stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 12%, rgba(245, 234, 208, 0.9), transparent),
+      radial-gradient(1px 1px at 32% 8%, rgba(245, 234, 208, 0.7), transparent),
+      radial-gradient(1px 1px at 55% 22%, rgba(245, 234, 208, 0.9), transparent),
+      radial-gradient(
+        1.5px 1.5px at 70% 10%,
+        rgba(214, 255, 61, 0.85),
+        transparent
+      ),
+      radial-gradient(1px 1px at 82% 18%, rgba(245, 234, 208, 0.7), transparent),
+      radial-gradient(1px 1px at 88% 5%, rgba(245, 234, 208, 0.9), transparent),
+      radial-gradient(1px 1px at 22% 28%, rgba(245, 234, 208, 0.6), transparent),
+      radial-gradient(1px 1px at 45% 4%, rgba(245, 234, 208, 0.7), transparent);
+  }
 
-  --line: var(--border);
-  --header-bg: hsl(0 0% 100% / 0.8);
-  --chip-bg: hsl(220 20% 94% / 0.9);
-  --chip-line: hsl(220 15% 80%);
-  --sea-ink: var(--foreground);
-  --sea-ink-soft: var(--muted-foreground);
-  --link-bg-hover: hsl(250 85% 65% / 0.12);
-}
-
-.dark {
-  --background: hsl(220 20% 4%);
-  --foreground: hsl(0 0% 95%);
-  --card: hsl(220 15% 8%);
-  --secondary: hsl(220 15% 14%);
-  --muted-foreground: hsl(220 10% 55%);
-  --border: hsl(220 15% 16%);
-  --primary: hsl(250 85% 65%);
-  --accent: hsl(250 50% 20%);
-
-  --line: var(--border);
-  --header-bg: hsl(220 20% 4% / 0.75);
-  --chip-bg: hsl(220 15% 8% / 0.82);
-  --chip-line: hsl(220 15% 16%);
-  --sea-ink: var(--foreground);
-  --sea-ink-soft: var(--muted-foreground);
-  --link-bg-hover: hsl(250 85% 65% / 0.16);
-}
-
-body {
-  font-family:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    monospace;
-  font-size: 1rem;
-  line-height: 1.5;
-  background: var(--background);
-  color: var(--foreground);
-}
-
-.page-wrap {
-  margin: 0 auto;
-  max-width: 72rem;
-}
-
-.nav-link {
-  border-radius: 999px;
-  color: var(--sea-ink-soft);
-  padding: 0.38rem 0.78rem;
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    color 180ms ease;
-}
-
-.nav-link:hover {
-  background: var(--link-bg-hover);
-  color: var(--sea-ink);
-}
-
-.nav-link.is-active {
-  background: hsl(250 85% 65% / 0.2);
-  color: var(--sea-ink);
-}
-
-.island-kicker {
-  color: var(--sea-ink-soft);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.glass-strong {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease;
-}
-
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.gradient-text {
-  background-image: linear-gradient(
-    135deg,
-    hsl(250 85% 65%),
-    hsl(280 80% 70%),
-    hsl(220 90% 70%)
-  );
-  background-clip: text;
-  color: transparent;
-}
-
-.glow-primary {
-  box-shadow: 0 0 40px -10px hsl(250 85% 65% / 0.3);
-}
-
-.glow-subtle {
-  box-shadow: 0 0 60px -15px hsl(250 85% 65% / 0.15);
+  .step-enter {
+    animation: stepIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
 }

@@ -1,2 +1,10 @@
 export { buttonRecipe } from './button';
+export { cardRecipe } from './card';
+export { chipRecipe } from './chip';
+export { connectRecipe } from './connect';
 export { iconRecipe } from './icon';
+export { inputRecipe } from './input';
+export { optionRecipe } from './option';
+export { progressRecipe } from './progress';
+export { stepRecipe } from './step';
+export { welcomeRecipe } from './welcome';

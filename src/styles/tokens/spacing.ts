@@ -1,20 +1,37 @@
 export const spacing = {
-  xs: { value: '0.25rem' }, // 4px
-  sm: { value: '0.5rem' }, // 8px
-  md: { value: '1rem' }, // 16px
-  lg: { value: '1.5rem' }, // 24px
-  xl: { value: '2rem' }, // 32px
-  '2xl': { value: '3rem' }, // 48px
-  '3xl': { value: '4rem' }, // 64px
-  '4xl': { value: '6rem' }, // 96px
-  '5xl': { value: '8rem' }, // 128px
+  '0': { value: '0px' },
+  px: { value: '1px' },
+  '1': { value: '4px' },
+  '2': { value: '8px' },
+  '3': { value: '12px' },
+  '4': { value: '16px' },
+  '5': { value: '20px' },
+  '6': { value: '24px' },
+  '7': { value: '32px' },
+  '8': { value: '40px' },
+  '9': { value: '56px' },
+  '10': { value: '72px' },
+  '11': { value: '96px' },
+  '12': { value: '128px' },
 };
 
 export const sizes = {
   ...spacing,
-  full: { value: '100%' },
-  screen: { value: '100vh' },
-  min: { value: 'min-content' },
-  max: { value: 'max-content' },
-  fit: { value: 'fit-content' },
+  'icon-xs': { value: '12px' },
+  'icon-sm': { value: '16px' },
+  'icon-md': { value: '20px' },
+  'icon-lg': { value: '24px' },
+  'icon-xl': { value: '32px' },
+  'control-sm': { value: '32px' },
+  'control-md': { value: '40px' },
+  'control-lg': { value: '48px' },
+  'control-xl': { value: '56px' },
+  'avatar-sm': { value: '32px' },
+  'avatar-md': { value: '48px' },
+  'avatar-lg': { value: '72px' },
+  'container-sm': { value: '640px' },
+  'container-md': { value: '768px' },
+  'container-lg': { value: '1024px' },
+  'container-xl': { value: '1280px' },
+  'container-2xl': { value: '1536px' },
 };

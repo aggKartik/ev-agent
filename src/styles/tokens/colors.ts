@@ -1,262 +1,170 @@
-// Base color palettes
 export const colors = {
-  // Core neutrals
-  white: { value: '#FFFFFF' },
-  black: { value: '#000000' },
-  gray: {
-    50: { value: '#F2F2F2' },
-    100: { value: '#DBDEE6' },
-    200: { value: '#BDC4D2' },
-    300: { value: '#9BA3B5' },
-    400: { value: '#838A9B' },
-    500: { value: '#6A7284' },
-    600: { value: '#495063' },
-    700: { value: '#232838' },
-    800: { value: '#1D2233' },
-    900: { value: '#111520' },
-    950: { value: '#090B10' },
+  night: {
+    50: { value: '#e8e4f2' },
+    100: { value: '#c9c1dd' },
+    200: { value: '#9a8fb8' },
+    300: { value: '#6e6396' },
+    400: { value: '#4d4278' },
+    500: { value: '#392e63' },
+    600: { value: '#2c2452' },
+    700: { value: '#241a4a' },
+    800: { value: '#1a1438' },
+    900: { value: '#0f0a24' },
+    950: { value: '#070416' },
   },
-
-  // Primary (Cool violet)
-  primary: {
-    50: { value: '#F1EEFF' },
-    100: { value: '#E4DEFF' },
-    200: { value: '#CFC4FF' },
-    300: { value: '#B6A7FF' },
-    400: { value: '#9782F8' },
-    500: { value: '#7C6BF0' },
-    600: { value: '#6656D6' },
-    700: { value: '#5244B4' },
-    800: { value: '#3E348F' },
-    900: { value: '#2D1A66' },
-    950: { value: '#1D113F' },
+  peach: {
+    50: { value: '#fff2eb' },
+    100: { value: '#ffdccb' },
+    200: { value: '#ffc3a8' },
+    300: { value: '#ffb07f' },
+    400: { value: '#ff9566' },
+    500: { value: '#ff7a59' },
+    600: { value: '#e8613f' },
+    700: { value: '#c44a2d' },
+    800: { value: '#933620' },
+    900: { value: '#5f2314' },
   },
-
-  // Accent (Deep violet)
-  accent: {
-    50: { value: '#EFEAFF' },
-    100: { value: '#DED3FF' },
-    200: { value: '#C6B6FF' },
-    300: { value: '#A98FFF' },
-    400: { value: '#8A69EC' },
-    500: { value: '#2D1A66' },
-    600: { value: '#261651' },
-    700: { value: '#211346' },
-    800: { value: '#1B0F38' },
-    900: { value: '#150B2C' },
-    950: { value: '#0C0619' },
+  magenta: {
+    50: { value: '#fde8f1' },
+    100: { value: '#f8c4dd' },
+    200: { value: '#f29bc3' },
+    300: { value: '#ee6ea6' },
+    400: { value: '#e94a8c' },
+    500: { value: '#d03774' },
+    600: { value: '#ad2a60' },
+    700: { value: '#871f4a' },
+    800: { value: '#5d1432' },
+    900: { value: '#330a1c' },
   },
-
-  // Success (Green)
+  violet: {
+    50: { value: '#efe7fa' },
+    100: { value: '#d5c3f1' },
+    200: { value: '#b99be4' },
+    300: { value: '#9a71d9' },
+    400: { value: '#7b4bd1' },
+    500: { value: '#6438b8' },
+    600: { value: '#512b96' },
+    700: { value: '#3d2075' },
+    800: { value: '#281550' },
+    900: { value: '#150a2c' },
+  },
+  sun: {
+    50: { value: '#fff6df' },
+    100: { value: '#ffeab3' },
+    200: { value: '#ffdc85' },
+    300: { value: '#ffcb6b' },
+    400: { value: '#ffbf4a' },
+    500: { value: '#e8a233' },
+    600: { value: '#c48525' },
+    700: { value: '#926318' },
+    800: { value: '#5c3e0d' },
+    900: { value: '#2e1f05' },
+  },
+  lime: {
+    50: { value: '#f8ffd9' },
+    100: { value: '#eeffa6' },
+    200: { value: '#e2ff71' },
+    300: { value: '#d6ff3d' },
+    400: { value: '#c0e82d' },
+    500: { value: '#a4cc1f' },
+    600: { value: '#86a814' },
+    700: { value: '#5e7a0c' },
+    800: { value: '#384906' },
+    900: { value: '#1c2502' },
+  },
+  cream: {
+    50: { value: '#fdfaf2' },
+    100: { value: '#faf3e2' },
+    200: { value: '#f5ead0' },
+    300: { value: '#ebdfc0' },
+    400: { value: '#d4c89f' },
+    500: { value: '#b0a27a' },
+    600: { value: '#8a7fb5' },
+    700: { value: '#6a6194' },
+    800: { value: '#453f64' },
+    900: { value: '#231f36' },
+  },
   success: {
-    50: { value: '#F0FDF4' },
-    100: { value: '#DCFCE7' },
-    200: { value: '#BBF7D0' },
-    300: { value: '#86EFAC' },
-    400: { value: '#4ADE80' },
-    500: { value: '#22C55E' },
-    600: { value: '#16A34A' },
-    700: { value: '#15803D' },
-    800: { value: '#166534' },
-    900: { value: '#14532D' },
-    950: { value: '#052E16' },
+    50: { value: '#e9fbef' },
+    300: { value: '#6de1a0' },
+    500: { value: '#2ec16b' },
+    700: { value: '#1d7f45' },
   },
-
-  // Warning (Amber)
   warning: {
-    50: { value: '#FFFBEB' },
-    100: { value: '#FEF3C7' },
-    200: { value: '#FDE68A' },
-    300: { value: '#FCD34D' },
-    400: { value: '#FBBF24' },
-    500: { value: '#F59E0B' },
-    600: { value: '#D97706' },
-    700: { value: '#B45309' },
-    800: { value: '#92400E' },
-    900: { value: '#78350F' },
-    950: { value: '#451A03' },
+    50: { value: '#fff4e0' },
+    300: { value: '#ffc56a' },
+    500: { value: '#e89526' },
+    700: { value: '#9e600f' },
   },
-
-  // Error (Muted dark red)
-  error: {
-    50: { value: '#FEF2F2' },
-    100: { value: '#FEE2E2' },
-    200: { value: '#FECACA' },
-    300: { value: '#FCA5A5' },
-    400: { value: '#B45353' },
-    500: { value: '#7F1D1D' },
-    600: { value: '#6B1717' },
-    700: { value: '#581212' },
-    800: { value: '#450E0E' },
-    900: { value: '#320909' },
-    950: { value: '#1F0505' },
+  danger: {
+    50: { value: '#ffe6e9' },
+    300: { value: '#ff7a89' },
+    500: { value: '#e8344a' },
+    700: { value: '#99132a' },
   },
-
-  // Info (Light Blue)
   info: {
-    50: { value: '#F0F9FF' },
-    100: { value: '#E0F2FE' },
-    200: { value: '#BAE6FD' },
-    300: { value: '#7DD3FC' },
-    400: { value: '#38BDF8' },
-    500: { value: '#0EA5E9' },
-    600: { value: '#0284C7' },
-    700: { value: '#0369A1' },
-    800: { value: '#075985' },
-    900: { value: '#0C4A6E' },
-    950: { value: '#082F49' },
+    50: { value: '#e3f1ff' },
+    300: { value: '#6eb3f7' },
+    500: { value: '#2e7fd6' },
+    700: { value: '#174f88' },
   },
-
-  // Charts
-  chart: {
-    1: { value: '#6D28D9' },
-    2: { value: '#2EB88A' },
-    3: { value: '#E6853A' },
-    4: { value: '#B061DB' },
-    5: { value: '#D93680' },
+  alpha: {
+    'cream-03': { value: '#f5ead008' },
+    'cream-06': { value: '#f5ead00f' },
+    'cream-12': { value: '#f5ead01f' },
+    'cream-18': { value: '#f5ead02e' },
+    'cream-28': { value: '#f5ead047' },
+    'night-40': { value: '#0f0a2466' },
+    'night-60': { value: '#0f0a2499' },
+    'night-80': { value: '#0f0a24cc' },
+    'peach-20': { value: '#ff956633' },
+    'peach-40': { value: '#ff956666' },
+    'magenta-20': { value: '#e94a8c33' },
   },
 };
 
-// Semantic color tokens with light/dark mode support
 export const semanticColors = {
-  // Backgrounds
-  bg: {
-    canvas: {
-      value: { base: '{colors.white}', _dark: '{colors.gray.950}' },
-    },
-    default: {
-      value: { base: '{colors.white}', _dark: '{colors.gray.950}' },
-    },
-    subtle: {
-      value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' },
-    },
-    muted: {
-      value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
-    },
-    secondary: {
-      value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
-    },
-    card: {
-      value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' },
-    },
+  background: {
+    base: { value: '{colors.night.800}' },
+    raised: { value: '{colors.night.700}' },
+    overlay: { value: '{colors.alpha.night-80}' },
+    inverse: { value: '{colors.cream.200}' },
   },
-
-  // Text
+  surface: {
+    default: { value: '{colors.alpha.cream-06}' },
+    hover: { value: '{colors.alpha.cream-12}' },
+    active: { value: '{colors.alpha.cream-18}' },
+    sunken: { value: '{colors.night.900}' },
+  },
   text: {
-    default: {
-      value: { base: '{colors.gray.900}', _dark: '{colors.gray.50}' },
-    },
-    muted: {
-      value: { base: '{colors.gray.600}', _dark: '{colors.gray.400}' },
-    },
-    subtle: {
-      value: { base: '{colors.gray.500}', _dark: '{colors.gray.400}' },
-    },
-    inverted: {
-      value: { base: '{colors.white}', _dark: '{colors.gray.900}' },
-    },
-    card: {
-      value: { base: '{colors.gray.900}', _dark: '{colors.gray.50}' },
-    },
+    primary: { value: '{colors.cream.200}' },
+    secondary: { value: '{colors.cream.300}' },
+    muted: { value: '{colors.cream.600}' },
+    accent: { value: '{colors.peach.400}' },
+    'on-accent': { value: '{colors.night.900}' },
+    inverse: { value: '{colors.night.900}' },
+    danger: { value: '{colors.danger.300}' },
   },
-
-  // Borders
   border: {
-    default: {
-      value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' },
-    },
-    subtle: {
-      value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
-    },
-    muted: {
-      value: { base: '{colors.gray.300}', _dark: '{colors.gray.600}' },
-    },
-    input: {
-      value: { base: '{colors.gray.300}', _dark: '{colors.gray.700}' },
-    },
+    subtle: { value: '{colors.alpha.cream-12}' },
+    default: { value: '{colors.alpha.cream-18}' },
+    strong: { value: '{colors.alpha.cream-28}' },
+    accent: { value: '{colors.peach.400}' },
+    focus: { value: '{colors.peach.300}' },
   },
-
-  ring: {
-    default: {
-      value: { base: '{colors.primary.600}', _dark: '{colors.primary.500}' },
-    },
+  action: {
+    'primary-bg': { value: '{colors.peach.400}' },
+    'primary-bg-hover': { value: '{colors.peach.300}' },
+    'primary-fg': { value: '{colors.night.900}' },
+    'ghost-bg': { value: '{colors.alpha.cream-06}' },
+    'ghost-bg-hover': { value: '{colors.alpha.cream-12}' },
+    'ghost-fg': { value: '{colors.cream.200}' },
   },
-
-  // Primary
-  primary: {
-    solid: {
-      value: { base: '{colors.primary.600}', _dark: '{colors.primary.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.gray.50}' },
-    },
-    muted: {
-      value: { base: '{colors.primary.100}', _dark: '{colors.accent.500}' },
-    },
-  },
-
-  // Accent
-  accent: {
-    solid: {
-      value: { base: '{colors.accent.600}', _dark: '{colors.accent.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.gray.50}' },
-    },
-    muted: {
-      value: { base: '{colors.accent.100}', _dark: '{colors.accent.900}' },
-    },
-  },
-
-  // Success
-  success: {
-    solid: {
-      value: { base: '{colors.success.600}', _dark: '{colors.success.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.white}' },
-    },
-    muted: {
-      value: { base: '{colors.success.100}', _dark: '{colors.success.900}' },
-    },
-  },
-
-  // Warning
-  warning: {
-    solid: {
-      value: { base: '{colors.warning.500}', _dark: '{colors.warning.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.gray.900}', _dark: '{colors.gray.900}' },
-    },
-    muted: {
-      value: { base: '{colors.warning.100}', _dark: '{colors.warning.900}' },
-    },
-  },
-
-  // Error
-  error: {
-    solid: {
-      value: { base: '{colors.error.600}', _dark: '{colors.error.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.white}' },
-    },
-    muted: {
-      value: { base: '{colors.error.100}', _dark: '{colors.error.900}' },
-    },
-  },
-
-  // Info
-  info: {
-    solid: {
-      value: { base: '{colors.info.600}', _dark: '{colors.info.500}' },
-    },
-    contrast: {
-      value: { base: '{colors.white}', _dark: '{colors.white}' },
-    },
-    muted: {
-      value: { base: '{colors.info.100}', _dark: '{colors.info.900}' },
-    },
+  feedback: {
+    success: { value: '{colors.success.500}' },
+    warning: { value: '{colors.warning.500}' },
+    danger: { value: '{colors.danger.500}' },
+    info: { value: '{colors.info.500}' },
+    charge: { value: '{colors.lime.300}' },
   },
 };

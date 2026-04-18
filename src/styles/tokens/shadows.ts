@@ -1,43 +1,19 @@
 export const shadows = {
-  xs: { value: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' },
-  sm: {
-    value: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
-  },
-  md: {
+  none: { value: 'none' },
+  sm: { value: '0px 2px 6px -2px #0f0a2466' },
+  md: { value: '0px 6px 14px -4px #0f0a2480' },
+  lg: { value: '0px 12px 28px -8px #0f0a2499' },
+  xl: { value: '0px 24px 60px -20px #0f0a24b3' },
+  inner: { value: 'inset 0px 2px 4px 0px #0f0a2480' },
+  button: {
     value:
-      '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+      '0px 8px 24px -8px {colors.alpha.peach-40}, inset 0px 1px 0px 0px #ffffff66',
   },
-  lg: {
-    value:
-      '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-  },
-  xl: {
-    value:
-      '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-  },
-  '2xl': { value: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
+  card: { value: '0px 8px 24px -12px {colors.alpha.peach-40}' },
+  'glow-peach': { value: '0px 0px 20px 0px {colors.peach.400}' },
+  'glow-magenta': { value: '0px 0px 14px 0px {colors.magenta.400}' },
+  'glow-lime': { value: '0px 0px 10px 0px {colors.lime.300}' },
+  'focus-ring': { value: '0px 0px 0px 3px {colors.peach.300}' },
 };
 
-export const semanticShadows = {
-  card: {
-    value: {
-      base: '{shadows.md}',
-      _dark:
-        '0 4px 6px -1px rgba(255, 255, 255, 0.05), 0 2px 4px -2px rgba(255, 255, 255, 0.05)',
-    },
-  },
-  panel: {
-    value: {
-      base: '{shadows.lg}',
-      _dark:
-        '0 10px 15px -3px rgba(255, 255, 255, 0.05), 0 4px 6px -4px rgba(255, 255, 255, 0.05)',
-    },
-  },
-  modal: {
-    value: {
-      base: '{shadows.xl}',
-      _dark:
-        '0 20px 25px -5px rgba(255, 255, 255, 0.05), 0 8px 10px -6px rgba(255, 255, 255, 0.05)',
-    },
-  },
-};
+export const semanticShadows = {};

@@ -1,9 +1,10 @@
 export const radii = {
-  none: { value: '0' },
-  sm: { value: '0.25rem' }, // 4px
-  md: { value: '0.5rem' }, // 8px
-  lg: { value: '0.75rem' }, // 12px
-  xl: { value: '1rem' }, // 16px
-  '2xl': { value: '1.5rem' }, // 24px
-  full: { value: '9999px' },
+  none: { value: '0px' },
+  xs: { value: '4px' },
+  sm: { value: '8px' },
+  md: { value: '12px' },
+  lg: { value: '18px' },
+  xl: { value: '24px' },
+  '2xl': { value: '32px' },
+  pill: { value: '999px' },
 };
