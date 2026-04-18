@@ -7,7 +7,7 @@ const contentClass = css({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 'xs',
+  gap: '2',
 });
 
 const spinnerClass = css({

@@ -2,133 +2,67 @@ import { useForm } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
-import BatteryCapacityStep from '#/components/onboarding/BatteryCapacityStep';
-import IntroStep from '#/components/onboarding/IntroStep';
+import WelcomeStep from '#/components/onboarding/WelcomeStep';
+import IntroCarStep from '#/components/onboarding/IntroCarStep';
+import NameStep from '#/components/onboarding/NameStep';
 import MakeStep from '#/components/onboarding/MakeStep';
 import ModelStep from '#/components/onboarding/ModelStep';
-import RangeStep from '#/components/onboarding/RangeStep';
 import YearStep from '#/components/onboarding/YearStep';
-import { Text } from '#/components/Text';
+import ConnectStep from '#/components/onboarding/ConnectStep';
+import PrefsStep from '#/components/onboarding/PrefsStep';
+import SuccessStep from '#/components/onboarding/SuccessStep';
 import { css } from '../../../styled-system/css';
+import { progress } from '../../../styled-system/recipes';
 
 export const Route = createFileRoute('/onboarding/')({
   component: OnboardingComponent,
 });
 
 const steps = [
-  'INTRO',
+  'WELCOME',
+  'INTRO_CAR',
+  'NAME',
   'MAKE',
   'MODEL',
   'YEAR',
-  'BATTERY_CAPACITY',
-  'RANGE',
+  'CONNECT',
+  'PREFS',
+  'SUCCESS',
 ] as const;
 
 type Step = (typeof steps)[number];
 
 type OnboardingFormValues = {
+  name: string;
   make: string;
   model: string;
   year: string;
-  batteryCapacity: string;
-  range: string;
+  connect: string;
+  prefs: string[];
 };
 
-const firstFormStep: Step = 'MAKE';
-const lastStep: Step = 'RANGE';
-const formSteps = steps.filter((step) => step !== 'INTRO');
-const currentYear = new Date().getFullYear();
+const formSteps = steps.filter(
+  (step) => step !== 'WELCOME' && step !== 'INTRO_CAR' && step !== 'SUCCESS',
+);
 
 const pageClass = css({
   width: 'full',
-  maxWidth: '64rem',
+  maxWidth: '86rem',
   display: 'flex',
   flexDirection: 'column',
-  gap: '2xl',
+  gap: '10',
   alignItems: 'center',
-  px: { base: 'xl', md: '3xl' },
+  px: { base: '6', md: '10' },
 });
 
 const progressClass = css({
   width: 'full',
+  maxWidth: '64rem',
   display: 'flex',
   flexDirection: 'column',
-  gap: 'sm',
+  gap: '4',
+  mb: '10',
 });
-
-const progressTrackClass = css({
-  width: 'full',
-  height: 'sm',
-  borderRadius: 'full',
-  bg: 'bg.muted',
-  overflow: 'hidden',
-});
-
-const progressFillClass = css({
-  height: 'full',
-  bg: 'primary.solid',
-  transitionProperty: 'width',
-  transitionDuration: 'normal',
-  transitionTimingFunction: 'out',
-});
-
-function validateRequiredText(value: string, fieldLabel: string) {
-  if (!value.trim()) {
-    return `${fieldLabel} is required.`;
-  }
-  return undefined;
-}
-
-function validateYear(value: string) {
-  if (!value.trim()) {
-    return 'Year is required.';
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed)) {
-    return 'Year must be a whole number.';
-  }
-
-  if (parsed < 1990 || parsed > currentYear + 1) {
-    return `Year must be between 1990 and ${currentYear + 1}.`;
-  }
-
-  return undefined;
-}
-
-function validateBatteryCapacity(value: string) {
-  if (!value.trim()) {
-    return 'Battery capacity is required.';
-  }
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 'Battery capacity must be a valid number.';
-  }
-
-  if (parsed <= 0 || parsed > 300) {
-    return 'Battery capacity must be between 0 and 300 kWh.';
-  }
-
-  return undefined;
-}
-
-function validateRange(value: string) {
-  if (!value.trim()) {
-    return 'Range is required.';
-  }
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 'Range must be a valid number.';
-  }
-
-  if (parsed <= 0 || parsed > 1000) {
-    return 'Range must be between 0 and 1000 miles.';
-  }
-
-  return undefined;
-}
 
 function getNextStep(step: Step): Step {
   const index = steps.indexOf(step);
@@ -143,14 +77,11 @@ function getPreviousStep(step: Step): Step {
 }
 
 function getProgress(step: Step): number {
-  if (step === 'INTRO') {
-    return 0;
-  }
+  if (step === 'WELCOME' || step === 'INTRO_CAR') return 0;
+  if (step === 'SUCCESS') return 100;
 
   const formIndex = formSteps.indexOf(step);
-  if (formIndex < 0) {
-    return 0;
-  }
+  if (formIndex < 0) return 0;
 
   return ((formIndex + 1) / formSteps.length) * 100;
 }
@@ -158,18 +89,19 @@ function getProgress(step: Step): number {
 function OnboardingComponent() {
   const form = useForm({
     defaultValues: {
+      name: '',
       make: '',
       model: '',
       year: '',
-      batteryCapacity: '',
-      range: '',
+      connect: '',
+      prefs: [] as string[],
     } satisfies OnboardingFormValues,
     onSubmit: async ({ value }) => {
       console.info('Onboarding submit ready for backend integration', value);
     },
   });
 
-  const [currentStep, setCurrentStep] = useState<Step>('INTRO');
+  const [currentStep, setCurrentStep] = useState<Step>('WELCOME');
 
   const goToNextStep = () => {
     setCurrentStep((step) => getNextStep(step));
@@ -179,9 +111,12 @@ function OnboardingComponent() {
     setCurrentStep((step) => getPreviousStep(step));
   };
 
-  const progress = getProgress(currentStep);
+  const progressValue = getProgress(currentStep);
 
-  const showProgress = currentStep !== 'INTRO';
+  const showProgress =
+    currentStep !== 'WELCOME' &&
+    currentStep !== 'INTRO_CAR' &&
+    currentStep !== 'SUCCESS';
 
   const handleSubmit = () => {
     void form.handleSubmit();
@@ -189,12 +124,11 @@ function OnboardingComponent() {
 
   return (
     <Stack
-      height="screen"
+      minHeight="100dvh"
       width="full"
-      justifyContent="start"
+      justifyContent="center"
       alignItems="center"
-      pt={{ base: '4xl', md: '5xl' }}
-      bg="bg.default"
+      py={{ base: '8', md: '12' }}
       color="text.default"
     >
       <form
@@ -206,185 +140,131 @@ function OnboardingComponent() {
       >
         {showProgress ? (
           <Box className={progressClass}>
-            <Text as="p" size="sm" color="text.subtle">
-              Step {formSteps.indexOf(currentStep) + 1} of {formSteps.length}
-            </Text>
-            <div className={progressTrackClass} aria-hidden="true">
+            <div className={progress().track} aria-hidden="true">
               <div
-                className={progressFillClass}
-                style={{ width: `${progress}%` }}
+                className={progress({ fill: 'default' }).fill}
+                style={{ width: `${progressValue}%` }}
               />
             </div>
           </Box>
         ) : null}
 
-        {currentStep === 'INTRO' ? (
-          <IntroStep onContinue={() => setCurrentStep(firstFormStep)} />
+        {currentStep === 'WELCOME' ? (
+          <WelcomeStep onContinue={goToNextStep} />
+        ) : null}
+
+        {currentStep === 'INTRO_CAR' ? (
+          <IntroCarStep onNext={goToNextStep} />
+        ) : null}
+
+        {currentStep === 'NAME' ? (
+          <form.Field name="name">
+            {(field) => (
+              <NameStep
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
+          </form.Field>
         ) : null}
 
         {currentStep === 'MAKE' ? (
-          <form.Field
-            name="make"
-            validators={{
-              onChange: ({ value }) => validateRequiredText(value, 'Make'),
-              onBlur: ({ value }) => validateRequiredText(value, 'Make'),
-            }}
-          >
-            {(field) => {
-              const error = field.state.meta.errors[0];
-              const showError =
-                field.state.meta.isTouched || form.state.submissionAttempts > 0;
-
-              return (
-                <MakeStep
-                  value={field.state.value}
-                  error={typeof error === 'string' ? error : undefined}
-                  showError={showError}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  onBack={goToPreviousStep}
-                  onNext={() => {
-                    field.handleBlur();
-                    if (!validateRequiredText(field.state.value, 'Make')) {
-                      goToNextStep();
-                    }
-                  }}
-                />
-              );
-            }}
+          <form.Field name="make">
+            {(field) => (
+              <MakeStep
+                value={field.state.value}
+                nameState={form.getFieldValue('name')}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
           </form.Field>
         ) : null}
 
         {currentStep === 'MODEL' ? (
-          <form.Field
-            name="model"
-            validators={{
-              onChange: ({ value }) => validateRequiredText(value, 'Model'),
-              onBlur: ({ value }) => validateRequiredText(value, 'Model'),
-            }}
-          >
-            {(field) => {
-              const error = field.state.meta.errors[0];
-              const showError =
-                field.state.meta.isTouched || form.state.submissionAttempts > 0;
-
-              return (
-                <ModelStep
-                  value={field.state.value}
-                  error={typeof error === 'string' ? error : undefined}
-                  showError={showError}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  onBack={goToPreviousStep}
-                  onNext={() => {
-                    field.handleBlur();
-                    if (!validateRequiredText(field.state.value, 'Model')) {
-                      goToNextStep();
-                    }
-                  }}
-                />
-              );
-            }}
+          <form.Field name="model">
+            {(field) => (
+              <ModelStep
+                value={field.state.value}
+                makeState={form.getFieldValue('make')}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
           </form.Field>
         ) : null}
 
         {currentStep === 'YEAR' ? (
-          <form.Field
-            name="year"
-            validators={{
-              onChange: ({ value }) => validateYear(value),
-              onBlur: ({ value }) => validateYear(value),
-            }}
-          >
-            {(field) => {
-              const error = field.state.meta.errors[0];
-              const showError =
-                field.state.meta.isTouched || form.state.submissionAttempts > 0;
-
-              return (
-                <YearStep
-                  value={field.state.value}
-                  error={typeof error === 'string' ? error : undefined}
-                  showError={showError}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  onBack={goToPreviousStep}
-                  onNext={() => {
-                    field.handleBlur();
-                    if (!validateYear(field.state.value)) {
-                      goToNextStep();
-                    }
-                  }}
-                />
-              );
-            }}
+          <form.Field name="year">
+            {(field) => (
+              <YearStep
+                value={field.state.value}
+                makeState={form.getFieldValue('make')}
+                modelState={form.getFieldValue('model')}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
           </form.Field>
         ) : null}
 
-        {currentStep === 'BATTERY_CAPACITY' ? (
-          <form.Field
-            name="batteryCapacity"
-            validators={{
-              onChange: ({ value }) => validateBatteryCapacity(value),
-              onBlur: ({ value }) => validateBatteryCapacity(value),
-            }}
-          >
-            {(field) => {
-              const error = field.state.meta.errors[0];
-              const showError =
-                field.state.meta.isTouched || form.state.submissionAttempts > 0;
-
-              return (
-                <BatteryCapacityStep
-                  value={field.state.value}
-                  error={typeof error === 'string' ? error : undefined}
-                  showError={showError}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  onBack={goToPreviousStep}
-                  onNext={() => {
-                    field.handleBlur();
-                    if (!validateBatteryCapacity(field.state.value)) {
-                      goToNextStep();
-                    }
-                  }}
-                />
-              );
-            }}
+        {currentStep === 'CONNECT' ? (
+          <form.Field name="connect">
+            {(field) => (
+              <ConnectStep
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
           </form.Field>
         ) : null}
 
-        {currentStep === lastStep ? (
-          <form.Field
-            name="range"
-            validators={{
-              onChange: ({ value }) => validateRange(value),
-              onBlur: ({ value }) => validateRange(value),
-            }}
-          >
-            {(field) => {
-              const error = field.state.meta.errors[0];
-              const showError =
-                field.state.meta.isTouched || form.state.submissionAttempts > 0;
-
-              return (
-                <form.Subscribe selector={(state) => state.isSubmitting}>
-                  {(isSubmitting) => (
-                    <RangeStep
-                      value={field.state.value}
-                      error={typeof error === 'string' ? error : undefined}
-                      showError={showError}
-                      isSubmitting={isSubmitting}
-                      onChange={field.handleChange}
-                      onBlur={field.handleBlur}
-                      onBack={goToPreviousStep}
-                      onSubmit={handleSubmit}
-                    />
-                  )}
-                </form.Subscribe>
-              );
-            }}
+        {currentStep === 'PREFS' ? (
+          <form.Field name="prefs">
+            {(field) => (
+              <PrefsStep
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBack={goToPreviousStep}
+                onNext={() => {
+                  field.handleBlur();
+                  goToNextStep();
+                }}
+              />
+            )}
           </form.Field>
+        ) : null}
+
+        {currentStep === 'SUCCESS' ? (
+          <SuccessStep
+            makeState={form.getFieldValue('make')}
+            modelState={form.getFieldValue('model')}
+            onNext={() => {
+              handleSubmit();
+            }}
+          />
         ) : null}
       </form>
     </Stack>

@@ -81,9 +81,9 @@ export default defineConfig({
         card: cardRecipe,
         input: inputRecipe,
         chip: chipRecipe,
-        progress: progressRecipe,
       },
       slotRecipes: {
+        progress: progressRecipe,
         step: stepRecipe,
         option: optionRecipe,
         connect: connectRecipe,

@@ -1,109 +1,76 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Box, Stack } from 'styled-system/jsx';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
-import { Text } from '@/components/Text';
-import { css } from '../../../styled-system/css';
+import { VisualPanel } from '@/components/onboarding/VisualPanel';
+import { step } from '../../../styled-system/recipes/step';
+import { input } from '../../../styled-system/recipes/input';
 
 type YearStepProps = {
   value: string;
-  error?: string;
-  showError: boolean;
+  makeState?: string;
+  modelState?: string;
   onChange: (value: string) => void;
-  onBlur: () => void;
-  onBack: () => void;
   onNext: () => void;
+  onBack: () => void;
 };
 
-const containerClass = css({
-  width: 'full',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'xl',
-});
-
-const inputClass = css({
-  width: 'full',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'border.input',
-  borderRadius: 'md',
-  bg: 'bg.card',
-  color: 'text.default',
-  px: 'md',
-  py: 'sm',
-  fontSize: 'md',
-  _placeholder: {
-    color: 'text.subtle',
-  },
-  _focusVisible: {
-    outlineWidth: '2px',
-    outlineStyle: 'solid',
-    outlineColor: 'ring.default',
-    outlineOffset: '2px',
-  },
-});
-
-const errorClass = css({
-  color: 'error.solid',
-  fontSize: 'sm',
-  mt: 'xs',
-});
-
-export default function YearStep(props: YearStepProps) {
-  const { value, error, showError, onChange, onBlur, onBack, onNext } = props;
+export default function YearStep({
+  value,
+  makeState,
+  modelState,
+  onChange,
+  onNext,
+  onBack,
+}: YearStepProps) {
+  const stepClasses = step();
+  const canAdvance = value.length === 4;
 
   return (
-    <div className={containerClass}>
-      <Box>
-        <Text as="h1" size="4xl" weight="bold" color="text.default" mb="sm">
-          What year is your EV?
-        </Text>
-        <Text as="p" size="md" lineHeight="relaxed" color="text.subtle">
-          Enter the model year of your vehicle.
-        </Text>
-      </Box>
+    <div className={stepClasses.card}>
+      <div>
+        <div className={stepClasses.kicker}>04 · THE YEAR</div>
+        <h1 className={stepClasses.title}>
+          Lastly, the <em>model year</em>.
+        </h1>
+        <p className={stepClasses.desc}>
+          Manufacturers tweak battery packs between years. We'll use this to
+          pull the exact EPA range.
+        </p>
 
-      <Box>
-        <label htmlFor="year-input">
-          <Text
-            as="span"
-            size="sm"
-            weight="semibold"
-            color="text.default"
-            mb="sm"
+        <div className={stepClasses.field}>
+          <input
+            className={input()}
+            type="number"
+            placeholder="YYYY"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && canAdvance) onNext();
+            }}
+          />
+        </div>
+
+        <div className={stepClasses.actions}>
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
           >
-            Model year
-          </Text>
-        </label>
-        <input
-          id="year-input"
-          type="number"
-          inputMode="numeric"
-          className={inputClass}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          placeholder="2024"
-        />
-        {showError && error ? <p className={errorClass}>{error}</p> : null}
-      </Box>
-
-      <Stack direction="row" gap="sm" justify="space-between">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          leadingIcon={<Icon icon={ArrowLeft} size="sm" tone="default" />}
-        >
-          Back
-        </Button>
-        <Button
-          onClick={onNext}
-          trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
-        >
-          Continue
-        </Button>
-      </Stack>
+            Back
+          </Button>
+          <Button
+            disabled={!canAdvance}
+            onClick={onNext}
+            trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
+          >
+            Continue
+          </Button>
+        </div>
+      </div>
+      <VisualPanel
+        kind="year"
+        data={{ make: makeState, model: modelState, year: value }}
+      />
     </div>
   );
 }

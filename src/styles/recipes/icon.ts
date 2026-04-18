@@ -12,20 +12,20 @@ export const iconRecipe = defineRecipe({
   variants: {
     size: {
       sm: {
-        width: 'md',
-        height: 'md',
+        width: 'icon-sm',
+        height: 'icon-sm',
       },
       md: {
-        width: 'lg',
-        height: 'lg',
+        width: 'icon-md',
+        height: 'icon-md',
       },
       lg: {
-        width: 'xl',
-        height: 'xl',
+        width: 'icon-lg',
+        height: 'icon-lg',
       },
       xl: {
-        width: '2xl',
-        height: '2xl',
+        width: 'icon-xl',
+        height: 'icon-xl',
       },
     },
     tone: {
