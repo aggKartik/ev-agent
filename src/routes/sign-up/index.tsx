@@ -80,7 +80,6 @@ function SignUpRoute() {
               Sign in
             </Link>
           </Text>
-          <Box id="clerk-captcha" />
         </Stack>
       </Box>
     </AuthShell>
