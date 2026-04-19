@@ -79,7 +79,6 @@ function SignInRoute() {
               Create an account
             </Link>
           </Text>
-          <Box id="clerk-captcha" />
         </Stack>
       </Box>
     </AuthShell>
