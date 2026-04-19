@@ -1,13 +1,11 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
-import ConnectStep, {
-  type TeslaPrefill,
-} from '#/components/onboarding/ConnectStep';
+import ConnectStep from '#/components/onboarding/ConnectStep';
 import IntroCarStep from '#/components/onboarding/IntroCarStep';
 import MakeStep from '#/components/onboarding/MakeStep';
 import ModelStep from '#/components/onboarding/ModelStep';
@@ -15,6 +13,7 @@ import NameStep from '#/components/onboarding/NameStep';
 import PrefsStep from '#/components/onboarding/PrefsStep';
 import SuccessStep from '#/components/onboarding/SuccessStep';
 import YearStep from '#/components/onboarding/YearStep';
+import type { TeslaPrefill } from '#/lib/useTeslaPrefill';
 import { css } from '../../../styled-system/css';
 import { progress } from '../../../styled-system/recipes';
 
@@ -55,19 +54,9 @@ const formSteps = steps.filter(
 
 type FormStep = (typeof formSteps)[number];
 
-/**
- * Steps that we auto-skip when a Tesla link has populated make/model/year.
- * The manual-entry steps are only shown when the user explicitly opted out
- * of the Tesla link or the Tesla data is insufficient.
- */
-const prefillableSteps: readonly FormStep[] = ['MAKE', 'MODEL', 'YEAR'];
-
 type FormStepNavConfig = {
   canAdvance: (values: OnboardingFormValues) => boolean;
-  getPrimaryActionLabel?: (
-    values: OnboardingFormValues,
-    ctx: { teslaLinked: boolean; hasTeslaPrefill: boolean },
-  ) => string;
+  getPrimaryActionLabel?: (values: OnboardingFormValues) => string;
 };
 
 const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
@@ -85,11 +74,8 @@ const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
   },
   CONNECT: {
     canAdvance: () => true,
-    getPrimaryActionLabel: (_values, { teslaLinked, hasTeslaPrefill }) => {
-      if (teslaLinked && hasTeslaPrefill) return 'Continue';
-      if (teslaLinked) return 'Continue';
-      return 'Skip for now';
-    },
+    getPrimaryActionLabel: (values) =>
+      values.connect ? 'Continue' : 'Skip for now',
   },
   PREFS: {
     canAdvance: () => true,
@@ -187,14 +173,26 @@ const navEdgeButtonClass = css({
   },
 });
 
-function getVisibleSteps(hasTeslaPrefill: boolean): Step[] {
-  if (!hasTeslaPrefill) return [...steps];
-  return steps.filter((step) => !prefillableSteps.includes(step as FormStep));
+function getNextStep(step: Step): Step {
+  const index = steps.indexOf(step);
+  const next = steps[index + 1];
+  return next ?? step;
 }
 
-function getVisibleFormSteps(hasTeslaPrefill: boolean): FormStep[] {
-  if (!hasTeslaPrefill) return [...formSteps];
-  return formSteps.filter((step) => !prefillableSteps.includes(step));
+function getPreviousStep(step: Step): Step {
+  const index = steps.indexOf(step);
+  const previous = steps[index - 1];
+  return previous ?? step;
+}
+
+function getProgress(step: Step): number {
+  if (step === 'INTRO_CAR') return 0;
+  if (step === 'SUCCESS') return 100;
+
+  const formIndex = formSteps.indexOf(step);
+  if (formIndex < 0) return 0;
+
+  return ((formIndex + 1) / formSteps.length) * 100;
 }
 
 function OnboardingComponent() {
@@ -215,83 +213,52 @@ function OnboardingComponent() {
   const [currentStep, setCurrentStep] = useState<Step>('INTRO_CAR');
   const [transitionKey, setTransitionKey] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
-  const [teslaPrefill, setTeslaPrefillState] = useState<TeslaPrefill | null>(
-    null,
-  );
 
   const formValues = useStore(form.store, (state) => state.values);
 
-  const hasTeslaPrefill =
-    teslaPrefill !== null &&
-    Boolean(teslaPrefill.model) &&
-    Boolean(teslaPrefill.year);
-
-  const visibleSteps = useMemo(
-    () => getVisibleSteps(hasTeslaPrefill),
-    [hasTeslaPrefill],
-  );
-  const visibleFormSteps = useMemo(
-    () => getVisibleFormSteps(hasTeslaPrefill),
-    [hasTeslaPrefill],
-  );
-
   const goToNextStep = useCallback(() => {
     setDirection('forward');
-    setCurrentStep((step) => {
-      const index = visibleSteps.indexOf(step);
-      if (index === -1) return step;
-      return visibleSteps[index + 1] ?? step;
-    });
+    setCurrentStep((step) => getNextStep(step));
     setTransitionKey((value) => value + 1);
-  }, [visibleSteps]);
+  }, []);
 
   const goToPreviousStep = useCallback(() => {
     setDirection('back');
-    setCurrentStep((step) => {
-      const index = visibleSteps.indexOf(step);
-      if (index === -1) return step;
-      return visibleSteps[index - 1] ?? step;
-    });
+    setCurrentStep((step) => getPreviousStep(step));
     setTransitionKey((value) => value + 1);
-  }, [visibleSteps]);
+  }, []);
 
-  // Apply Tesla prefill into the form fields. Only overwrite fields that are
+  // Push Tesla-derived values into the form. Only overwrites fields that are
   // still empty so a user who typed a make/model manually before Tesla data
-  // arrived doesn't have their input clobbered.
+  // arrived doesn't lose their input. The legacy "selected provider" field
+  // is also set so the CONNECT step's primary action reads "Continue".
   const handleTeslaPrefill = useCallback(
-    (prefill: TeslaPrefill | null) => {
-      setTeslaPrefillState(prefill);
-      if (!prefill) return;
-      if (prefill.make) {
+    (prefill: TeslaPrefill) => {
+      form.setFieldValue('connect', 'Tesla');
+      if (prefill.make && !form.getFieldValue('make')) {
         form.setFieldValue('make', prefill.make);
       }
-      if (prefill.model) {
+      if (prefill.model && !form.getFieldValue('model')) {
         form.setFieldValue('model', prefill.model);
       }
-      if (prefill.year) {
+      if (prefill.year && !form.getFieldValue('year')) {
         form.setFieldValue('year', String(prefill.year));
       }
     },
     [form],
   );
 
-  const progressValue = useMemo(() => {
-    if (currentStep === 'INTRO_CAR') return 0;
-    if (currentStep === 'SUCCESS') return 100;
-    const formIndex = visibleFormSteps.indexOf(currentStep as FormStep);
-    if (formIndex < 0) return 0;
-    return ((formIndex + 1) / visibleFormSteps.length) * 100;
-  }, [currentStep, visibleFormSteps]);
+  const progressValue = getProgress(currentStep);
 
   const showProgress = currentStep !== 'INTRO_CAR' && currentStep !== 'SUCCESS';
 
-  const isFormStep = visibleFormSteps.includes(currentStep as FormStep);
+  const isFormStep = formSteps.includes(currentStep as FormStep);
 
   const showPinnedFormNav = isFormStep;
 
-  const stepIndex = visibleSteps.indexOf(currentStep);
+  const stepIndex = steps.indexOf(currentStep);
   const currentProgressIndex = showProgress
-    ? visibleFormSteps.indexOf(currentStep as FormStep)
+    ? formSteps.indexOf(currentStep as FormStep)
     : -1;
 
   const progressLabel =
@@ -299,7 +266,7 @@ function OnboardingComponent() {
       ? 'INTRO'
       : currentStep === 'SUCCESS'
         ? 'COMPLETE'
-        : `STEP ${currentProgressIndex + 1} OF ${visibleFormSteps.length}`;
+        : `STEP ${currentProgressIndex + 1} OF ${formSteps.length}`;
 
   const currentFormStepConfig = isFormStep
     ? (formStepNavConfig[currentStep as FormStep] ?? defaultFormStepNavConfig)
@@ -310,11 +277,7 @@ function OnboardingComponent() {
     : true;
 
   const primaryActionLabel =
-    (isFormStep &&
-      currentFormStepConfig.getPrimaryActionLabel?.(formValues, {
-        teslaLinked: formValues.connect === 'Tesla',
-        hasTeslaPrefill,
-      })) ||
+    (isFormStep && currentFormStepConfig.getPrimaryActionLabel?.(formValues)) ||
     'Continue';
 
   const shouldTopAlignStage = currentStep === 'PREFS';
@@ -339,29 +302,13 @@ function OnboardingComponent() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [canAdvance, goToNextStep, goToPreviousStep, showPinnedFormNav]);
 
-  // If the current step disappears from the visible list (e.g. Tesla prefill
-  // lands while the user is still on MAKE), jump forward so we never render
-  // a hidden step.
-  useEffect(() => {
-    if (visibleSteps.includes(currentStep)) return;
-    setDirection('forward');
-    const canonicalIndex = steps.indexOf(currentStep);
-    const nextVisible =
-      visibleSteps.find((step) => steps.indexOf(step) > canonicalIndex) ??
-      visibleSteps[visibleSteps.length - 1];
-    if (nextVisible) {
-      setCurrentStep(nextVisible);
-      setTransitionKey((value) => value + 1);
-    }
-  }, [visibleSteps, currentStep]);
-
   const handleSubmit = () => {
     void form.handleSubmit();
   };
 
   const headerNode = (
     <Header
-      sessionLabel={`SESSION · ${String(stepIndex + 1).padStart(2, '0')}/${String(visibleSteps.length).padStart(2, '0')}`}
+      sessionLabel={`SESSION · ${String(stepIndex + 1).padStart(2, '0')}/${String(steps.length).padStart(2, '0')}`}
       buildLabel="v1.0 BETA"
       showMeta
     />
@@ -450,7 +397,6 @@ function OnboardingComponent() {
                   value={field.state.value}
                   onChange={field.handleChange}
                   onTeslaPrefill={handleTeslaPrefill}
-                  onAutoAdvance={goToNextStep}
                 />
               )}
             </form.Field>
