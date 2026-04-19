@@ -29,7 +29,7 @@ parameters without complaint.
 └───┬────┘                                  └───────────┬───────────────┘
     │                                                   │
     │  1. click "Connect Tesla"                         │
-    │  GET /-api/oauth/tesla/connect (Clerk-protected)  │
+    │  GET /api/oauth/tesla/connect (Clerk-protected)   │
     │  server: generate state + PKCE verifier           │
     │  server: sign + drop HttpOnly cookie              │
     │                                                   │
@@ -37,16 +37,16 @@ parameters without complaint.
     │──────────────────────────────────────────────────>│
     │     response_type=code                            │
     │     client_id=$TESLA_CLIENT_ID                    │
-    │     redirect_uri=$OAUTH_BASE_URL/-api/oauth/tesla/callback │
+    │     redirect_uri=$OAUTH_BASE_URL/api/oauth/tesla/callback │
     │     scope=openid offline_access vehicle_device_data│
     │     state=$STATE                                  │
     │     code_challenge=$CHAL code_challenge_method=S256│
     │                                                   │
     │  3. user authenticates + consents                 │
     │<──────────────────────────────────────────────────│
-    │     302 → $OAUTH_BASE_URL/-api/oauth/tesla/callback?code=&state= │
+    │     302 → $OAUTH_BASE_URL/api/oauth/tesla/callback?code=&state= │
     │                                                   │
-    │  4. GET /-api/oauth/tesla/callback (Clerk-protected) │
+    │  4. GET /api/oauth/tesla/callback (Clerk-protected)  │
     │     server: verify signed cookie, state match,    │
     │             clerkUserId match                     │
     │                                                   │

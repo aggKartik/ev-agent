@@ -145,7 +145,7 @@ export default function ConnectStep({ value, onChange }: ConnectStepProps) {
         // Same-tab redirect: OAuth providers ship framing / popup-blocker
         // hostility, and mobile Safari kills OAuth popups silently. The
         // onboarding shell resumes on the CONNECT step via `?connected={slug}`.
-        window.location.assign(`/-api/oauth/${tile.slug}/connect`);
+        window.location.assign(`/api/oauth/${tile.slug}/connect`);
       }
     },
     [onChange],

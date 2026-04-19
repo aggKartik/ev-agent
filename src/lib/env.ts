@@ -9,7 +9,7 @@ const envSchema = z.object({
 
   // Shared OAuth config. Token encryption is provider-agnostic; the base URL
   // is used to derive per-provider callback URIs as
-  // `${OAUTH_BASE_URL}/-api/oauth/{slug}/callback`.
+  // `${OAUTH_BASE_URL}/api/oauth/{slug}/callback`.
   OAUTH_TOKEN_ENCRYPTION_KEY: z.string().optional(),
   OAUTH_BASE_URL: z.string().url().optional(),
 

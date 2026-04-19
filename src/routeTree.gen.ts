@@ -15,6 +15,9 @@ import { Route as SsoCallbackIndexRouteImport } from './routes/sso-callback/inde
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
+import { Route as ApiTrpcTrpcRouteImport } from './routes/api.trpc.$trpc'
+import { Route as ApiOauthProviderConnectRouteImport } from './routes/api.oauth.$provider.connect'
+import { Route as ApiOauthProviderCallbackRouteImport } from './routes/api.oauth.$provider.callback'
 
 const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
   id: '/onboarding',
@@ -46,6 +49,22 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const ApiTrpcTrpcRoute = ApiTrpcTrpcRouteImport.update({
+  id: '/api/trpc/$trpc',
+  path: '/api/trpc/$trpc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOauthProviderConnectRoute = ApiOauthProviderConnectRouteImport.update({
+  id: '/api/oauth/$provider/connect',
+  path: '/api/oauth/$provider/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOauthProviderCallbackRoute =
+  ApiOauthProviderCallbackRouteImport.update({
+    id: '/api/oauth/$provider/callback',
+    path: '/api/oauth/$provider/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +73,9 @@ export interface FileRoutesByFullPath {
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
+  '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
+  '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
+  '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,6 +83,9 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInIndexRoute
   '/sign-up': typeof SignUpIndexRoute
   '/sso-callback': typeof SsoCallbackIndexRoute
+  '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
+  '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
+  '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,6 +95,9 @@ export interface FileRoutesById {
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
+  '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
+  '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
+  '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,8 +108,19 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
+    | '/api/trpc/$trpc'
+    | '/api/oauth/$provider/callback'
+    | '/api/oauth/$provider/connect'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/onboarding' | '/sign-in' | '/sign-up' | '/sso-callback'
+  to:
+    | '/'
+    | '/onboarding'
+    | '/sign-in'
+    | '/sign-up'
+    | '/sso-callback'
+    | '/api/trpc/$trpc'
+    | '/api/oauth/$provider/callback'
+    | '/api/oauth/$provider/connect'
   id:
     | '__root__'
     | '/'
@@ -90,6 +129,9 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
+    | '/api/trpc/$trpc'
+    | '/api/oauth/$provider/callback'
+    | '/api/oauth/$provider/connect'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -98,6 +140,9 @@ export interface RootRouteChildren {
   SignInIndexRoute: typeof SignInIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
   SsoCallbackIndexRoute: typeof SsoCallbackIndexRoute
+  ApiTrpcTrpcRoute: typeof ApiTrpcTrpcRoute
+  ApiOauthProviderCallbackRoute: typeof ApiOauthProviderCallbackRoute
+  ApiOauthProviderConnectRoute: typeof ApiOauthProviderConnectRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -144,6 +189,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof OnboardingRouteRoute
     }
+    '/api/trpc/$trpc': {
+      id: '/api/trpc/$trpc'
+      path: '/api/trpc/$trpc'
+      fullPath: '/api/trpc/$trpc'
+      preLoaderRoute: typeof ApiTrpcTrpcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/oauth/$provider/connect': {
+      id: '/api/oauth/$provider/connect'
+      path: '/api/oauth/$provider/connect'
+      fullPath: '/api/oauth/$provider/connect'
+      preLoaderRoute: typeof ApiOauthProviderConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/oauth/$provider/callback': {
+      id: '/api/oauth/$provider/callback'
+      path: '/api/oauth/$provider/callback'
+      fullPath: '/api/oauth/$provider/callback'
+      preLoaderRoute: typeof ApiOauthProviderCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -165,6 +231,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignInIndexRoute: SignInIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
   SsoCallbackIndexRoute: SsoCallbackIndexRoute,
+  ApiTrpcTrpcRoute: ApiTrpcTrpcRoute,
+  ApiOauthProviderCallbackRoute: ApiOauthProviderCallbackRoute,
+  ApiOauthProviderConnectRoute: ApiOauthProviderConnectRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

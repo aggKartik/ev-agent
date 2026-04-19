@@ -11,7 +11,7 @@ import type { OAuthProvider } from './types';
 
 /**
  * Derive the OAuth redirect URI for a given provider. Falls back to
- * OAUTH_BASE_URL + '/-api/oauth/{slug}/callback' so adding a new provider
+ * OAUTH_BASE_URL + '/api/oauth/{slug}/callback' so adding a new provider
  * doesn't require a new env var unless the provider insists on a
  * bespoke host.
  */
@@ -22,7 +22,7 @@ function resolveRedirectUri(providerSlug: string): string {
       'OAUTH_BASE_URL is not configured; cannot derive OAuth redirect URI.',
     );
   }
-  return `${base}/-api/oauth/${providerSlug}/callback`;
+  return `${base}/api/oauth/${providerSlug}/callback`;
 }
 
 function redirectToOnboarding(params: Record<string, string>): Response {
@@ -57,7 +57,7 @@ function resolveProvider(
 }
 
 /**
- * GET /-api/oauth/{provider}/connect
+ * GET /api/oauth/{provider}/connect
  *
  * Requires a Clerk session. Generates state + PKCE, writes the signed
  * cookie, and 302s to the provider's authorize URL.
@@ -93,7 +93,7 @@ export async function handleOAuthConnect(
 }
 
 /**
- * GET /-api/oauth/{provider}/callback
+ * GET /api/oauth/{provider}/callback
  *
  * Verifies the signed state cookie, exchanges the authorization code,
  * encrypts + persists the tokens, and redirects back to onboarding with
