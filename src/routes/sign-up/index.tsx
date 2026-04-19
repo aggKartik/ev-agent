@@ -2,8 +2,11 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Box, Stack } from 'styled-system/jsx';
 import AuthShell from '#/components/auth/AuthShell';
 import GoogleButton from '#/components/auth/GoogleButton';
+import TestUserButton from '#/components/auth/TestUserButton';
 import { Text } from '#/components/Text';
+import { isTestUserAuthEnabled } from '#/lib/devFlags';
 import { useGoogleOAuth } from '#/lib/useGoogleOAuth';
+import { useTestUserAuth } from '#/lib/useTestUserAuth';
 import { css } from '../../../styled-system/css';
 import { step } from '../../../styled-system/recipes/step';
 
@@ -26,7 +29,11 @@ const altLinkAnchorClass = css({
 
 function SignUpRoute() {
   const { start, submitting, error } = useGoogleOAuth('sign-up');
+  const testAuth = useTestUserAuth();
+  const showTestUser = isTestUserAuthEnabled();
   const stepClasses = step({ single: true });
+
+  const displayedError = error ?? (showTestUser ? testAuth.error : null);
 
   return (
     <AuthShell>
@@ -41,16 +48,39 @@ function SignUpRoute() {
             preferences next.
           </Text>
           <Stack direction="row" className={actionsClass}>
-            <GoogleButton onClick={start} loading={submitting} />
+            <GoogleButton
+              onClick={start}
+              loading={submitting}
+              disabled={testAuth.submitting}
+            />
+            {showTestUser ? (
+              <TestUserButton
+                onClick={testAuth.start}
+                loading={testAuth.submitting}
+                disabled={submitting}
+              />
+            ) : null}
           </Stack>
-          {error ? (
+          {showTestUser ? (
+            <Text
+              as="div"
+              textStyle="mono-meta"
+              color="cream.600"
+              marginTop="3"
+              maxWidth="420px"
+            >
+              Dev only. Signs up as <code>{testAuth.email}</code> using Clerk's
+              test-mode flow — no Google, no real email.
+            </Text>
+          ) : null}
+          {displayedError ? (
             <Text
               textStyle="caption"
               color="magenta.400"
               marginTop="4"
               maxWidth="420px"
             >
-              {error}
+              {displayedError}
             </Text>
           ) : null}
           <Text as="div" textStyle="mono-meta" color="cream.600" marginTop="4">
