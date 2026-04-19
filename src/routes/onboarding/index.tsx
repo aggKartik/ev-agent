@@ -129,7 +129,7 @@ const stageClass = css({
   flex: 1,
   minHeight: 0,
   display: 'flex',
-  alignItems: 'center',
+  alignItems: { base: 'flex-start', md: 'center' },
   justifyContent: 'center',
   px: { base: '5', md: '10' },
   pt: { base: '6', md: '6' },
@@ -349,9 +349,9 @@ function OnboardingComponent() {
 
           <Box
             className={stageClass}
-            style={{
-              alignItems: shouldTopAlignStage ? 'flex-start' : 'center',
-            }}
+            style={
+              shouldTopAlignStage ? { alignItems: 'flex-start' } : undefined
+            }
           >
             <Box
               key={transitionKey}
