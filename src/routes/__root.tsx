@@ -50,7 +50,7 @@ export const Route = createRootRoute({
           'ev/agent — route, charge, and wander with your electric vehicle.',
       },
       {
-        title: 'ev/agent — route · charge · wander',
+        title: 'ev/agent',
       },
     ],
     links: [
