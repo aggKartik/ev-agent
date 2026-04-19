@@ -1,6 +1,10 @@
+import { useCallback } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
+import Spinner from '#/components/Spinner';
+import { trpc } from '#/lib/trpc';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
+import { chip } from '../../../styled-system/recipes/chip';
 import { connect } from '../../../styled-system/recipes/connect';
 import { step } from '../../../styled-system/recipes/step';
 
@@ -9,29 +13,143 @@ type ConnectStepProps = {
   onChange: (value: string) => void;
 };
 
+type ProviderTile = {
+  slug: string;
+  label: string;
+  description: string;
+  /** If true, clicking the tile kicks off OAuth. Otherwise it's placeholder copy. */
+  oauth: boolean;
+  icon: string;
+};
+
+/**
+ * Presentational overrides keyed by provider slug. Every OAuth-enabled
+ * integration registered in `src/server/integrations/*` flows through
+ * `trpc.oauth.list` and picks up its icon glyph here; anything not yet
+ * wired server-side falls back to the static placeholder tiles below.
+ */
+const providerIcons: Record<string, string> = {
+  tesla: 'T',
+};
+
+const placeholderTiles: ProviderTile[] = [
+  {
+    slug: 'rivian',
+    label: 'Rivian',
+    description:
+      'State of charge, camp mode preferences, Adventure Network stalls.',
+    oauth: false,
+    icon: 'R',
+  },
+  {
+    slug: 'smartcar',
+    label: 'Smartcar',
+    description: 'One link that covers Ford, Hyundai, Kia, Chevrolet and more.',
+    oauth: false,
+    icon: 'S',
+  },
+];
+
+type ProviderOptionProps = {
+  tile: ProviderTile;
+  selected: boolean;
+  onSelect: () => void;
+};
+
+function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
+  const cardClasses = connect();
+  const chipClasses = chip();
+
+  // Per-tile status query; skipped for non-OAuth placeholder tiles. One
+  // query per provider keeps the generic oauth.status endpoint simple and
+  // lets React Query dedupe/cached responses per provider key.
+  const status = trpc.oauth.status.useQuery(
+    { provider: tile.slug },
+    {
+      enabled: tile.oauth,
+      staleTime: 0,
+      refetchOnWindowFocus: true,
+    },
+  );
+
+  const isConnected = tile.oauth && status.data?.linked === true;
+  const isLoading = tile.oauth && status.isLoading && !status.data;
+
+  const style = selected
+    ? {
+        borderColor: 'var(--colors-peach-400)',
+        background:
+          'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
+      }
+    : {};
+
+  return (
+    <button
+      type="button"
+      className={cardClasses.card}
+      style={style}
+      onClick={onSelect}
+      aria-pressed={selected}
+    >
+      <Box className={cardClasses.icon}>{tile.icon}</Box>
+      <Box className={cardClasses.body} textAlign="left">
+        <Box className={cardClasses.title}>Connect {tile.label}</Box>
+        <Box className={cardClasses.desc}>{tile.description}</Box>
+      </Box>
+      {tile.oauth ? (
+        <Box
+          className={chipClasses}
+          aria-live="polite"
+          data-state={
+            isConnected ? 'connected' : isLoading ? 'loading' : 'idle'
+          }
+        >
+          {isLoading ? (
+            <>
+              <Spinner size="0.9em" label={`Checking ${tile.label}`} />
+              CHECKING
+            </>
+          ) : isConnected ? (
+            'CONNECTED'
+          ) : (
+            'LINK'
+          )}
+        </Box>
+      ) : null}
+    </button>
+  );
+}
+
 export default function ConnectStep({ value, onChange }: ConnectStepProps) {
   const stepClasses = step();
 
-  const providers = [
-    {
-      key: 'Tesla',
-      icon: 'T',
-      title: 'Connect Tesla',
-      desc: 'Live battery %, preheat the cabin, send routes to your car.',
+  // Every provider registered via `registerProvider()` appears here — the
+  // UI is fully registry-driven and adding a new integration requires zero
+  // component changes.
+  const providers = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
+
+  const oauthTiles: ProviderTile[] = (providers.data ?? []).map((p) => ({
+    slug: p.slug,
+    label: p.label,
+    description: p.description,
+    oauth: true,
+    icon: providerIcons[p.slug] ?? p.label.charAt(0).toUpperCase(),
+  }));
+
+  const tiles: ProviderTile[] = [...oauthTiles, ...placeholderTiles];
+
+  const handleSelect = useCallback(
+    (tile: ProviderTile) => {
+      onChange(tile.label);
+      if (tile.oauth && typeof window !== 'undefined') {
+        // Same-tab redirect: OAuth providers ship framing / popup-blocker
+        // hostility, and mobile Safari kills OAuth popups silently. The
+        // onboarding shell resumes on the CONNECT step via `?connected={slug}`.
+        window.location.assign(`/-api/oauth/${tile.slug}/connect`);
+      }
     },
-    {
-      key: 'Rivian',
-      icon: 'R',
-      title: 'Connect Rivian',
-      desc: 'State of charge, camp mode preferences, Adventure Network stalls.',
-    },
-    {
-      key: 'Smartcar',
-      icon: 'S',
-      title: 'Connect via Smartcar',
-      desc: 'One link that covers Ford, Hyundai, Kia, Chevrolet and more.',
-    },
-  ];
+    [onChange],
+  );
 
   return (
     <Box className={stepClasses.card}>
@@ -47,33 +165,14 @@ export default function ConnectStep({ value, onChange }: ConnectStepProps) {
 
         <Box className={stepClasses.field} maxWidth="520px">
           <Stack>
-            {providers.map((p) => {
-              const sel = value === p.key;
-              const cardClasses = connect();
-              const style = sel
-                ? {
-                    borderColor: 'var(--colors-peach-400)',
-                    background:
-                      'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
-                  }
-                : {};
-
-              return (
-                <button
-                  type="button"
-                  key={p.key}
-                  className={cardClasses.card}
-                  style={style}
-                  onClick={() => onChange(p.key)}
-                >
-                  <Box className={cardClasses.icon}>{p.icon}</Box>
-                  <Box className={cardClasses.body} textAlign="left">
-                    <Box className={cardClasses.title}>{p.title}</Box>
-                    <Box className={cardClasses.desc}>{p.desc}</Box>
-                  </Box>
-                </button>
-              );
-            })}
+            {tiles.map((tile) => (
+              <ProviderOption
+                key={tile.slug}
+                tile={tile}
+                selected={value === tile.label}
+                onSelect={() => handleSelect(tile)}
+              />
+            ))}
           </Stack>
         </Box>
       </Stack>
