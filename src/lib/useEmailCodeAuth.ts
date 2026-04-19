@@ -45,9 +45,7 @@ export function useEmailCodeAuth(
 
   const ready = mode === 'sign-in' ? Boolean(signIn) : Boolean(signUp);
 
-  const navigateOnSuccess = () => {
-    router.navigate({ to: '/onboarding' });
-  };
+  const navigateOnSuccess = () => router.navigate({ to: '/onboarding' });
 
   const startSignIn = async (address: string) => {
     if (!signIn) return { error: 'Sign-in resource not ready.' } as const;
