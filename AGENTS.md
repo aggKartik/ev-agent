@@ -13,7 +13,8 @@
 
 ## App Wiring That Is Easy To Miss
 - File routes live in `src/routes/**`; current user-facing routes are `/` and `/onboarding/`.
-- tRPC HTTP handler is wired through `src/routes/-api.trpc.$trpc.ts` at `/api/trpc`.
+- tRPC HTTP handler is wired through `src/routes/api.trpc.$trpc.ts` at `/api/trpc`.
+- OAuth connect/callback handlers live at `src/routes/api.oauth.$provider.connect.ts` and `src/routes/api.oauth.$provider.callback.ts` (URLs `/api/oauth/:provider/connect` and `/api/oauth/:provider/callback`).
 - Client tRPC setup is in `src/lib/trpc.ts`; server router composition is in `src/server/routers/index.ts`.
 - Root providers (QueryClient, tRPC provider, devtools, global CSS) are in `src/routes/__root.tsx`.
 
