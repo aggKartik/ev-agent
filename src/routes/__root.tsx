@@ -1,3 +1,4 @@
+import { ClerkProvider } from '@clerk/tanstack-react-start';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -91,28 +92,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className={bodyClass}>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <Header />
-            <main className={mainClass}>{children}</main>
-            <TanStackDevtools
-              config={{
-                position: 'bottom-right',
-              }}
-              plugins={[
-                {
-                  name: 'Tanstack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-                {
-                  name: 'React Query',
-                  render: <ReactQueryDevtools />,
-                },
-              ]}
-            />
-            <Scripts />
-          </QueryClientProvider>
-        </trpc.Provider>
+        <ClerkProvider>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <Header />
+              <main className={mainClass}>{children}</main>
+              <TanStackDevtools
+                config={{
+                  position: 'bottom-right',
+                }}
+                plugins={[
+                  {
+                    name: 'Tanstack Router',
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                  {
+                    name: 'React Query',
+                    render: <ReactQueryDevtools />,
+                  },
+                ]}
+              />
+              <Scripts />
+            </QueryClientProvider>
+          </trpc.Provider>
+        </ClerkProvider>
       </body>
     </html>
   );

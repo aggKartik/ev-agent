@@ -1,5 +1,7 @@
+import { Show, useClerk } from '@clerk/tanstack-react-start';
 import { Box } from 'styled-system/jsx';
 import { css } from '../../styled-system/css';
+import Button from './Button';
 import EVAgentLogo from './EVAgentLogo';
 
 const headerClass = css({
@@ -12,6 +14,12 @@ const headerClass = css({
   paddingTop: { base: '5', md: '6' },
   paddingBottom: '3.5',
   flexShrink: 0,
+});
+
+const rightGroupClass = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: { base: '3', md: '5' },
 });
 
 const metaClass = css({
@@ -45,6 +53,20 @@ type HeaderProps = {
   showMeta?: boolean;
 };
 
+function SignOutControl() {
+  const clerk = useClerk();
+
+  const handleSignOut = () => {
+    void clerk.signOut({ redirectUrl: '/' });
+  };
+
+  return (
+    <Button variant="ghost" size="sm" font="mono" onClick={handleSignOut}>
+      Sign out
+    </Button>
+  );
+}
+
 export default function Header({
   sessionLabel = 'SESSION · 00/00',
   buildLabel = 'v1.0 BETA',
@@ -53,16 +75,21 @@ export default function Header({
   return (
     <header className={headerClass}>
       <EVAgentLogo showSub />
-      {showMeta ? (
-        <Box className={metaClass}>
-          <Box as="span" className={dotClass} />
-          <Box as="span">{sessionLabel}</Box>
-          <Box as="span" className={metaSeparatorClass}>
-            ·
+      <Box className={rightGroupClass}>
+        {showMeta ? (
+          <Box className={metaClass}>
+            <Box as="span" className={dotClass} />
+            <Box as="span">{sessionLabel}</Box>
+            <Box as="span" className={metaSeparatorClass}>
+              ·
+            </Box>
+            <Box as="span">{buildLabel}</Box>
           </Box>
-          <Box as="span">{buildLabel}</Box>
-        </Box>
-      ) : null}
+        ) : null}
+        <Show when="signed-in">
+          <SignOutControl />
+        </Show>
+      </Box>
     </header>
   );
 }
