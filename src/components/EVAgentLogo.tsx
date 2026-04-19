@@ -18,13 +18,17 @@ const logoClass = css({
 const wordmarkClass = css({
   fontFamily: 'display',
   fontWeight: 'black',
-  fontSize: '22px',
+  fontSize: { base: '20px', md: '22px' },
   letterSpacing: '-0.02em',
   lineHeight: '1',
   color: 'cream.200',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
 });
 
 const sublabelClass = css({
+  display: { base: 'none', sm: 'inline-flex' },
+  alignItems: 'center',
   fontFamily: 'mono',
   fontSize: '10px',
   color: 'cream.600',
@@ -73,7 +77,7 @@ export default function EVAgentLogo({
   showSub = true,
   size = 'md',
 }: EVAgentLogoProps) {
-  const markSize = size === 'sm' ? 28 : 34;
+  const markSize = size === 'sm' ? 28 : 32;
 
   return (
     <Stack className={logoClass} direction="row" alignItems="center">

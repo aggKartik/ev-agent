@@ -15,7 +15,7 @@ export const welcomeRecipe = defineSlotRecipe({
     title: {
       fontFamily: 'display',
       fontWeight: 'black',
-      fontSize: 'clamp(56px, 7vw, 110px)',
+      fontSize: 'clamp(44px, 9vw, 110px)',
       lineHeight: '0.96',
       letterSpacing: '-0.04em',
       textAlign: 'center',
@@ -41,7 +41,7 @@ export const welcomeRecipe = defineSlotRecipe({
     },
     sub: {
       fontFamily: 'body',
-      fontSize: '17px',
+      fontSize: { base: '15px', md: '17px' },
       color: 'rgba(245, 234, 208, 0.72)',
       textAlign: 'center',
       maxWidth: '540px',

@@ -1,4 +1,4 @@
-import { Box, Stack } from 'styled-system/jsx';
+import { Box } from 'styled-system/jsx';
 import { css } from '../../styled-system/css';
 import EVAgentLogo from './EVAgentLogo';
 
@@ -15,7 +15,7 @@ const headerClass = css({
 });
 
 const metaClass = css({
-  display: 'flex',
+  display: { base: 'none', md: 'flex' },
   alignItems: 'center',
   gap: '4',
   fontFamily: 'mono',
@@ -23,9 +23,6 @@ const metaClass = css({
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   color: 'cream.600',
-  mdDown: {
-    display: 'none',
-  },
 });
 
 const dotClass = css({
@@ -57,14 +54,14 @@ export default function Header({
     <header className={headerClass}>
       <EVAgentLogo showSub />
       {showMeta ? (
-        <Stack direction="row" align="center" className={metaClass}>
+        <Box className={metaClass}>
           <Box as="span" className={dotClass} />
           <Box as="span">{sessionLabel}</Box>
           <Box as="span" className={metaSeparatorClass}>
             ·
           </Box>
           <Box as="span">{buildLabel}</Box>
-        </Stack>
+        </Box>
       ) : null}
     </header>
   );

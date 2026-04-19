@@ -110,16 +110,13 @@ const progressClass = css({
   maxWidth: '74rem',
   display: 'flex',
   alignItems: 'center',
-  gap: '4',
+  gap: { base: '2.5', md: '4' },
   px: { base: '5', md: '10' },
   pb: '2',
   textStyle: 'mono-meta',
-  fontSize: '11px',
+  fontSize: { base: '10px', md: '11px' },
   letterSpacing: '0.16em',
   color: 'cream.600',
-  mdDown: {
-    gap: '2.5',
-  },
 });
 
 const progressTrackWrapClass = css({
@@ -132,7 +129,7 @@ const stageClass = css({
   flex: 1,
   minHeight: 0,
   display: 'flex',
-  alignItems: 'center',
+  alignItems: { base: 'flex-start', md: 'center' },
   justifyContent: 'center',
   px: { base: '5', md: '10' },
   pt: { base: '6', md: '6' },
@@ -168,7 +165,7 @@ const formNavInnerClass = css({
   marginInline: 'auto',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
+  justifyContent: { base: 'center', md: 'space-between' },
   gap: '3',
   pointerEvents: 'auto',
 });
@@ -177,10 +174,12 @@ const formNavButtonsClass = css({
   display: 'flex',
   alignItems: 'center',
   gap: '3',
+  width: { base: 'full', md: 'auto' },
+  justifyContent: { base: 'space-between', md: 'flex-start' },
 });
 
 const navEdgesClass = css({
-  display: 'flex',
+  display: { base: 'none', md: 'flex' },
   gap: '2',
 });
 
@@ -350,9 +349,9 @@ function OnboardingComponent() {
 
           <Box
             className={stageClass}
-            style={{
-              alignItems: shouldTopAlignStage ? 'flex-start' : 'center',
-            }}
+            style={
+              shouldTopAlignStage ? { alignItems: 'flex-start' } : undefined
+            }
           >
             <Box
               key={transitionKey}
