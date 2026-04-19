@@ -1,3 +1,4 @@
+import { Show, useClerk } from '@clerk/tanstack-react-start';
 import { Box } from 'styled-system/jsx';
 import { css } from '../../styled-system/css';
 import EVAgentLogo from './EVAgentLogo';
@@ -12,6 +13,12 @@ const headerClass = css({
   paddingTop: { base: '5', md: '6' },
   paddingBottom: '3.5',
   flexShrink: 0,
+});
+
+const rightGroupClass = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: { base: '3', md: '5' },
 });
 
 const metaClass = css({
@@ -39,11 +46,48 @@ const metaSeparatorClass = css({
   opacity: 0.6,
 });
 
+const signOutButtonClass = css({
+  fontFamily: 'mono',
+  fontSize: '11px',
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: 'cream.200',
+  background: 'transparent',
+  border: '1px solid {colors.alpha.cream-28}',
+  borderRadius: 'pill',
+  paddingInline: '3.5',
+  paddingBlock: '1.5',
+  cursor: 'pointer',
+  transition: 'background fast ease-out, border-color fast ease-out',
+  _hover: {
+    background: 'alpha.cream-06',
+    borderColor: 'peach.400',
+  },
+});
+
 type HeaderProps = {
   sessionLabel?: string;
   buildLabel?: string;
   showMeta?: boolean;
 };
+
+function SignOutControl() {
+  const clerk = useClerk();
+
+  const handleSignOut = () => {
+    void clerk.signOut({ redirectUrl: '/' });
+  };
+
+  return (
+    <button
+      type="button"
+      className={signOutButtonClass}
+      onClick={handleSignOut}
+    >
+      Sign out
+    </button>
+  );
+}
 
 export default function Header({
   sessionLabel = 'SESSION · 00/00',
@@ -53,16 +97,21 @@ export default function Header({
   return (
     <header className={headerClass}>
       <EVAgentLogo showSub />
-      {showMeta ? (
-        <Box className={metaClass}>
-          <Box as="span" className={dotClass} />
-          <Box as="span">{sessionLabel}</Box>
-          <Box as="span" className={metaSeparatorClass}>
-            ·
+      <Box className={rightGroupClass}>
+        {showMeta ? (
+          <Box className={metaClass}>
+            <Box as="span" className={dotClass} />
+            <Box as="span">{sessionLabel}</Box>
+            <Box as="span" className={metaSeparatorClass}>
+              ·
+            </Box>
+            <Box as="span">{buildLabel}</Box>
           </Box>
-          <Box as="span">{buildLabel}</Box>
-        </Box>
-      ) : null}
+        ) : null}
+        <Show when="signed-in">
+          <SignOutControl />
+        </Show>
+      </Box>
     </header>
   );
 }

@@ -9,48 +9,106 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SsoCallbackIndexRouteImport } from './routes/sso-callback/index'
+import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
+import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 
+const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
-  id: '/onboarding/',
-  path: '/onboarding/',
+const SsoCallbackIndexRoute = SsoCallbackIndexRouteImport.update({
+  id: '/sso-callback/',
+  path: '/sso-callback/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpIndexRoute = SignUpIndexRouteImport.update({
+  id: '/sign-up/',
+  path: '/sign-up/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInIndexRoute = SignInIndexRouteImport.update({
+  id: '/sign-in/',
+  path: '/sign-in/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/onboarding/': typeof OnboardingIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/sign-up/': typeof SignUpIndexRoute
+  '/sso-callback/': typeof SsoCallbackIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/sign-in': typeof SignInIndexRoute
+  '/sign-up': typeof SignUpIndexRoute
+  '/sso-callback': typeof SsoCallbackIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/onboarding/': typeof OnboardingIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/sign-up/': typeof SignUpIndexRoute
+  '/sso-callback/': typeof SsoCallbackIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/onboarding/'
+  fullPaths:
+    | '/'
+    | '/onboarding'
+    | '/onboarding/'
+    | '/sign-in/'
+    | '/sign-up/'
+    | '/sso-callback/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/onboarding'
-  id: '__root__' | '/' | '/onboarding/'
+  to: '/' | '/onboarding' | '/sign-in' | '/sign-up' | '/sso-callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/onboarding'
+    | '/onboarding/'
+    | '/sign-in/'
+    | '/sign-up/'
+    | '/sso-callback/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  OnboardingIndexRoute: typeof OnboardingIndexRoute
+  OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
+  SignInIndexRoute: typeof SignInIndexRoute
+  SignUpIndexRoute: typeof SignUpIndexRoute
+  SsoCallbackIndexRoute: typeof SsoCallbackIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -58,29 +116,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sso-callback/': {
+      id: '/sso-callback/'
+      path: '/sso-callback'
+      fullPath: '/sso-callback/'
+      preLoaderRoute: typeof SsoCallbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up/': {
+      id: '/sign-up/'
+      path: '/sign-up'
+      fullPath: '/sign-up/'
+      preLoaderRoute: typeof SignUpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/sign-in'
+      fullPath: '/sign-in/'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding/': {
       id: '/onboarding/'
-      path: '/onboarding'
+      path: '/'
       fullPath: '/onboarding/'
       preLoaderRoute: typeof OnboardingIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof OnboardingRouteRoute
     }
   }
 }
 
+interface OnboardingRouteRouteChildren {
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
+}
+
+const OnboardingRouteRouteChildren: OnboardingRouteRouteChildren = {
+  OnboardingIndexRoute: OnboardingIndexRoute,
+}
+
+const OnboardingRouteRouteWithChildren = OnboardingRouteRoute._addFileChildren(
+  OnboardingRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  OnboardingIndexRoute: OnboardingIndexRoute,
+  OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
+  SignInIndexRoute: SignInIndexRoute,
+  SignUpIndexRoute: SignUpIndexRoute,
+  SsoCallbackIndexRoute: SsoCallbackIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
