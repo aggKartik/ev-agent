@@ -1,32 +1,46 @@
 import { useForm, useStore } from '@tanstack/react-form';
-import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute, useSearch } from '@tanstack/react-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
-import ConnectStep from '#/components/onboarding/ConnectStep';
 import IntroCarStep from '#/components/onboarding/IntroCarStep';
 import MakeStep from '#/components/onboarding/MakeStep';
 import ModelStep from '#/components/onboarding/ModelStep';
 import NameStep from '#/components/onboarding/NameStep';
 import PrefsStep from '#/components/onboarding/PrefsStep';
 import SuccessStep from '#/components/onboarding/SuccessStep';
+import TeslaLinkStep from '#/components/onboarding/TeslaLinkStep';
 import YearStep from '#/components/onboarding/YearStep';
 import { css } from '../../../styled-system/css';
 import { progress } from '../../../styled-system/recipes';
 
+type OnboardingSearch = {
+  connected?: string;
+  connect?: string;
+  reason?: string;
+  provider?: string;
+};
+
 export const Route = createFileRoute('/onboarding/')({
+  validateSearch: (search: Record<string, unknown>): OnboardingSearch => ({
+    connected:
+      typeof search.connected === 'string' ? search.connected : undefined,
+    connect: typeof search.connect === 'string' ? search.connect : undefined,
+    reason: typeof search.reason === 'string' ? search.reason : undefined,
+    provider: typeof search.provider === 'string' ? search.provider : undefined,
+  }),
   component: OnboardingComponent,
 });
 
 const steps = [
   'INTRO_CAR',
+  'TESLA_LINK',
   'NAME',
   'MAKE',
   'MODEL',
   'YEAR',
-  'CONNECT',
   'PREFS',
   'SUCCESS',
 ] as const;
@@ -38,7 +52,6 @@ type OnboardingFormValues = {
   make: string;
   model: string;
   year: string;
-  connect: string;
   prefs: string[];
 };
 
@@ -65,11 +78,6 @@ const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
   },
   YEAR: {
     canAdvance: (values) => values.year.length === 4,
-  },
-  CONNECT: {
-    canAdvance: () => true,
-    getPrimaryActionLabel: (values) =>
-      values.connect ? 'Connect' : 'Skip for now',
   },
   PREFS: {
     canAdvance: () => true,
@@ -196,7 +204,6 @@ function OnboardingComponent() {
       make: '',
       model: '',
       year: '',
-      connect: '',
       prefs: [] as string[],
     } satisfies OnboardingFormValues,
     onSubmit: async ({ value }) => {
@@ -204,11 +211,64 @@ function OnboardingComponent() {
     },
   });
 
-  const [currentStep, setCurrentStep] = useState<Step>('INTRO_CAR');
+  const search = useSearch({ from: '/onboarding/' });
+
+  // If we land on /onboarding with ?connected=tesla or ?connect=error, start
+  // the flow on the Tesla link step so the user sees the result of the OAuth
+  // handoff immediately.
+  const initialStep: Step = useMemo(() => {
+    if (search.connected === 'tesla') return 'TESLA_LINK';
+    if (search.connect === 'error' && search.provider === 'tesla')
+      return 'TESLA_LINK';
+    return 'INTRO_CAR';
+  }, [search.connect, search.connected, search.provider]);
+
+  const [currentStep, setCurrentStep] = useState<Step>(initialStep);
   const [transitionKey, setTransitionKey] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
 
   const formValues = useStore(form.store, (state) => state.values);
+
+  const teslaErrorReason =
+    search.connect === 'error' && search.provider === 'tesla'
+      ? (search.reason ?? 'unknown')
+      : null;
+
+  // Strip the OAuth redirect params from the URL once we've read them so a
+  // later navigation / refresh doesn't keep forcing us onto TESLA_LINK.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!search.connected && !search.connect) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('connected');
+    url.searchParams.delete('connect');
+    url.searchParams.delete('reason');
+    url.searchParams.delete('provider');
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  }, [search.connect, search.connected]);
+
+  const handleTeslaPrefill = useCallback(
+    (prefill: {
+      make: string;
+      model: string | null;
+      year: string | null;
+      vehicleName: string | null;
+    }) => {
+      // Only fill blanks — if the user already tapped through manual entry we
+      // don't want to clobber their selections.
+      const values = form.store.state.values;
+      if (!values.make) form.setFieldValue('make', prefill.make);
+      if (!values.model && prefill.model)
+        form.setFieldValue('model', prefill.model);
+      if (!values.year && prefill.year)
+        form.setFieldValue('year', prefill.year);
+    },
+    [form],
+  );
 
   const goToNextStep = useCallback(() => {
     setDirection('forward');
@@ -416,15 +476,11 @@ function OnboardingComponent() {
             </form.Field>
           ) : null}
 
-          {currentStep === 'CONNECT' ? (
-            <form.Field name="connect">
-              {(field) => (
-                <ConnectStep
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                />
-              )}
-            </form.Field>
+          {currentStep === 'TESLA_LINK' ? (
+            <TeslaLinkStep
+              onPrefill={handleTeslaPrefill}
+              errorReason={teslaErrorReason}
+            />
           ) : null}
 
           {currentStep === 'PREFS' ? (

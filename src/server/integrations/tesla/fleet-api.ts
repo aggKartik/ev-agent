@@ -27,6 +27,10 @@ type VehicleDataEntry = {
     charge_limit_soc?: number;
     battery_range?: number;
   };
+  vehicle_config?: {
+    car_type?: string;
+    trim_badging?: string;
+  };
 };
 
 type FleetApiResponse<T> = {
@@ -40,6 +44,8 @@ export type TeslaVehicleSummary = {
   vin: string | null;
   displayName: string | null;
   state: string | null;
+  carType: string | null;
+  trimBadging: string | null;
   odometerMi: number | null;
   batteryLevel: number | null;
   usableBatteryLevel: number | null;
@@ -99,6 +105,14 @@ function mapVehicle(
     vin: entry.vin ?? null,
     displayName: entry.display_name ?? null,
     state: entry.state ?? null,
+    carType:
+      typeof full.vehicle_config?.car_type === 'string'
+        ? full.vehicle_config.car_type
+        : null,
+    trimBadging:
+      typeof full.vehicle_config?.trim_badging === 'string'
+        ? full.vehicle_config.trim_badging
+        : null,
     odometerMi:
       typeof full.vehicle_state?.odometer === 'number'
         ? full.vehicle_state.odometer
@@ -142,7 +156,7 @@ export async function fetchVehiclesWithState(args: {
           args.accessToken,
           args.region,
           `/api/1/vehicles/${v.id}/vehicle_data?endpoints=${encodeURIComponent(
-            'vehicle_state;charge_state',
+            'vehicle_state;charge_state;vehicle_config',
           )}`,
         );
         return mapVehicle(data);
