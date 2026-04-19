@@ -8,13 +8,9 @@ export const stepRecipe = defineSlotRecipe({
       width: '100%',
       maxWidth: '1320px',
       display: 'grid',
-      gridTemplateColumns: '1.1fr 0.9fr',
-      gap: '50px',
+      gridTemplateColumns: { base: '1fr', md: '1.1fr 0.9fr' },
+      gap: { base: '6', md: '50px' },
       alignItems: 'center',
-      mdDown: {
-        gridTemplateColumns: '1fr',
-        gap: '6',
-      },
     },
     kicker: {
       textStyle: 'mono-kicker',
@@ -34,7 +30,7 @@ export const stepRecipe = defineSlotRecipe({
     title: {
       fontFamily: 'display',
       fontWeight: 'bold',
-      fontSize: 'clamp(32px, 4vw, 58px)',
+      fontSize: 'clamp(28px, 6vw, 58px)',
       lineHeight: '1.03',
       letterSpacing: '-0.03em',
       color: 'cream.200',

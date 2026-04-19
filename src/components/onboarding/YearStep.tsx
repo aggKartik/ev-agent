@@ -23,12 +23,9 @@ export default function YearStep({
 
   const yearGridClass = css({
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
+    gridTemplateColumns: { base: 'repeat(4, 1fr)', md: 'repeat(5, 1fr)' },
     gap: '2',
     maxWidth: '500px',
-    mdDown: {
-      gridTemplateColumns: 'repeat(4, 1fr)',
-    },
   });
 
   const yearChipClass = (selected: boolean) =>

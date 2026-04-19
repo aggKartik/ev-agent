@@ -15,7 +15,7 @@ const headerClass = css({
 });
 
 const metaClass = css({
-  display: 'flex',
+  display: { base: 'none', md: 'flex' },
   alignItems: 'center',
   gap: '4',
   fontFamily: 'mono',
@@ -23,9 +23,6 @@ const metaClass = css({
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   color: 'cream.600',
-  mdDown: {
-    display: 'none',
-  },
 });
 
 const dotClass = css({

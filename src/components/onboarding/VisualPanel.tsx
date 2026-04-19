@@ -18,17 +18,13 @@ type VisualPanelProps = {
 const visualClass = css({
   position: 'relative',
   height: '100%',
-  minHeight: '380px',
-  maxHeight: '520px',
+  minHeight: { base: '200px', md: '380px' },
+  maxHeight: { base: '240px', md: '520px' },
   borderRadius: '24px',
   overflow: 'hidden',
   borderWidth: '1px',
   borderColor: 'alpha.cream.12',
   background: 'linear-gradient(160deg, {colors.night.300}, {colors.night.400})',
-  mdDown: {
-    minHeight: '200px',
-    maxHeight: '240px',
-  },
 });
 
 const photoPlaceholderClass = css({
