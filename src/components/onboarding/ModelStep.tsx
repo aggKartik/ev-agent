@@ -40,7 +40,7 @@ export default function ModelStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>03 · THE MODEL</Box>
+        <Box className={stepClasses.kicker}>04 · THE MODEL</Box>
         <Text as="h1" className={stepClasses.title}>
           Which <Box as="em">{makeState || 'model'}</Box> is it?
         </Text>
