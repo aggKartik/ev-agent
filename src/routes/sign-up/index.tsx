@@ -1,10 +1,9 @@
-import { useSignUp } from '@clerk/tanstack-react-start';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import AuthShell from '#/components/auth/AuthShell';
 import GoogleButton from '#/components/auth/GoogleButton';
 import { Text } from '#/components/Text';
+import { useGoogleOAuth } from '#/lib/useGoogleOAuth';
 import { css } from '../../../styled-system/css';
 import { step } from '../../../styled-system/recipes/step';
 
@@ -26,30 +25,7 @@ const altLinkAnchorClass = css({
 });
 
 function SignUpRoute() {
-  const { signUp } = useSignUp();
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleGoogle = async () => {
-    if (!signUp) return;
-    setError(null);
-    setSubmitting(true);
-    try {
-      const { error: ssoError } = await signUp.sso({
-        strategy: 'oauth_google',
-        redirectCallbackUrl: '/sso-callback',
-        redirectUrl: '/onboarding',
-      });
-      if (ssoError) {
-        setError(ssoError.message ?? 'Unable to start Google sign-up.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unexpected error.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  const { start, submitting, error } = useGoogleOAuth('sign-up');
   const stepClasses = step({ single: true });
 
   return (
@@ -65,7 +41,7 @@ function SignUpRoute() {
             preferences next.
           </Text>
           <Stack direction="row" className={actionsClass}>
-            <GoogleButton onClick={handleGoogle} loading={submitting} />
+            <GoogleButton onClick={start} loading={submitting} />
           </Stack>
           {error ? (
             <Text
