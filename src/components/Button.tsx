@@ -1,5 +1,6 @@
 import { ark } from '@ark-ui/react/factory';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import Spinner from '#/components/Spinner';
 import { css, cx } from '../../styled-system/css';
 import { button } from '../../styled-system/recipes';
 
@@ -8,17 +9,6 @@ const contentClass = css({
   alignItems: 'center',
   justifyContent: 'center',
   gap: '2',
-});
-
-const spinnerClass = css({
-  display: 'inline-block',
-  width: '1em',
-  height: '1em',
-  borderWidth: '2px',
-  borderStyle: 'solid',
-  borderRadius: 'full',
-  borderColor: 'currentColor',
-  borderRightColor: 'transparent',
 });
 
 export type ButtonProps = Omit<
@@ -59,12 +49,9 @@ export default function Button(props: ButtonProps) {
     >
       <span className={contentClass}>
         {loading ? (
-          <span
-            className={spinnerClass}
-            data-part="spinner"
-            data-icon="true"
-            aria-hidden="true"
-          />
+          <span data-part="spinner" data-icon="true" aria-hidden="true">
+            <Spinner />
+          </span>
         ) : (
           <span data-part="leading-icon" data-icon="true">
             {leadingIcon}

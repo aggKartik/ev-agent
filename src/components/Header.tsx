@@ -1,6 +1,7 @@
 import { Show, useClerk } from '@clerk/tanstack-react-start';
 import { Box } from 'styled-system/jsx';
 import { css } from '../../styled-system/css';
+import Button from './Button';
 import EVAgentLogo from './EVAgentLogo';
 
 const headerClass = css({
@@ -46,25 +47,6 @@ const metaSeparatorClass = css({
   opacity: 0.6,
 });
 
-const signOutButtonClass = css({
-  fontFamily: 'mono',
-  fontSize: '11px',
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: 'cream.200',
-  background: 'transparent',
-  border: '1px solid {colors.alpha.cream-28}',
-  borderRadius: 'pill',
-  paddingInline: '3.5',
-  paddingBlock: '1.5',
-  cursor: 'pointer',
-  transition: 'background fast ease-out, border-color fast ease-out',
-  _hover: {
-    background: 'alpha.cream-06',
-    borderColor: 'peach.400',
-  },
-});
-
 type HeaderProps = {
   sessionLabel?: string;
   buildLabel?: string;
@@ -79,13 +61,9 @@ function SignOutControl() {
   };
 
   return (
-    <button
-      type="button"
-      className={signOutButtonClass}
-      onClick={handleSignOut}
-    >
+    <Button variant="ghost" size="sm" font="mono" onClick={handleSignOut}>
       Sign out
-    </button>
+    </Button>
   );
 }
 

@@ -61,9 +61,20 @@ export const buttonRecipe = defineRecipe({
         paddingY: '4',
       },
     },
+    font: {
+      display: {
+        fontFamily: 'display',
+      },
+      mono: {
+        fontFamily: 'mono',
+        textTransform: 'uppercase',
+        letterSpacing: 'wider',
+      },
+    },
   },
   defaultVariants: {
     variant: 'primary',
     size: 'md',
+    font: 'display',
   },
 });
