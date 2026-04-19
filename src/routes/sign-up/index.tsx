@@ -69,8 +69,8 @@ function SignUpRoute() {
               marginTop="3"
               maxWidth="420px"
             >
-              Dev only. Signs up as <code>{testAuth.email}</code> using Clerk's
-              test-mode flow — no Google, no real email.
+              Dev only. Bypasses Google using a Clerk sign-in token for a
+              dedicated test user.
             </Text>
           ) : null}
           {displayedError ? (
