@@ -52,13 +52,16 @@ export type TeslaVehicleSummary = {
   /** Manufacturer; always "Tesla" when linked via the Tesla provider. */
   make: string;
   /**
-   * Model derived from `vehicle_config.car_type` when available, with a VIN
-   * 4th-character fallback. Null when nothing decodes to a recognized model.
+   * Model derived from `vehicle_config.car_type` (the Fleet API field that
+   * carries the model enum) with a VIN position-4 fallback for offline
+   * vehicles that only expose the cached list entry. Null when nothing
+   * decodes to a recognized model.
    */
   model: string | null;
   /**
-   * Model year decoded from the VIN (position 10). Null when the VIN is
-   * missing or uses an unrecognized year code.
+   * Model year decoded from VIN position 10. The Fleet API does not
+   * currently return the year directly, so we rely on VIN decoding — see
+   * `VIN_YEAR_MAP` below. Null when the VIN is missing or unrecognized.
    */
   year: number | null;
 };
@@ -67,6 +70,9 @@ export type TeslaVehicleSummary = {
  * Fleet API `vehicle_config.car_type` values observed in production. Maps to
  * the display labels used in the onboarding MAKE/MODEL pickers so a
  * Tesla-linked user sees the same label they would have selected manually.
+ *
+ * See: https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data
+ * (Vehicle Configuration → `car_type` enum).
  */
 const CAR_TYPE_MODEL_MAP: Record<string, string> = {
   models: 'Model S',
@@ -82,8 +88,8 @@ const CAR_TYPE_MODEL_MAP: Record<string, string> = {
 
 /**
  * VIN position 4 encodes the Tesla model family. This is the fallback when
- * `vehicle_config.car_type` isn't populated (e.g. offline vehicle) but we
- * still have a VIN from the vehicle list endpoint.
+ * `vehicle_config.car_type` isn't populated (e.g. an offline vehicle that
+ * only returns the cached list entry).
  *
  * See: https://service.tesla.com/docs/Factory/VINDecoder
  */
@@ -98,10 +104,18 @@ const VIN_MODEL_MAP: Record<string, string> = {
 };
 
 /**
- * VIN position 10 is the model-year code. Tesla has been in production since
- * 2008 (code "8"), and the NHTSA spec wraps through the alphabet skipping
- * I/O/Q/U/Z. We populate through 2030 which is more than enough for any
- * car that could plausibly be linked today.
+ * VIN position 10 is the model-year code. The Fleet API does not currently
+ * expose a dedicated model-year field on `vehicle_data` — the Tesla team
+ * declined to add one and the community-recommended approach is to decode
+ * the VIN, which every vehicle_data + vehicle list response already carries.
+ *
+ * Tesla has been in production since 2008 (code "8"), and the NHTSA spec
+ * wraps through the alphabet skipping I/O/Q/U/Z. We populate through 2030
+ * which is more than enough for any car that could plausibly be linked
+ * today.
+ *
+ * See: https://github.com/teslamotors/vehicle-command/issues/135
+ *      https://service.tesla.com/docs/Factory/VINDecoder
  */
 const VIN_YEAR_MAP: Record<string, number> = {
   '8': 2008,
