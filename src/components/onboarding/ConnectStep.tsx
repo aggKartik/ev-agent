@@ -1,21 +1,14 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Spinner from '#/components/Spinner';
 import { trpc } from '#/lib/trpc';
+import { type TeslaPrefill, useTeslaPrefill } from '#/lib/useTeslaPrefill';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { css } from '../../../styled-system/css';
 import { chip } from '../../../styled-system/recipes/chip';
 import { connect } from '../../../styled-system/recipes/connect';
 import { step } from '../../../styled-system/recipes/step';
-
-export type TeslaPrefill = {
-  make: string;
-  model: string | null;
-  year: number | null;
-  displayName: string | null;
-  vin: string | null;
-};
 
 type ConnectStepProps = {
   /**
@@ -26,16 +19,9 @@ type ConnectStepProps = {
   onChange: (value: string) => void;
   /**
    * Called whenever we resolve a Tesla vehicle after OAuth. The parent uses
-   * the payload to prefill make/model/year and to skip those steps. Passing
-   * `null` clears any previously prefilled data (e.g. the account was
-   * disconnected mid-session).
+   * the payload to prefill make/model/year.
    */
-  onTeslaPrefill: (prefill: TeslaPrefill | null) => void;
-  /**
-   * Lets the parent advance to the next step once a background prefill
-   * completes so the user never sees an empty "already connected" state.
-   */
-  onAutoAdvance?: () => void;
+  onTeslaPrefill: (prefill: TeslaPrefill) => void;
 };
 
 type ProviderTile = {
@@ -117,35 +103,9 @@ const teslaSpecsClass = css({
   letterSpacing: '0.14em',
 });
 
-const teslaSkipClass = css({
-  marginTop: '2',
-  textStyle: 'mono-meta',
-  fontSize: '11px',
-  color: 'cream.600',
-  letterSpacing: '0.14em',
-});
-
-const manualLinkClass = css({
-  appearance: 'none',
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  color: 'peach.300',
-  textDecoration: 'underline',
-  textUnderlineOffset: '3px',
-  cursor: 'pointer',
-  fontFamily: 'mono',
-  fontSize: '12px',
-  letterSpacing: '0.14em',
-  _hover: {
-    color: 'peach.400',
-  },
-});
-
 type ProviderOptionProps = {
   tile: ProviderTile;
   selected: boolean;
-  connected: boolean;
   loadingStatus: boolean;
   onSelect: () => void;
 };
@@ -153,7 +113,6 @@ type ProviderOptionProps = {
 function ProviderOption({
   tile,
   selected,
-  connected,
   loadingStatus,
   onSelect,
 }: ProviderOptionProps) {
@@ -168,19 +127,13 @@ function ProviderOption({
       }
     : {};
 
-  const disabled = connected;
-
   return (
     <button
       type="button"
       className={cardClasses.card}
-      style={{
-        ...style,
-        ...(disabled ? { cursor: 'default', opacity: 0.85 } : {}),
-      }}
-      onClick={disabled ? undefined : onSelect}
+      style={style}
+      onClick={onSelect}
       aria-pressed={selected}
-      aria-disabled={disabled}
     >
       <Box className={cardClasses.icon}>{tile.icon}</Box>
       <Box className={cardClasses.body} textAlign="left">
@@ -191,17 +144,13 @@ function ProviderOption({
         <Box
           className={chipClasses}
           aria-live="polite"
-          data-state={
-            connected ? 'connected' : loadingStatus ? 'loading' : 'idle'
-          }
+          data-state={loadingStatus ? 'loading' : 'idle'}
         >
           {loadingStatus ? (
             <>
               <Spinner size="0.9em" label={`Checking ${tile.label}`} />
               CHECKING
             </>
-          ) : connected ? (
-            'CONNECTED'
           ) : (
             'LINK'
           )}
@@ -215,63 +164,10 @@ export default function ConnectStep({
   value,
   onChange,
   onTeslaPrefill,
-  onAutoAdvance,
 }: ConnectStepProps) {
   const stepClasses = step();
 
-  // Tesla is the only OAuth integration with a prefill path today, so we
-  // query its status explicitly to drive the "already linked → skip" branch.
-  const teslaStatus = trpc.oauth.status.useQuery(
-    { provider: 'tesla' },
-    { staleTime: 0, refetchOnWindowFocus: true },
-  );
-
-  const teslaLinked = teslaStatus.data?.linked === true;
-
-  // Only fetch vehicles after we know Tesla is linked. The tRPC endpoint
-  // throws FAILED_PRECONDITION if called while unlinked, and we want to keep
-  // the query cold in that case so the unlink → relink flow stays clean.
-  const vehicles = trpc.tesla.vehicles.useQuery(undefined, {
-    enabled: teslaLinked,
-    staleTime: 60_000,
-    refetchOnWindowFocus: false,
-  });
-
-  const primaryVehicle = useMemo(() => {
-    const list = vehicles.data ?? [];
-    if (list.length === 0) return null;
-    // Prefer a vehicle we were able to decode a model+year from (i.e. one
-    // that actually lets us prefill the form), falling back to the first.
-    return (
-      list.find((v) => Boolean(v.model) && Boolean(v.year)) ?? list[0] ?? null
-    );
-  }, [vehicles.data]);
-
-  // Notify parent about prefill state. We run this on every meaningful
-  // change so prefill reflects the most recent Tesla fetch without any extra
-  // button press from the user.
-  useEffect(() => {
-    if (!teslaLinked) {
-      onTeslaPrefill(null);
-      return;
-    }
-    if (!primaryVehicle) return;
-    onTeslaPrefill({
-      make: 'Tesla',
-      model: primaryVehicle.model,
-      year: primaryVehicle.year,
-      displayName: primaryVehicle.displayName,
-      vin: primaryVehicle.vin,
-    });
-  }, [teslaLinked, primaryVehicle, onTeslaPrefill]);
-
-  // Keep the legacy `value` string in sync so the old "selected provider"
-  // state (and anything that depends on it) reflects the linked Tesla.
-  useEffect(() => {
-    if (teslaLinked && value !== 'Tesla') {
-      onChange('Tesla');
-    }
-  }, [teslaLinked, value, onChange]);
+  const tesla = useTeslaPrefill({ onPrefill: onTeslaPrefill });
 
   const providers = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
 
@@ -289,7 +185,7 @@ export default function ConnectStep({
   const teslaTile = oauthTiles.find((t) => t.slug === 'tesla');
   const otherOauthTiles = oauthTiles.filter((t) => t.slug !== 'tesla');
   const tiles: ProviderTile[] = [
-    ...(teslaTile ? [teslaTile] : []),
+    ...(teslaTile && !tesla.linked ? [teslaTile] : []),
     ...otherOauthTiles,
     ...placeholderTiles,
   ];
@@ -307,20 +203,15 @@ export default function ConnectStep({
     [onChange],
   );
 
-  const handleSkipManual = useCallback(() => {
-    onChange('');
-    onTeslaPrefill(null);
-  }, [onChange, onTeslaPrefill]);
-
   const vehicleName =
-    primaryVehicle?.displayName ||
-    [primaryVehicle?.year, primaryVehicle?.model].filter(Boolean).join(' ') ||
+    tesla.prefill?.displayName ||
+    [tesla.prefill?.year, tesla.prefill?.model].filter(Boolean).join(' ') ||
     'Your Tesla';
 
   const specs: string[] = [];
-  if (primaryVehicle?.year) specs.push(String(primaryVehicle.year));
-  if (primaryVehicle?.model) specs.push(primaryVehicle.model);
-  if (primaryVehicle?.vin) specs.push(`VIN ${primaryVehicle.vin.slice(-6)}`);
+  if (tesla.prefill?.year) specs.push(String(tesla.prefill.year));
+  if (tesla.prefill?.model) specs.push(tesla.prefill.model);
+  if (tesla.prefill?.vin) specs.push(`VIN ${tesla.prefill.vin.slice(-6)}`);
 
   return (
     <Box className={stepClasses.card}>
@@ -336,7 +227,7 @@ export default function ConnectStep({
         </Text>
 
         <Box className={stepClasses.field} maxWidth="520px">
-          {teslaLinked ? (
+          {tesla.linked ? (
             <Stack gap="3">
               <Box className={teslaSummaryClass} aria-live="polite">
                 <Box className={teslaSummaryHeaderClass}>
@@ -351,7 +242,7 @@ export default function ConnectStep({
                     CONNECTED
                   </Box>
                 </Box>
-                {vehicles.isLoading && !vehicles.data ? (
+                {tesla.vehicleLoading ? (
                   <Box
                     className={css({
                       display: 'flex',
@@ -365,12 +256,12 @@ export default function ConnectStep({
                     <Spinner size="1em" label="Loading your Tesla" />
                     Loading your vehicle…
                   </Box>
-                ) : vehicles.isError ? (
+                ) : tesla.vehicleError ? (
                   <Text variant="mono-meta" fontSize="11px" color="cream.400">
                     We couldn't reach Tesla just now. You can continue and we'll
                     sync live data later.
                   </Text>
-                ) : primaryVehicle ? (
+                ) : tesla.prefill ? (
                   <>
                     <Box className={teslaVehicleNameClass}>{vehicleName}</Box>
                     {specs.length > 0 ? (
@@ -382,17 +273,8 @@ export default function ConnectStep({
                     ) : null}
                     <Text variant="mono-meta" fontSize="11px" color="cream.400">
                       We filled in your make, model and year from Tesla. You can
-                      tweak anything in the next step.
+                      review each step and tweak anything before saving.
                     </Text>
-                    {onAutoAdvance ? (
-                      <button
-                        type="button"
-                        className={manualLinkClass}
-                        onClick={onAutoAdvance}
-                      >
-                        Continue with this Tesla →
-                      </button>
-                    ) : null}
                   </>
                 ) : (
                   <Text variant="mono-meta" fontSize="11px" color="cream.400">
@@ -400,16 +282,6 @@ export default function ConnectStep({
                     car manually on the next screen.
                   </Text>
                 )}
-              </Box>
-              <Box className={teslaSkipClass}>
-                Not your car?{' '}
-                <button
-                  type="button"
-                  className={manualLinkClass}
-                  onClick={handleSkipManual}
-                >
-                  Enter details manually
-                </button>
               </Box>
             </Stack>
           ) : (
@@ -419,12 +291,7 @@ export default function ConnectStep({
                   key={tile.slug}
                   tile={tile}
                   selected={value === tile.label}
-                  connected={false}
-                  loadingStatus={
-                    tile.slug === 'tesla' &&
-                    teslaStatus.isLoading &&
-                    !teslaStatus.data
-                  }
+                  loadingStatus={tile.slug === 'tesla' && tesla.statusLoading}
                   onSelect={() => handleSelect(tile)}
                 />
               ))}
