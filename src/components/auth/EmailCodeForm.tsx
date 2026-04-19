@@ -52,6 +52,19 @@ const hintClass = css({
   maxWidth: '420px',
 });
 
+// Clerk renders its CAPTCHA widget into this element when bot sign-up
+// protection is on. The element must exist in the DOM before `signUp.create()`
+// is called; without it, Clerk silently falls back to an invisible widget that
+// can fail (e.g. Turnstile error 600010) and block the sign-up entirely.
+// https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/bot-sign-up-protection
+const captchaClass = css({
+  display: 'flex',
+  justifyContent: 'center',
+  width: '100%',
+  minHeight: '0',
+  '&:empty': { display: 'none' },
+});
+
 const codeClass = css({
   color: 'peach.400',
   fontWeight: 'bold',
@@ -145,6 +158,12 @@ export default function EmailCodeForm({ mode }: EmailCodeFormProps) {
           </Text>
         ) : null}
         {testEmail ? <TestUserHint /> : null}
+        <div
+          id="clerk-captcha"
+          className={captchaClass}
+          data-cl-theme="dark"
+          data-cl-size="flexible"
+        />
       </Stack>
     );
   }
@@ -182,6 +201,12 @@ export default function EmailCodeForm({ mode }: EmailCodeFormProps) {
         </Text>
       ) : null}
       {testEmail ? <TestUserHint /> : null}
+      <div
+        id="clerk-captcha"
+        className={captchaClass}
+        data-cl-theme="dark"
+        data-cl-size="flexible"
+      />
     </Stack>
   );
 }
