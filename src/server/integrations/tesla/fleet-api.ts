@@ -27,6 +27,10 @@ type VehicleDataEntry = {
     charge_limit_soc?: number;
     battery_range?: number;
   };
+  vehicle_config?: {
+    car_type?: string;
+    trim_badging?: string;
+  };
 };
 
 type FleetApiResponse<T> = {
@@ -45,7 +49,107 @@ export type TeslaVehicleSummary = {
   usableBatteryLevel: number | null;
   chargeLimitSoc: number | null;
   batteryRangeMi: number | null;
+  /** Manufacturer; always "Tesla" when linked via the Tesla provider. */
+  make: string;
+  /**
+   * Model derived from `vehicle_config.car_type` when available, with a VIN
+   * 4th-character fallback. Null when nothing decodes to a recognized model.
+   */
+  model: string | null;
+  /**
+   * Model year decoded from the VIN (position 10). Null when the VIN is
+   * missing or uses an unrecognized year code.
+   */
+  year: number | null;
 };
+
+/**
+ * Fleet API `vehicle_config.car_type` values observed in production. Maps to
+ * the display labels used in the onboarding MAKE/MODEL pickers so a
+ * Tesla-linked user sees the same label they would have selected manually.
+ */
+const CAR_TYPE_MODEL_MAP: Record<string, string> = {
+  models: 'Model S',
+  models2: 'Model S',
+  modelx: 'Model X',
+  model3: 'Model 3',
+  modely: 'Model Y',
+  cybertruck: 'Cybertruck',
+  truck: 'Cybertruck',
+  roadster: 'Roadster',
+  semi: 'Semi',
+};
+
+/**
+ * VIN position 4 encodes the Tesla model family. This is the fallback when
+ * `vehicle_config.car_type` isn't populated (e.g. offline vehicle) but we
+ * still have a VIN from the vehicle list endpoint.
+ *
+ * See: https://service.tesla.com/docs/Factory/VINDecoder
+ */
+const VIN_MODEL_MAP: Record<string, string> = {
+  S: 'Model S',
+  X: 'Model X',
+  '3': 'Model 3',
+  Y: 'Model Y',
+  C: 'Cybertruck',
+  R: 'Roadster',
+  T: 'Semi',
+};
+
+/**
+ * VIN position 10 is the model-year code. Tesla has been in production since
+ * 2008 (code "8"), and the NHTSA spec wraps through the alphabet skipping
+ * I/O/Q/U/Z. We populate through 2030 which is more than enough for any
+ * car that could plausibly be linked today.
+ */
+const VIN_YEAR_MAP: Record<string, number> = {
+  '8': 2008,
+  '9': 2009,
+  A: 2010,
+  B: 2011,
+  C: 2012,
+  D: 2013,
+  E: 2014,
+  F: 2015,
+  G: 2016,
+  H: 2017,
+  J: 2018,
+  K: 2019,
+  L: 2020,
+  M: 2021,
+  N: 2022,
+  P: 2023,
+  R: 2024,
+  S: 2025,
+  T: 2026,
+  V: 2027,
+  W: 2028,
+  X: 2029,
+  Y: 2030,
+};
+
+function decodeTeslaModel(
+  entry: VehicleDataEntry | VehicleListEntry,
+): string | null {
+  const full = entry as VehicleDataEntry;
+  const carType = full.vehicle_config?.car_type?.toLowerCase();
+  if (carType && CAR_TYPE_MODEL_MAP[carType]) {
+    return CAR_TYPE_MODEL_MAP[carType];
+  }
+  const vin = entry.vin;
+  if (vin && vin.length >= 4) {
+    const code = vin.charAt(3).toUpperCase();
+    return VIN_MODEL_MAP[code] ?? null;
+  }
+  return null;
+}
+
+function decodeTeslaYear(vin: string | undefined): number | null {
+  if (!vin || vin.length < 10) return null;
+  const code = vin.charAt(9).toUpperCase();
+  return VIN_YEAR_MAP[code] ?? null;
+}
 
 async function fleetFetch<T>(
   accessToken: string,
@@ -119,6 +223,9 @@ function mapVehicle(
       typeof full.charge_state?.battery_range === 'number'
         ? full.charge_state.battery_range
         : null,
+    make: 'Tesla',
+    model: decodeTeslaModel(entry),
+    year: decodeTeslaYear(entry.vin),
   };
 }
 
@@ -142,7 +249,7 @@ export async function fetchVehiclesWithState(args: {
           args.accessToken,
           args.region,
           `/api/1/vehicles/${v.id}/vehicle_data?endpoints=${encodeURIComponent(
-            'vehicle_state;charge_state',
+            'vehicle_state;charge_state;vehicle_config',
           )}`,
         );
         return mapVehicle(data);
