@@ -63,7 +63,7 @@ function WelcomeRoute() {
 
         <Stack className={shellClass}>
           <Header
-            sessionLabel="SESSION · 00/09"
+            sessionLabel="SESSION · 00/08"
             buildLabel="v1.0 BETA"
             showMeta
           />
