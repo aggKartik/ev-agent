@@ -22,6 +22,15 @@ type ConnectStepProps = {
    * the payload to prefill make/model/year.
    */
   onTeslaPrefill: (prefill: TeslaPrefill) => void;
+  /**
+   * If the OAuth callback redirected back with an error (e.g. the user
+   * rejected consent, Tesla returned `access_denied`, or our token
+   * exchange failed), the parent forwards the decoded reason so we can
+   * surface it inline. `null` when the last redirect completed cleanly.
+   */
+  oauthError?: { provider: string; reason: string } | null;
+  /** Called when the user acknowledges the error so it stops re-rendering. */
+  onDismissOauthError?: () => void;
 };
 
 type ProviderTile = {
@@ -160,10 +169,61 @@ function ProviderOption({
   );
 }
 
+/**
+ * Maps the OAuth error codes our callback forwards (and a couple of common
+ * Tesla-side `error` values) to human copy. Anything we don't recognize
+ * falls through to the raw code so support can still grep for it.
+ */
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  access_denied: 'You cancelled the Tesla consent screen.',
+  missing_params: 'Tesla returned an incomplete response. Please try again.',
+  invalid_state: 'The link session expired. Please try again.',
+  invalid_state_signature:
+    'The link session signature was invalid. Please try again.',
+  invalid_token_response:
+    'Tesla returned an unexpected response. Please try again.',
+  missing_config: 'Tesla credentials are not configured for this environment.',
+};
+
+function formatOauthError(reason: string): string {
+  return OAUTH_ERROR_MESSAGES[reason] ?? `Tesla link failed (${reason}).`;
+}
+
+const oauthErrorBannerClass = css({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: '3',
+  padding: '3',
+  borderRadius: 'md',
+  borderWidth: '1px',
+  borderColor: 'alpha.cream-28',
+  background: 'rgba(233, 74, 140, 0.08)',
+  color: 'cream.200',
+  fontFamily: 'mono',
+  fontSize: '12px',
+  letterSpacing: '0.04em',
+});
+
+const oauthErrorDismissClass = css({
+  appearance: 'none',
+  background: 'transparent',
+  border: 'none',
+  padding: 0,
+  color: 'cream.400',
+  cursor: 'pointer',
+  fontFamily: 'mono',
+  fontSize: '11px',
+  letterSpacing: '0.14em',
+  _hover: { color: 'peach.400' },
+});
+
 export default function ConnectStep({
   value,
   onChange,
   onTeslaPrefill,
+  oauthError,
+  onDismissOauthError,
 }: ConnectStepProps) {
   const stepClasses = step();
 
@@ -227,6 +287,26 @@ export default function ConnectStep({
         </Text>
 
         <Box className={stepClasses.field} maxWidth="520px">
+          {oauthError ? (
+            <Box
+              className={oauthErrorBannerClass}
+              role="alert"
+              aria-live="assertive"
+              mb="3"
+            >
+              <Box>{formatOauthError(oauthError.reason)}</Box>
+              {onDismissOauthError ? (
+                <button
+                  type="button"
+                  className={oauthErrorDismissClass}
+                  onClick={onDismissOauthError}
+                  aria-label="Dismiss error"
+                >
+                  DISMISS
+                </button>
+              ) : null}
+            </Box>
+          ) : null}
           {tesla.linked ? (
             <Stack gap="3">
               <Box className={teslaSummaryClass} aria-live="polite">

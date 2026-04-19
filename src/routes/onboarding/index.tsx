@@ -1,7 +1,8 @@
 import { useForm, useStore } from '@tanstack/react-form';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Box } from 'styled-system/jsx';
+import { z } from 'zod';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
@@ -13,11 +14,28 @@ import NameStep from '#/components/onboarding/NameStep';
 import PrefsStep from '#/components/onboarding/PrefsStep';
 import SuccessStep from '#/components/onboarding/SuccessStep';
 import YearStep from '#/components/onboarding/YearStep';
+import { trpc } from '#/lib/trpc';
 import type { TeslaPrefill } from '#/lib/useTeslaPrefill';
 import { css } from '../../../styled-system/css';
 import { progress } from '../../../styled-system/recipes';
 
+/**
+ * Search params the OAuth callback appends when redirecting users back to
+ * `/onboarding`. `connected=<slug>` signals a successful link, while the
+ * `connect=error` triad carries a provider slug plus a machine-readable
+ * reason so the CONNECT step can surface an explanation.
+ */
+const onboardingSearchSchema = z
+  .object({
+    connected: z.string().optional(),
+    connect: z.literal('error').optional(),
+    provider: z.string().optional(),
+    reason: z.string().optional(),
+  })
+  .partial();
+
 export const Route = createFileRoute('/onboarding/')({
+  validateSearch: (search) => onboardingSearchSchema.parse(search),
   component: OnboardingComponent,
 });
 
@@ -196,6 +214,10 @@ function getProgress(step: Step): number {
 }
 
 function OnboardingComponent() {
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const trpcUtils = trpc.useUtils();
+
   const form = useForm({
     defaultValues: {
       name: '',
@@ -210,9 +232,45 @@ function OnboardingComponent() {
     },
   });
 
-  const [currentStep, setCurrentStep] = useState<Step>('INTRO_CAR');
+  // When the OAuth callback sends the user back with `?connected=tesla` (or
+  // `?connect=error&provider=tesla&reason=...`), drop them directly on the
+  // CONNECT step instead of the intro so they immediately see the linked /
+  // errored state. Otherwise the Tesla redirect just looked like "nothing
+  // happened" because the flow reset to INTRO_CAR on every page load.
+  const initialStep: Step =
+    search.connected || (search.connect === 'error' && search.provider)
+      ? 'CONNECT'
+      : 'INTRO_CAR';
+
+  const [currentStep, setCurrentStep] = useState<Step>(initialStep);
   const [transitionKey, setTransitionKey] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+  const [oauthError, setOauthError] = useState<{
+    provider: string;
+    reason: string;
+  } | null>(
+    search.connect === 'error' && search.provider
+      ? { provider: search.provider, reason: search.reason ?? 'unknown' }
+      : null,
+  );
+
+  // Right after the redirect, invalidate the Tesla status + vehicles caches
+  // so the CONNECT step's queries refetch the just-linked state instead of
+  // reading a stale "not linked" response from before the OAuth dance.
+  // Then scrub the query params so a refresh doesn't keep re-triggering
+  // this path or keep a stale error visible. This intentionally runs once
+  // on mount — the navigate call clears the params so dep churn no-ops.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only OAuth return handler
+  useEffect(() => {
+    if (!search.connected && search.connect !== 'error') return;
+    if (search.connected) {
+      void trpcUtils.oauth.status.invalidate({ provider: search.connected });
+      if (search.connected === 'tesla') {
+        void trpcUtils.tesla.vehicles.invalidate();
+      }
+    }
+    void navigate({ search: {}, replace: true });
+  }, []);
 
   const formValues = useStore(form.store, (state) => state.values);
 
@@ -397,6 +455,8 @@ function OnboardingComponent() {
                   value={field.state.value}
                   onChange={field.handleChange}
                   onTeslaPrefill={handleTeslaPrefill}
+                  oauthError={oauthError}
+                  onDismissOauthError={() => setOauthError(null)}
                 />
               )}
             </form.Field>
