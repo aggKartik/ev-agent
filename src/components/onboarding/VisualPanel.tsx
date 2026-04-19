@@ -490,7 +490,7 @@ function ConnectVisual() {
           </defs>
           {[60, 100, 140, 180].map((r, i) => (
             <circle
-              key={i}
+              key={r}
               cx="200"
               cy="200"
               r={r}
@@ -590,8 +590,8 @@ function PrefsVisual({ data }: { data: any }) {
         justify="center"
         gap="3"
       >
-        {rows.map((row, i) => (
-          <Flex key={i} alignItems="center" gap="2.5">
+        {rows.map((row) => (
+          <Flex key={row.label} alignItems="center" gap="2.5">
             <Text
               variant="mono-meta"
               fontSize="9px"
