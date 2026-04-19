@@ -1,9 +1,10 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Box, Stack } from 'styled-system/jsx';
+import { Box } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
+import AppShell, { StageInner } from '#/components/layout/AppShell';
 import ConnectStep from '#/components/onboarding/ConnectStep';
 import IntroCarStep from '#/components/onboarding/IntroCarStep';
 import MakeStep from '#/components/onboarding/MakeStep';
@@ -80,31 +81,6 @@ const defaultFormStepNavConfig: FormStepNavConfig = {
   canAdvance: () => true,
 };
 
-const pageClass = css({
-  width: 'full',
-  maxWidth: '86rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10',
-  alignItems: 'center',
-  px: { base: '6', md: '10' },
-});
-
-const overlayClass = css({
-  position: 'fixed',
-  inset: 0,
-  zIndex: '60',
-});
-
-const shellClass = css({
-  position: 'relative',
-  width: 'full',
-  height: '100dvh',
-  display: 'flex',
-  flexDirection: 'column',
-  zIndex: 2,
-});
-
 const progressClass = css({
   width: 'full',
   maxWidth: '74rem',
@@ -121,20 +97,6 @@ const progressClass = css({
 
 const progressTrackWrapClass = css({
   flex: 1,
-});
-
-const stageClass = css({
-  position: 'relative',
-  zIndex: 5,
-  flex: 1,
-  minHeight: 0,
-  display: 'flex',
-  alignItems: { base: 'flex-start', md: 'center' },
-  justifyContent: 'center',
-  px: { base: '5', md: '10' },
-  pt: { base: '6', md: '6' },
-  pb: { base: '40', md: '36' },
-  overflowY: 'auto',
 });
 
 const stepTransitionClass = css({
@@ -318,182 +280,175 @@ function OnboardingComponent() {
     void form.handleSubmit();
   };
 
-  return (
-    <Box className={overlayClass}>
-      <Box className="app-container">
-        <Box className="horizon">
-          <Box className="horizon-grid" />
-        </Box>
+  const headerNode = (
+    <Header
+      sessionLabel={`SESSION · ${String(stepIndex + 1).padStart(2, '0')}/${String(steps.length).padStart(2, '0')}`}
+      buildLabel="v1.0 BETA"
+      showMeta
+    />
+  );
 
-        <Stack className={shellClass}>
-          <Header
-            sessionLabel={`SESSION · ${String(stepIndex + 1).padStart(2, '0')}/${String(steps.length).padStart(2, '0')}`}
-            buildLabel="v1.0 BETA"
-            showMeta
-          />
-
-          {showProgress ? (
-            <Box className={progressClass}>
-              <Box>{progressLabel}</Box>
-              <Box className={progressTrackWrapClass}>
-                <Box className={progress().track} aria-hidden="true">
-                  <Box
-                    className={progress({ fill: 'default' }).fill}
-                    style={{ width: `${progressValue}%` }}
-                  />
-                </Box>
-              </Box>
-              <Box>{Math.round(progressValue)}%</Box>
-            </Box>
-          ) : null}
-
+  const progressNode = showProgress ? (
+    <Box className={progressClass}>
+      <Box>{progressLabel}</Box>
+      <Box className={progressTrackWrapClass}>
+        <Box className={progress().track} aria-hidden="true">
           <Box
-            className={stageClass}
-            style={
-              shouldTopAlignStage ? { alignItems: 'flex-start' } : undefined
-            }
+            className={progress({ fill: 'default' }).fill}
+            style={{ width: `${progressValue}%` }}
+          />
+        </Box>
+      </Box>
+      <Box>{Math.round(progressValue)}%</Box>
+    </Box>
+  ) : null;
+
+  const footerNode = showPinnedFormNav ? (
+    <Box className={formNavBarClass}>
+      <Box className={formNavInnerClass}>
+        <Box className={formNavButtonsClass}>
+          <Button variant="ghost" onClick={goToPreviousStep}>
+            Back
+          </Button>
+          <Button disabled={!canAdvance} onClick={goToNextStep}>
+            {primaryActionLabel}
+          </Button>
+        </Box>
+        <Box className={navEdgesClass}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={navEdgeButtonClass}
+            aria-label="Back step"
+            onClick={goToPreviousStep}
           >
-            <Box
-              key={transitionKey}
-              data-direction={direction}
-              className={stepTransitionClass}
-            >
-              <Box
-                as="form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void form.handleSubmit();
-                }}
-                className={pageClass}
-              >
-                {currentStep === 'INTRO_CAR' ? (
-                  <IntroCarStep onNext={goToNextStep} />
-                ) : null}
-
-                {currentStep === 'NAME' ? (
-                  <form.Field name="name">
-                    {(field) => (
-                      <NameStep
-                        value={field.state.value}
-                        onChange={field.handleChange}
-                        onNext={() => {
-                          field.handleBlur();
-                          goToNextStep();
-                        }}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'MAKE' ? (
-                  <form.Field name="make">
-                    {(field) => (
-                      <MakeStep
-                        value={field.state.value}
-                        nameState={formValues.name}
-                        onChange={field.handleChange}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'MODEL' ? (
-                  <form.Field name="model">
-                    {(field) => (
-                      <ModelStep
-                        value={field.state.value}
-                        makeState={formValues.make}
-                        onChange={field.handleChange}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'YEAR' ? (
-                  <form.Field name="year">
-                    {(field) => (
-                      <YearStep
-                        value={field.state.value}
-                        makeState={formValues.make}
-                        modelState={formValues.model}
-                        onChange={field.handleChange}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'CONNECT' ? (
-                  <form.Field name="connect">
-                    {(field) => (
-                      <ConnectStep
-                        value={field.state.value}
-                        onChange={field.handleChange}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'PREFS' ? (
-                  <form.Field name="prefs">
-                    {(field) => (
-                      <PrefsStep
-                        value={field.state.value}
-                        onChange={field.handleChange}
-                      />
-                    )}
-                  </form.Field>
-                ) : null}
-
-                {currentStep === 'SUCCESS' ? (
-                  <SuccessStep
-                    makeState={formValues.make}
-                    modelState={formValues.model}
-                    onNext={() => {
-                      handleSubmit();
-                    }}
-                  />
-                ) : null}
-              </Box>
-            </Box>
-          </Box>
-
-          {showPinnedFormNav ? (
-            <Box className={formNavBarClass}>
-              <Box className={formNavInnerClass}>
-                <Box className={formNavButtonsClass}>
-                  <Button variant="ghost" onClick={goToPreviousStep}>
-                    Back
-                  </Button>
-                  <Button disabled={!canAdvance} onClick={goToNextStep}>
-                    {primaryActionLabel}
-                  </Button>
-                </Box>
-                <Box className={navEdgesClass}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={navEdgeButtonClass}
-                    aria-label="Back step"
-                    onClick={goToPreviousStep}
-                  >
-                    {'←'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={navEdgeButtonClass}
-                    aria-label="Next step"
-                    disabled={!canAdvance}
-                    onClick={goToNextStep}
-                  >
-                    {'→'}
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          ) : null}
-        </Stack>
+            {'←'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={navEdgeButtonClass}
+            aria-label="Next step"
+            disabled={!canAdvance}
+            onClick={goToNextStep}
+          >
+            {'→'}
+          </Button>
+        </Box>
       </Box>
     </Box>
+  ) : null;
+
+  return (
+    <AppShell
+      header={headerNode}
+      progress={progressNode}
+      footer={footerNode}
+      background="horizon-only"
+      stage="onboarding"
+      stageTopAlign={shouldTopAlignStage}
+    >
+      <Box
+        key={transitionKey}
+        data-direction={direction}
+        className={stepTransitionClass}
+      >
+        <StageInner
+          as="form"
+          onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            void form.handleSubmit();
+          }}
+        >
+          {currentStep === 'INTRO_CAR' ? (
+            <IntroCarStep onNext={goToNextStep} />
+          ) : null}
+
+          {currentStep === 'NAME' ? (
+            <form.Field name="name">
+              {(field) => (
+                <NameStep
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onNext={() => {
+                    field.handleBlur();
+                    goToNextStep();
+                  }}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'MAKE' ? (
+            <form.Field name="make">
+              {(field) => (
+                <MakeStep
+                  value={field.state.value}
+                  nameState={formValues.name}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'MODEL' ? (
+            <form.Field name="model">
+              {(field) => (
+                <ModelStep
+                  value={field.state.value}
+                  makeState={formValues.make}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'YEAR' ? (
+            <form.Field name="year">
+              {(field) => (
+                <YearStep
+                  value={field.state.value}
+                  makeState={formValues.make}
+                  modelState={formValues.model}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'CONNECT' ? (
+            <form.Field name="connect">
+              {(field) => (
+                <ConnectStep
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'PREFS' ? (
+            <form.Field name="prefs">
+              {(field) => (
+                <PrefsStep
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          {currentStep === 'SUCCESS' ? (
+            <SuccessStep
+              makeState={formValues.make}
+              modelState={formValues.model}
+              onNext={() => {
+                handleSubmit();
+              }}
+            />
+          ) : null}
+        </StageInner>
+      </Box>
+    </AppShell>
   );
 }
