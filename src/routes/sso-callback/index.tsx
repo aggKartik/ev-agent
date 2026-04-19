@@ -129,7 +129,8 @@ function SsoCallbackRoute() {
         }
       } catch (err) {
         console.error('SSO callback failed:', err);
-        hasRun.current = false;
+        // Keep hasRun.current = true so a transient re-render doesn't
+        // retry the failed SSO flow while the navigation unmounts us.
         navigateToSignIn();
       }
     })();
