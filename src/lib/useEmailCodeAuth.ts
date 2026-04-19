@@ -43,7 +43,7 @@ export function useEmailCodeAuth(
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ready = initialMode === 'sign-in' ? Boolean(signIn) : Boolean(signUp);
+  const ready = mode === 'sign-in' ? Boolean(signIn) : Boolean(signUp);
 
   const navigateOnSuccess = () => {
     router.navigate({ to: '/onboarding' });
