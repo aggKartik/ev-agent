@@ -11,7 +11,6 @@ import ModelStep from '#/components/onboarding/ModelStep';
 import NameStep from '#/components/onboarding/NameStep';
 import PrefsStep from '#/components/onboarding/PrefsStep';
 import SuccessStep from '#/components/onboarding/SuccessStep';
-import WelcomeStep from '#/components/onboarding/WelcomeStep';
 import YearStep from '#/components/onboarding/YearStep';
 import { css } from '../../../styled-system/css';
 import { progress } from '../../../styled-system/recipes';
@@ -21,7 +20,6 @@ export const Route = createFileRoute('/onboarding/')({
 });
 
 const steps = [
-  'WELCOME',
   'INTRO_CAR',
   'NAME',
   'MAKE',
@@ -44,7 +42,7 @@ type OnboardingFormValues = {
 };
 
 const formSteps = steps.filter(
-  (step) => step !== 'WELCOME' && step !== 'INTRO_CAR' && step !== 'SUCCESS',
+  (step) => step !== 'INTRO_CAR' && step !== 'SUCCESS',
 );
 
 type FormStep = (typeof formSteps)[number];
@@ -221,7 +219,7 @@ function getPreviousStep(step: Step): Step {
 }
 
 function getProgress(step: Step): number {
-  if (step === 'WELCOME' || step === 'INTRO_CAR') return 0;
+  if (step === 'INTRO_CAR') return 0;
   if (step === 'SUCCESS') return 100;
 
   const formIndex = formSteps.indexOf(step);
@@ -245,7 +243,7 @@ function OnboardingComponent() {
     },
   });
 
-  const [currentStep, setCurrentStep] = useState<Step>('WELCOME');
+  const [currentStep, setCurrentStep] = useState<Step>('INTRO_CAR');
   const [transitionKey, setTransitionKey] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
 
@@ -265,16 +263,11 @@ function OnboardingComponent() {
 
   const progressValue = getProgress(currentStep);
 
-  const showProgress =
-    currentStep !== 'WELCOME' &&
-    currentStep !== 'INTRO_CAR' &&
-    currentStep !== 'SUCCESS';
+  const showProgress = currentStep !== 'INTRO_CAR' && currentStep !== 'SUCCESS';
 
   const isFormStep = formSteps.includes(currentStep as FormStep);
 
   const showPinnedFormNav = isFormStep;
-
-  const showWelcomeAtmosphere = currentStep === 'WELCOME';
 
   const stepIndex = steps.indexOf(currentStep);
   const currentProgressIndex = showProgress
@@ -282,7 +275,7 @@ function OnboardingComponent() {
     : -1;
 
   const progressLabel =
-    currentStep === 'WELCOME'
+    currentStep === 'INTRO_CAR'
       ? 'INTRO'
       : currentStep === 'SUCCESS'
         ? 'COMPLETE'
@@ -329,8 +322,6 @@ function OnboardingComponent() {
   return (
     <Box className={overlayClass}>
       <Box className="app-container">
-        {showWelcomeAtmosphere ? <Box className="stars" /> : null}
-        {showWelcomeAtmosphere ? <Box className="sun" /> : null}
         <Box className="horizon">
           <Box className="horizon-grid" />
         </Box>
@@ -376,10 +367,6 @@ function OnboardingComponent() {
                 }}
                 className={pageClass}
               >
-                {currentStep === 'WELCOME' ? (
-                  <WelcomeStep onContinue={goToNextStep} />
-                ) : null}
-
                 {currentStep === 'INTRO_CAR' ? (
                   <IntroCarStep onNext={goToNextStep} />
                 ) : null}
