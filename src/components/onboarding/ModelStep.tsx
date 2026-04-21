@@ -1,4 +1,5 @@
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { option } from '../../../styled-system/recipes/option';
@@ -55,14 +56,15 @@ export default function ModelStep({
               const sel = value === m;
               const cardClasses = option({ selected: sel });
               return (
-                <button
+                <Button
                   type="button"
+                  unstyled
                   key={m}
                   className={cardClasses.card}
                   onClick={() => onChange(m)}
                 >
                   <Box margin="auto">{m}</Box>
-                </button>
+                </Button>
               );
             })}
           </Box>

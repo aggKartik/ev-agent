@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/Button';
+import Input from '#/components/Input';
 import { Text } from '#/components/Text';
 import { useEmailCodeAuth } from '#/lib/useEmailCodeAuth';
 import { css } from '../../../styled-system/css';
-import { input } from '../../../styled-system/recipes/input';
 
 type Mode = 'sign-in' | 'sign-up';
 
@@ -99,9 +99,8 @@ export default function EmailCodeForm({ mode }: EmailCodeFormProps) {
         <Text textStyle="mono-meta" color="cream.600" textAlign="center">
           Code sent to <strong>{auth.email}</strong>
         </Text>
-        <input
+        <Input
           ref={codeInputRef}
-          className={input()}
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
@@ -170,8 +169,7 @@ export default function EmailCodeForm({ mode }: EmailCodeFormProps) {
 
   return (
     <Stack className={formClass} alignItems="center">
-      <input
-        className={input()}
+      <Input
         type="email"
         autoComplete="email"
         placeholder="you@example.com"

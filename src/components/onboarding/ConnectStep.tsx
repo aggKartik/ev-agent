@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import Spinner from '#/components/Spinner';
 import { trpc } from '#/lib/trpc';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
@@ -57,7 +58,7 @@ type ProviderOptionProps = {
 };
 
 function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
-  const cardClasses = connect();
+  const cardClasses = connect({ selected });
   const chipClasses = chip();
 
   // Per-tile status query; skipped for non-OAuth placeholder tiles. One
@@ -75,19 +76,11 @@ function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
   const isConnected = tile.oauth && status.data?.linked === true;
   const isLoading = tile.oauth && status.isLoading && !status.data;
 
-  const style = selected
-    ? {
-        borderColor: 'var(--colors-peach-400)',
-        background:
-          'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
-      }
-    : {};
-
   return (
-    <button
+    <Button
       type="button"
+      unstyled
       className={cardClasses.card}
-      style={style}
       onClick={onSelect}
       aria-pressed={selected}
     >
@@ -116,7 +109,7 @@ function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
           )}
         </Box>
       ) : null}
-    </button>
+    </Button>
   );
 }
 
