@@ -30,6 +30,11 @@ export async function getOrLinkUserByClerkId(
 
   const email = await resolveEmail();
 
+  // `email` column has a UNIQUE constraint. Only include it in the INSERT
+  // when no other user already owns it — otherwise the insert would throw
+  // an unhandled unique-constraint violation (the `onConflict` clause only
+  // covers `clerkUserId`).
+  let insertEmail: string | undefined;
   if (email) {
     const linked = await db
       .updateTable('users')
@@ -40,13 +45,21 @@ export async function getOrLinkUserByClerkId(
       .executeTakeFirst();
 
     if (linked) return { id: linked.id };
+
+    const claimed = await db
+      .selectFrom('users')
+      .select('id')
+      .where('email', '=', email)
+      .executeTakeFirst();
+
+    if (!claimed) insertEmail = email;
   }
 
   await db
     .insertInto('users')
     .values({
       clerkUserId,
-      ...(email ? { email } : {}),
+      ...(insertEmail ? { email: insertEmail } : {}),
     })
     .onConflict((oc) => oc.column('clerkUserId').doNothing())
     .execute();

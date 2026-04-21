@@ -56,6 +56,10 @@ const placeholderTiles: ProviderTile[] = [
  * Reflects "this provider is already linked server-side" into the parent
  * form state so the CONNECT step's primary action can flip from "Skip for
  * now" to "Continue" without any manual user interaction.
+ *
+ * Only populates the field when it is empty so that multiple linked
+ * providers don't fight each other in a render loop — the first linked
+ * provider wins, subsequent ones no-op unless the user clears the field.
  */
 function useReflectLinkedProvider(args: {
   enabled: boolean;
@@ -67,7 +71,7 @@ function useReflectLinkedProvider(args: {
   const { enabled, linked, label, currentValue, onChange } = args;
   useEffect(() => {
     if (!enabled || !linked) return;
-    if (currentValue === label) return;
+    if (currentValue !== '') return;
     onChange(label);
   }, [enabled, linked, label, currentValue, onChange]);
 }
