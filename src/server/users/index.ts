@@ -55,14 +55,30 @@ export async function getOrLinkUserByClerkId(
     if (!claimed) insertEmail = email;
   }
 
-  await db
-    .insertInto('users')
-    .values({
-      clerkUserId,
-      ...(insertEmail ? { email: insertEmail } : {}),
-    })
-    .onConflict((oc) => oc.column('clerkUserId').doNothing())
-    .execute();
+  try {
+    await db
+      .insertInto('users')
+      .values({
+        clerkUserId,
+        ...(insertEmail ? { email: insertEmail } : {}),
+      })
+      .onConflict((oc) => oc.column('clerkUserId').doNothing())
+      .execute();
+  } catch (err) {
+    // Defensive backstop for the TOCTOU window between the `claimed`
+    // SELECT above and this INSERT: a concurrent request may have just
+    // inserted a row with the same email. Retry once without the email
+    // so the Clerk user still gets an internal row.
+    if (insertEmail && isUniqueEmailViolation(err)) {
+      await db
+        .insertInto('users')
+        .values({ clerkUserId })
+        .onConflict((oc) => oc.column('clerkUserId').doNothing())
+        .execute();
+    } else {
+      throw err;
+    }
+  }
 
   const row = await db
     .selectFrom('users')
@@ -71,6 +87,20 @@ export async function getOrLinkUserByClerkId(
     .executeTakeFirstOrThrow();
 
   return row;
+}
+
+/** Postgres unique-violation (SQLSTATE 23505) on the `users_email_key` index. */
+function isUniqueEmailViolation(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as { code?: unknown; constraint?: unknown; detail?: unknown };
+  if (e.code !== '23505') return false;
+  if (typeof e.constraint === 'string' && e.constraint.includes('email')) {
+    return true;
+  }
+  if (typeof e.detail === 'string' && /\bemail\b/i.test(e.detail)) {
+    return true;
+  }
+  return false;
 }
 
 /**
