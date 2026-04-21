@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { css, cx } from '../../../styled-system/css';
@@ -67,15 +68,16 @@ export default function PrefsStep({ value, onChange }: PrefsStepProps) {
               const sel = value.includes(o.label);
               const cardClasses = option({ selected: sel });
               return (
-                <button
+                <Button
                   type="button"
+                  unstyled
                   key={o.label}
                   className={cx(cardClasses.card, prefCardClass)}
                   onClick={() => toggleOption(o.label)}
                 >
                   <Box className={cardClasses.blob}>{o.e}</Box>
                   <Box>{o.label}</Box>
-                </button>
+                </Button>
               );
             })}
           </Box>

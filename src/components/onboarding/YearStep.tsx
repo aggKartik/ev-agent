@@ -1,4 +1,5 @@
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { css, cx } from '../../../styled-system/css';
@@ -65,14 +66,15 @@ export default function YearStep({
             {years.map((year) => {
               const selected = value === String(year);
               return (
-                <button
+                <Button
                   type="button"
+                  unstyled
                   key={year}
                   onClick={() => onChange(String(year))}
                   className={yearChipClass(selected)}
                 >
                   {year}
-                </button>
+                </Button>
               );
             })}
           </Box>

@@ -1,7 +1,7 @@
 import { Box, Stack } from 'styled-system/jsx';
+import Input from '#/components/Input';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
-import { input } from '../../../styled-system/recipes/input';
 import { step } from '../../../styled-system/recipes/step';
 
 type NameStepProps = {
@@ -26,8 +26,7 @@ export default function NameStep({ value, onChange, onNext }: NameStepProps) {
           when we text route changes.
         </Text>
         <Box className={stepClasses.field}>
-          <input
-            className={input()}
+          <Input
             type="text"
             placeholder="Type your name…"
             value={value || ''}
