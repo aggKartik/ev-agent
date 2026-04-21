@@ -47,6 +47,17 @@ function requireConfig() {
   return config;
 }
 
+/**
+ * Validate Tesla's token response and project it into our {@link TokenSet}.
+ *
+ * Tesla's token endpoint is standard OAuth2 but a few fields are optional or
+ * only present conditionally:
+ *   - `scope` is often omitted from the response body; the user already
+ *     consented at authorize time. We fall back to the scopes we requested.
+ *   - `token_type` is always "Bearer" in practice but we default defensively.
+ *   - `refresh_token` is only returned when `offline_access` was requested,
+ *     which we always do — so it remains a hard requirement.
+ */
 function parseTokenResponse(raw: RawTokenResponse): TokenSet {
   if (typeof raw.error === 'string') {
     const detail =
@@ -57,10 +68,14 @@ function parseTokenResponse(raw: RawTokenResponse): TokenSet {
   if (
     typeof raw.access_token !== 'string' ||
     typeof raw.refresh_token !== 'string' ||
-    typeof raw.token_type !== 'string' ||
-    typeof raw.expires_in !== 'number' ||
-    typeof raw.scope !== 'string'
+    typeof raw.expires_in !== 'number'
   ) {
+    console.error('[tesla] invalid token response shape', {
+      keys: Object.keys(raw),
+      accessTokenType: typeof raw.access_token,
+      refreshTokenType: typeof raw.refresh_token,
+      expiresInType: typeof raw.expires_in,
+    });
     throw new OAuthError(
       'invalid_token_response',
       'Tesla token endpoint returned an unexpected payload shape.',
@@ -70,8 +85,11 @@ function parseTokenResponse(raw: RawTokenResponse): TokenSet {
   return {
     accessToken: raw.access_token,
     refreshToken: raw.refresh_token,
-    tokenType: raw.token_type,
-    scope: raw.scope,
+    tokenType: typeof raw.token_type === 'string' ? raw.token_type : 'Bearer',
+    scope:
+      typeof raw.scope === 'string' && raw.scope.length > 0
+        ? raw.scope
+        : TESLA_DEFAULT_SCOPES.join(' '),
     expiresAt: new Date(Date.now() + raw.expires_in * 1000),
     remoteAccountId: null,
   };
