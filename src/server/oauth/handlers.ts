@@ -1,7 +1,10 @@
 import { auth } from '@clerk/tanstack-react-start/server';
 import { env } from '#/lib/env';
 import { db } from '#/server/db';
-import { getOrCreateUserByClerkId } from '#/server/users';
+import {
+  getOrLinkUserByClerkId,
+  resolveClerkPrimaryEmail,
+} from '#/server/users';
 import { beginAuthorization, completeAuthorization } from './client';
 import { InvalidStateError, OAuthError, UnknownProviderError } from './errors';
 import { getProviderBySlug } from './registry';
@@ -143,7 +146,9 @@ export async function handleOAuthCallback(
       code,
       state,
     });
-    const user = await getOrCreateUserByClerkId(db, userId);
+    const user = await getOrLinkUserByClerkId(db, userId, () =>
+      resolveClerkPrimaryEmail(userId),
+    );
     await upsertLinkedAccount(db, providerSlug, user.id, tokens);
   } catch (err) {
     if (err instanceof InvalidStateError) {
