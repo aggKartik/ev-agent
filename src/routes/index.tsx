@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
 import WelcomeStep from '#/components/onboarding/WelcomeStep';
+import { emptyOnboardingSearch } from '#/features/onboarding/search';
 
 export const Route = createFileRoute('/')({ component: WelcomeRoute });
 
@@ -9,7 +10,7 @@ function WelcomeRoute() {
   const navigate = useNavigate();
 
   const handleContinue = () => {
-    void navigate({ to: '/onboarding' });
+    void navigate({ to: '/onboarding', search: emptyOnboardingSearch });
   };
 
   return (

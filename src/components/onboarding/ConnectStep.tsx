@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Spinner from '#/components/Spinner';
 import { trpc } from '#/lib/trpc';
@@ -11,6 +11,8 @@ import { step } from '../../../styled-system/recipes/step';
 type ConnectStepProps = {
   value: string;
   onChange: (value: string) => void;
+  /** Set when the OAuth callback redirected with `?connect=error&reason=…` */
+  errorReason?: string;
 };
 
 type ProviderTile = {
@@ -50,19 +52,48 @@ const placeholderTiles: ProviderTile[] = [
   },
 ];
 
+/**
+ * Reflects "this provider is already linked server-side" into the parent
+ * form state so the CONNECT step's primary action can flip from "Skip for
+ * now" to "Continue" without any manual user interaction.
+ *
+ * Only populates the field when it is empty so that multiple linked
+ * providers don't fight each other in a render loop — the first linked
+ * provider wins, subsequent ones no-op unless the user clears the field.
+ */
+function useReflectLinkedProvider(args: {
+  enabled: boolean;
+  linked: boolean;
+  label: string;
+  currentValue: string;
+  onChange: (value: string) => void;
+}) {
+  const { enabled, linked, label, currentValue, onChange } = args;
+  useEffect(() => {
+    if (!enabled || !linked) return;
+    if (currentValue !== '') return;
+    onChange(label);
+  }, [enabled, linked, label, currentValue, onChange]);
+}
+
 type ProviderOptionProps = {
   tile: ProviderTile;
   selected: boolean;
+  connectFieldValue: string;
+  onChange: (value: string) => void;
   onSelect: () => void;
 };
 
-function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
+function ProviderOption({
+  tile,
+  selected,
+  connectFieldValue,
+  onChange,
+  onSelect,
+}: ProviderOptionProps) {
   const cardClasses = connect();
   const chipClasses = chip();
 
-  // Per-tile status query; skipped for non-OAuth placeholder tiles. One
-  // query per provider keeps the generic oauth.status endpoint simple and
-  // lets React Query dedupe/cached responses per provider key.
   const status = trpc.oauth.status.useQuery(
     { provider: tile.slug },
     {
@@ -75,6 +106,14 @@ function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
   const isConnected = tile.oauth && status.data?.linked === true;
   const isLoading = tile.oauth && status.isLoading && !status.data;
 
+  useReflectLinkedProvider({
+    enabled: tile.oauth,
+    linked: status.data?.linked === true,
+    label: tile.label,
+    currentValue: connectFieldValue,
+    onChange,
+  });
+
   const style = selected
     ? {
         borderColor: 'var(--colors-peach-400)',
@@ -83,12 +122,25 @@ function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
       }
     : {};
 
+  const handleClick = () => {
+    if (!tile.oauth) {
+      onChange(tile.label);
+      return;
+    }
+    if (isConnected) {
+      onChange(tile.label);
+      return;
+    }
+    if (isLoading) return;
+    onSelect();
+  };
+
   return (
     <button
       type="button"
       className={cardClasses.card}
       style={style}
-      onClick={onSelect}
+      onClick={handleClick}
       aria-pressed={selected}
     >
       <Box className={cardClasses.icon}>{tile.icon}</Box>
@@ -120,12 +172,27 @@ function ProviderOption({ tile, selected, onSelect }: ProviderOptionProps) {
   );
 }
 
-export default function ConnectStep({ value, onChange }: ConnectStepProps) {
+function formatConnectError(reason: string): string {
+  const map: Record<string, string> = {
+    missing_params: 'The link flow returned without a code. Try again.',
+    access_denied: 'Tesla did not authorize the link.',
+    state_mismatch: 'Your session expired during linking. Try again.',
+    user_mismatch: 'Account mismatch during linking. Try again.',
+    missing: 'Link session expired. Try again.',
+    signature: 'Invalid link session. Try again.',
+    provider_mismatch: 'Provider mismatch. Try again.',
+    ttl: 'Link session timed out. Try again.',
+  };
+  return map[reason] ?? reason.replaceAll('_', ' ');
+}
+
+export default function ConnectStep({
+  value,
+  onChange,
+  errorReason,
+}: ConnectStepProps) {
   const stepClasses = step();
 
-  // Every provider registered via `registerProvider()` appears here — the
-  // UI is fully registry-driven and adding a new integration requires zero
-  // component changes.
   const providers = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
 
   const oauthTiles: ProviderTile[] = (providers.data ?? []).map((p) => ({
@@ -138,13 +205,10 @@ export default function ConnectStep({ value, onChange }: ConnectStepProps) {
 
   const tiles: ProviderTile[] = [...oauthTiles, ...placeholderTiles];
 
-  const handleSelect = useCallback(
+  const handleOAuthTileSelect = useCallback(
     (tile: ProviderTile) => {
       onChange(tile.label);
-      if (tile.oauth && typeof window !== 'undefined') {
-        // Same-tab redirect: OAuth providers ship framing / popup-blocker
-        // hostility, and mobile Safari kills OAuth popups silently. The
-        // onboarding shell resumes on the CONNECT step via `?connected={slug}`.
+      if (typeof window !== 'undefined') {
         window.location.assign(`/api/oauth/${tile.slug}/connect`);
       }
     },
@@ -163,6 +227,23 @@ export default function ConnectStep({ value, onChange }: ConnectStepProps) {
           routes straight to the in-car nav.
         </Text>
 
+        {errorReason ? (
+          <Box
+            role="alert"
+            marginBottom="4"
+            padding="3"
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor="magenta.400"
+            background="alpha.cream-06"
+            maxWidth="520px"
+          >
+            <Text textStyle="caption" color="magenta.300">
+              Could not complete linking: {formatConnectError(errorReason)}
+            </Text>
+          </Box>
+        ) : null}
+
         <Box className={stepClasses.field} maxWidth="520px">
           <Stack>
             {tiles.map((tile) => (
@@ -170,7 +251,9 @@ export default function ConnectStep({ value, onChange }: ConnectStepProps) {
                 key={tile.slug}
                 tile={tile}
                 selected={value === tile.label}
-                onSelect={() => handleSelect(tile)}
+                connectFieldValue={value}
+                onChange={onChange}
+                onSelect={() => handleOAuthTileSelect(tile)}
               />
             ))}
           </Stack>

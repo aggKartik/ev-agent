@@ -1,21 +1,24 @@
+import { clerkClient } from '@clerk/tanstack-react-start/server';
 import type { Kysely } from 'kysely';
 import type { Database } from '#/server/db/types';
 
 /**
  * User directory. The `users` table is our internal source of truth;
  * everything else (OAuth accounts, cars, etc.) joins into `users.id`.
- * External identity providers (Clerk today) are resolved into a user row
- * via helpers in this module.
+ * External identity providers (Clerk today, anything else tomorrow) are resolved
+ * into a user row via helpers in this module.
  */
 
 /**
- * Look up the internal user for a given Clerk user id, creating the row
- * lazily on first authenticated request. Race-safe: concurrent callers
- * land on the same row via `ON CONFLICT DO NOTHING` + a follow-up select.
+ * Look up the internal user for a given Clerk user id. If no row exists yet,
+ * tries to attach `clerkUserId` to an existing row matched by email (when
+ * `resolveEmail` returns a primary email). Otherwise inserts a new row.
+ * Race-safe for concurrent first requests.
  */
-export async function getOrCreateUserByClerkId(
+export async function getOrLinkUserByClerkId(
   db: Kysely<Database>,
   clerkUserId: string,
+  resolveEmail: () => Promise<string | null>,
 ): Promise<{ id: number }> {
   const existing = await db
     .selectFrom('users')
@@ -25,11 +28,57 @@ export async function getOrCreateUserByClerkId(
 
   if (existing) return existing;
 
-  await db
-    .insertInto('users')
-    .values({ clerkUserId })
-    .onConflict((oc) => oc.column('clerkUserId').doNothing())
-    .execute();
+  const email = await resolveEmail();
+
+  // `email` column has a UNIQUE constraint. Only include it in the INSERT
+  // when no other user already owns it — otherwise the insert would throw
+  // an unhandled unique-constraint violation (the `onConflict` clause only
+  // covers `clerkUserId`).
+  let insertEmail: string | undefined;
+  if (email) {
+    const linked = await db
+      .updateTable('users')
+      .set({ clerkUserId })
+      .where('email', '=', email)
+      .where('clerkUserId', 'is', null)
+      .returning('id')
+      .executeTakeFirst();
+
+    if (linked) return { id: linked.id };
+
+    const claimed = await db
+      .selectFrom('users')
+      .select('id')
+      .where('email', '=', email)
+      .executeTakeFirst();
+
+    if (!claimed) insertEmail = email;
+  }
+
+  try {
+    await db
+      .insertInto('users')
+      .values({
+        clerkUserId,
+        ...(insertEmail ? { email: insertEmail } : {}),
+      })
+      .onConflict((oc) => oc.column('clerkUserId').doNothing())
+      .execute();
+  } catch (err) {
+    // Defensive backstop for the TOCTOU window between the `claimed`
+    // SELECT above and this INSERT: a concurrent request may have just
+    // inserted a row with the same email. Retry once without the email
+    // so the Clerk user still gets an internal row.
+    if (insertEmail && isUniqueEmailViolation(err)) {
+      await db
+        .insertInto('users')
+        .values({ clerkUserId })
+        .onConflict((oc) => oc.column('clerkUserId').doNothing())
+        .execute();
+    } else {
+      throw err;
+    }
+  }
 
   const row = await db
     .selectFrom('users')
@@ -38,4 +87,47 @@ export async function getOrCreateUserByClerkId(
     .executeTakeFirstOrThrow();
 
   return row;
+}
+
+/** Postgres unique-violation (SQLSTATE 23505) on the `users_email_key` index. */
+function isUniqueEmailViolation(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as { code?: unknown; constraint?: unknown; detail?: unknown };
+  if (e.code !== '23505') return false;
+  if (typeof e.constraint === 'string' && e.constraint.includes('email')) {
+    return true;
+  }
+  if (typeof e.detail === 'string' && /\bemail\b/i.test(e.detail)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @deprecated Prefer {@link getOrLinkUserByClerkId} with a Clerk email resolver.
+ * Retained for call sites that cannot resolve email (tests / scripts).
+ */
+export async function getOrCreateUserByClerkId(
+  db: Kysely<Database>,
+  clerkUserId: string,
+): Promise<{ id: number }> {
+  return getOrLinkUserByClerkId(db, clerkUserId, async () => null);
+}
+
+/** Primary email from Clerk (for linking pre-existing users by email). */
+export async function resolveClerkPrimaryEmail(
+  clerkUserId: string,
+): Promise<string | null> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkUserId);
+    const primaryId = user.primaryEmailAddressId;
+    if (primaryId) {
+      const match = user.emailAddresses.find((e) => e.id === primaryId);
+      if (match) return match.emailAddress;
+    }
+    return user.emailAddresses[0]?.emailAddress ?? null;
+  } catch {
+    return null;
+  }
 }

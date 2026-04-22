@@ -1,6 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
@@ -13,73 +13,31 @@ import NameStep from '#/components/onboarding/NameStep';
 import PrefsStep from '#/components/onboarding/PrefsStep';
 import SuccessStep from '#/components/onboarding/SuccessStep';
 import YearStep from '#/components/onboarding/YearStep';
+import { useKeyboardStepNavigation } from '#/features/onboarding/keyboard';
+import { useOAuthCallbackResult } from '#/features/onboarding/oauth-callback';
+import {
+  useOnboardingInitialState,
+  useOnboardingPersist,
+} from '#/features/onboarding/persistence';
+import { parseOnboardingSearch } from '#/features/onboarding/search';
+import { useOnboardingStepper } from '#/features/onboarding/stepper';
+import {
+  defaultFormStepNavConfig,
+  type FormStep,
+  formStepNavConfig,
+  formSteps,
+  getProgress,
+  type OnboardingFormValues,
+  steps,
+} from '#/features/onboarding/steps';
+import { trpc } from '#/lib/trpc';
 import { css } from '../../../styled-system/css';
 import { progress } from '../../../styled-system/recipes';
 
 export const Route = createFileRoute('/onboarding/')({
+  validateSearch: parseOnboardingSearch,
   component: OnboardingComponent,
 });
-
-const steps = [
-  'INTRO_CAR',
-  'NAME',
-  'MAKE',
-  'MODEL',
-  'YEAR',
-  'CONNECT',
-  'PREFS',
-  'SUCCESS',
-] as const;
-
-type Step = (typeof steps)[number];
-
-type OnboardingFormValues = {
-  name: string;
-  make: string;
-  model: string;
-  year: string;
-  connect: string;
-  prefs: string[];
-};
-
-const formSteps = steps.filter(
-  (step) => step !== 'INTRO_CAR' && step !== 'SUCCESS',
-);
-
-type FormStep = (typeof formSteps)[number];
-
-type FormStepNavConfig = {
-  canAdvance: (values: OnboardingFormValues) => boolean;
-  getPrimaryActionLabel?: (values: OnboardingFormValues) => string;
-};
-
-const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
-  NAME: {
-    canAdvance: (values) => values.name.trim().length > 0,
-  },
-  MAKE: {
-    canAdvance: (values) => Boolean(values.make),
-  },
-  MODEL: {
-    canAdvance: (values) => Boolean(values.model),
-  },
-  YEAR: {
-    canAdvance: (values) => values.year.length === 4,
-  },
-  CONNECT: {
-    canAdvance: () => true,
-    getPrimaryActionLabel: (values) =>
-      values.connect ? 'Connect' : 'Skip for now',
-  },
-  PREFS: {
-    canAdvance: () => true,
-    getPrimaryActionLabel: () => 'Review Route',
-  },
-};
-
-const defaultFormStepNavConfig: FormStepNavConfig = {
-  canAdvance: () => true,
-};
 
 const progressClass = css({
   width: 'full',
@@ -167,80 +125,50 @@ const navEdgeButtonClass = css({
   },
 });
 
-function getNextStep(step: Step): Step {
-  const index = steps.indexOf(step);
-  const next = steps[index + 1];
-  return next ?? step;
-}
-
-function getPreviousStep(step: Step): Step {
-  const index = steps.indexOf(step);
-  const previous = steps[index - 1];
-  return previous ?? step;
-}
-
-function getProgress(step: Step): number {
-  if (step === 'INTRO_CAR') return 0;
-  if (step === 'SUCCESS') return 100;
-
-  const formIndex = formSteps.indexOf(step);
-  if (formIndex < 0) return 0;
-
-  return ((formIndex + 1) / formSteps.length) * 100;
-}
-
 function OnboardingComponent() {
+  const search = Route.useSearch();
+  const initial = useOnboardingInitialState();
+
   const form = useForm({
-    defaultValues: {
-      name: '',
-      make: '',
-      model: '',
-      year: '',
-      connect: '',
-      prefs: [] as string[],
-    } satisfies OnboardingFormValues,
+    defaultValues: initial.values,
     onSubmit: async ({ value }) => {
       console.info('Onboarding submit ready for backend integration', value);
     },
   });
 
-  const [currentStep, setCurrentStep] = useState<Step>('INTRO_CAR');
-  const [transitionKey, setTransitionKey] = useState(0);
-  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+  const stepper = useOnboardingStepper(initial.step);
+  const { currentStep, direction, transitionKey, goNext, goPrev, goTo } =
+    stepper;
+
+  useOnboardingPersist(form, currentStep);
+
+  const oauthList = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
+
+  const resolveProviderLabel = useCallback(
+    (slug: string) =>
+      oauthList.data?.find((p) => p.slug === slug)?.label ??
+      slug.charAt(0).toUpperCase() + slug.slice(1),
+    [oauthList.data],
+  );
+
+  const { errorReason: connectErrorReason } = useOAuthCallbackResult({
+    search,
+    currentStep,
+    goToConnect: useCallback(() => goTo('CONNECT'), [goTo]),
+    onConnected: useCallback(
+      (slug) => {
+        form.setFieldValue('connect', resolveProviderLabel(slug));
+      },
+      [form, resolveProviderLabel],
+    ),
+  });
 
   const formValues = useStore(form.store, (state) => state.values);
 
-  const goToNextStep = useCallback(() => {
-    setDirection('forward');
-    setCurrentStep((step) => getNextStep(step));
-    setTransitionKey((value) => value + 1);
-  }, []);
-
-  const goToPreviousStep = useCallback(() => {
-    setDirection('back');
-    setCurrentStep((step) => getPreviousStep(step));
-    setTransitionKey((value) => value + 1);
-  }, []);
-
-  const progressValue = getProgress(currentStep);
-
-  const showProgress = currentStep !== 'INTRO_CAR' && currentStep !== 'SUCCESS';
-
   const isFormStep = formSteps.includes(currentStep as FormStep);
-
   const showPinnedFormNav = isFormStep;
-
-  const stepIndex = steps.indexOf(currentStep);
-  const currentProgressIndex = showProgress
-    ? formSteps.indexOf(currentStep as FormStep)
-    : -1;
-
-  const progressLabel =
-    currentStep === 'INTRO_CAR'
-      ? 'INTRO'
-      : currentStep === 'SUCCESS'
-        ? 'COMPLETE'
-        : `STEP ${currentProgressIndex + 1} OF ${formSteps.length}`;
+  const showProgress = currentStep !== 'INTRO_CAR' && currentStep !== 'SUCCESS';
+  const shouldTopAlignStage = currentStep === 'PREFS';
 
   const currentFormStepConfig = isFormStep
     ? (formStepNavConfig[currentStep as FormStep] ?? defaultFormStepNavConfig)
@@ -254,27 +182,25 @@ function OnboardingComponent() {
     (isFormStep && currentFormStepConfig.getPrimaryActionLabel?.(formValues)) ||
     'Continue';
 
-  const shouldTopAlignStage = currentStep === 'PREFS';
+  useKeyboardStepNavigation({
+    enabled: showPinnedFormNav,
+    canAdvance,
+    onPrev: goPrev,
+    onNext: goNext,
+  });
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      const tag = target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  const stepIndex = steps.indexOf(currentStep);
+  const progressValue = getProgress(currentStep);
+  const currentProgressIndex = showProgress
+    ? formSteps.indexOf(currentStep as FormStep)
+    : -1;
 
-      if (event.key === 'ArrowLeft' && showPinnedFormNav) {
-        goToPreviousStep();
-      }
-
-      if (event.key === 'ArrowRight' && showPinnedFormNav && canAdvance) {
-        goToNextStep();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [canAdvance, goToNextStep, goToPreviousStep, showPinnedFormNav]);
+  const progressLabel =
+    currentStep === 'INTRO_CAR'
+      ? 'INTRO'
+      : currentStep === 'SUCCESS'
+        ? 'COMPLETE'
+        : `STEP ${currentProgressIndex + 1} OF ${formSteps.length}`;
 
   const handleSubmit = () => {
     void form.handleSubmit();
@@ -307,10 +233,10 @@ function OnboardingComponent() {
     <Box className={formNavBarClass}>
       <Box className={formNavInnerClass}>
         <Box className={formNavButtonsClass}>
-          <Button variant="ghost" onClick={goToPreviousStep}>
+          <Button variant="ghost" onClick={goPrev}>
             Back
           </Button>
-          <Button disabled={!canAdvance} onClick={goToNextStep}>
+          <Button disabled={!canAdvance} onClick={goNext}>
             {primaryActionLabel}
           </Button>
         </Box>
@@ -320,7 +246,7 @@ function OnboardingComponent() {
             size="sm"
             className={navEdgeButtonClass}
             aria-label="Back step"
-            onClick={goToPreviousStep}
+            onClick={goPrev}
           >
             {'←'}
           </Button>
@@ -330,7 +256,7 @@ function OnboardingComponent() {
             className={navEdgeButtonClass}
             aria-label="Next step"
             disabled={!canAdvance}
-            onClick={goToNextStep}
+            onClick={goNext}
           >
             {'→'}
           </Button>
@@ -361,7 +287,7 @@ function OnboardingComponent() {
           }}
         >
           {currentStep === 'INTRO_CAR' ? (
-            <IntroCarStep onNext={goToNextStep} />
+            <IntroCarStep onNext={goNext} />
           ) : null}
 
           {currentStep === 'NAME' ? (
@@ -372,7 +298,7 @@ function OnboardingComponent() {
                   onChange={field.handleChange}
                   onNext={() => {
                     field.handleBlur();
-                    goToNextStep();
+                    goNext();
                   }}
                 />
               )}
@@ -422,6 +348,7 @@ function OnboardingComponent() {
                 <ConnectStep
                   value={field.state.value}
                   onChange={field.handleChange}
+                  errorReason={connectErrorReason}
                 />
               )}
             </form.Field>
@@ -442,9 +369,7 @@ function OnboardingComponent() {
             <SuccessStep
               makeState={formValues.make}
               modelState={formValues.model}
-              onNext={() => {
-                handleSubmit();
-              }}
+              onNext={handleSubmit}
             />
           ) : null}
         </StageInner>
@@ -452,3 +377,5 @@ function OnboardingComponent() {
     </AppShell>
   );
 }
+
+export type { OnboardingFormValues };
