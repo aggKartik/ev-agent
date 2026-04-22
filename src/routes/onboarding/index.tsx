@@ -1,6 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Header from '#/components/Header';
@@ -143,6 +143,62 @@ function OnboardingComponent() {
   useOnboardingPersist(form, currentStep);
 
   const oauthList = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
+
+  // Prefill NAME from Clerk (populated for Google OAuth sign-ins). Only fills
+  // when the field is still empty so manual edits — and values restored from
+  // sessionStorage after an OAuth redirect — are never clobbered.
+  const profileQuery = trpc.user.profile.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+  });
+  useEffect(() => {
+    const firstName = profileQuery.data?.firstName;
+    if (!firstName) return;
+    if (form.state.values.name.trim() !== '') return;
+    form.setFieldValue('name', firstName);
+  }, [profileQuery.data?.firstName, form]);
+
+  // Prefill MAKE/MODEL/YEAR when Tesla is linked. The query only runs once we
+  // confirm a linked account to avoid an expected "not linked" roundtrip.
+  const teslaStatus = trpc.oauth.status.useQuery(
+    { provider: 'tesla' },
+    { staleTime: 0, refetchOnWindowFocus: true },
+  );
+  const teslaLinked = teslaStatus.data?.linked === true;
+
+  const teslaPrefill = trpc.tesla.vehiclePrefill.useQuery(undefined, {
+    enabled: teslaLinked,
+    staleTime: 60_000,
+  });
+
+  const teslaVehicle = teslaPrefill.data?.linked
+    ? teslaPrefill.data.vehicle
+    : null;
+
+  useEffect(() => {
+    if (!teslaVehicle) return;
+    if (teslaVehicle.make && form.state.values.make === '') {
+      form.setFieldValue('make', teslaVehicle.make);
+    }
+    if (teslaVehicle.model && form.state.values.model === '') {
+      form.setFieldValue('model', teslaVehicle.model);
+    }
+    if (teslaVehicle.year && form.state.values.year === '') {
+      form.setFieldValue('year', teslaVehicle.year);
+    }
+  }, [teslaVehicle, form]);
+
+  const teslaConnectedDetail = teslaVehicle
+    ? [
+        teslaVehicle.displayName ?? null,
+        [teslaVehicle.year, teslaVehicle.make, teslaVehicle.model]
+          .filter(Boolean)
+          .join(' ') || null,
+      ]
+        .filter(Boolean)
+        .join(' · ') || null
+    : teslaLinked
+      ? 'Live data ready'
+      : null;
 
   const resolveProviderLabel = useCallback(
     (slug: string) =>
@@ -349,6 +405,7 @@ function OnboardingComponent() {
                   value={field.state.value}
                   onChange={field.handleChange}
                   errorReason={connectErrorReason}
+                  connectedDetails={{ tesla: teslaConnectedDetail }}
                 />
               )}
             </form.Field>

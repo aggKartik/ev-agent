@@ -34,7 +34,7 @@ export default function MakeStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>02 · THE MAKE</Box>
+        <Box className={stepClasses.kicker}>03 · THE MAKE</Box>
         <Text as="h1" className={stepClasses.title}>
           {nameState ? `${nameState}, ` : ''}what do you{' '}
           <Box as="em">drive</Box>?

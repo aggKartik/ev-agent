@@ -14,6 +14,11 @@ type ConnectStepProps = {
   onChange: (value: string) => void;
   /** Set when the OAuth callback redirected with `?connect=error&reason=…` */
   errorReason?: string;
+  /**
+   * Map from provider slug to a short detail string to display on the tile
+   * once it's connected (e.g. the linked vehicle's display name).
+   */
+  connectedDetails?: Partial<Record<string, string | null>>;
 };
 
 type ProviderTile = {
@@ -83,6 +88,7 @@ type ProviderOptionProps = {
   connectFieldValue: string;
   onChange: (value: string) => void;
   onSelect: () => void;
+  connectedDetail?: string | null;
 };
 
 function ProviderOption({
@@ -91,6 +97,7 @@ function ProviderOption({
   connectFieldValue,
   onChange,
   onSelect,
+  connectedDetail,
 }: ProviderOptionProps) {
   const cardClasses = connect();
   const chipClasses = chip();
@@ -120,8 +127,9 @@ function ProviderOption({
         borderColor: 'var(--colors-peach-400)',
         background:
           'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
+        cursor: isConnected ? 'default' : 'pointer',
       }
-    : {};
+    : { cursor: isConnected ? 'default' : 'pointer' };
 
   const handleClick = () => {
     if (!tile.oauth) {
@@ -129,12 +137,20 @@ function ProviderOption({
       return;
     }
     if (isConnected) {
+      // Already linked server-side — a second click must NOT kick off a
+      // fresh OAuth redirect (the user would bounce through Tesla's
+      // login again for no benefit). Re-asserting the form value keeps
+      // the step's primary action on "Continue".
       onChange(tile.label);
       return;
     }
     if (isLoading) return;
     onSelect();
   };
+
+  const title = isConnected ? `${tile.label} linked` : `Connect ${tile.label}`;
+  const description =
+    isConnected && connectedDetail ? connectedDetail : tile.description;
 
   return (
     <Button
@@ -144,11 +160,12 @@ function ProviderOption({
       style={style}
       onClick={handleClick}
       aria-pressed={selected}
+      aria-disabled={isConnected || undefined}
     >
       <Box className={cardClasses.icon}>{tile.icon}</Box>
       <Box className={cardClasses.body} textAlign="left">
-        <Box className={cardClasses.title}>Connect {tile.label}</Box>
-        <Box className={cardClasses.desc}>{tile.description}</Box>
+        <Box className={cardClasses.title}>{title}</Box>
+        <Box className={cardClasses.desc}>{description}</Box>
       </Box>
       {tile.oauth ? (
         <Box
@@ -192,6 +209,7 @@ export default function ConnectStep({
   value,
   onChange,
   errorReason,
+  connectedDetails,
 }: ConnectStepProps) {
   const stepClasses = step();
 
@@ -220,7 +238,7 @@ export default function ConnectStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>05 · TELEMETRY</Box>
+        <Box className={stepClasses.kicker}>01 · TELEMETRY</Box>
         <Text as="h1" className={stepClasses.title}>
           Link your car for <Box as="em">live data</Box>.
         </Text>
@@ -256,6 +274,7 @@ export default function ConnectStep({
                 connectFieldValue={value}
                 onChange={onChange}
                 onSelect={() => handleOAuthTileSelect(tile)}
+                connectedDetail={connectedDetails?.[tile.slug] ?? null}
               />
             ))}
           </Stack>
