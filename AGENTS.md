@@ -28,3 +28,9 @@
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
 - Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths).
 - Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
+
+## Auth / Local Testing
+- Auth is handled by Clerk (`@clerk/tanstack-react-start`). Two entry points live at `/sign-in` and `/sign-up` — both offer Google SSO and an email-code (OTP) fallback rendered by `src/components/auth/EmailCodeForm.tsx`.
+- For local development, running agents, and anything that shouldn't touch Google OAuth: use a Clerk **test email** (any address containing the `+clerk_test` subaddress, e.g. `devin+clerk_test@ev-agent.test`). On development Clerk instances, no email is sent and the verification code is always `424242`. See [Clerk's test emails docs](https://clerk.com/docs/guides/development/testing/test-emails-and-phones).
+- Set `VITE_TEST_USER_EMAIL` in `.env` (template in `.env.example`) to prefill the sign-in / sign-up form with the test address in dev. The prefill + hint only render when `import.meta.env.DEV` is true.
+- Email OTP must be enabled on the Clerk instance: Dashboard → User & authentication → Email → **Sign-in with email: Email verification code**. Dev instances have this pre-enabled by default; prod instances don't (and shouldn't use test emails anyway).

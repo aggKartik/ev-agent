@@ -16,6 +16,7 @@ export type ButtonProps = Omit<
   'color'
 > &
   Parameters<typeof button>[0] & {
+    unstyled?: boolean;
     loading?: boolean;
     loadingText?: ReactNode;
     leadingIcon?: ReactNode;
@@ -28,6 +29,7 @@ export default function Button(props: ButtonProps) {
     className,
     children,
     disabled,
+    unstyled,
     loading,
     loadingText,
     leadingIcon,
@@ -41,7 +43,7 @@ export default function Button(props: ButtonProps) {
   return (
     <ark.button
       type={type ?? 'button'}
-      className={cx(button(recipeProps), className)}
+      className={cx(unstyled ? undefined : button(recipeProps), className)}
       disabled={isDisabled}
       aria-busy={loading || undefined}
       data-loading={loading ? '' : undefined}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import Spinner from '#/components/Spinner';
 import { trpc } from '#/lib/trpc';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
@@ -136,8 +137,9 @@ function ProviderOption({
   };
 
   return (
-    <button
+    <Button
       type="button"
+      unstyled
       className={cardClasses.card}
       style={style}
       onClick={handleClick}
@@ -168,7 +170,7 @@ function ProviderOption({
           )}
         </Box>
       ) : null}
-    </button>
+    </Button>
   );
 }
 

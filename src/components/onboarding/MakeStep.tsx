@@ -1,4 +1,5 @@
 import { Box, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import { VisualPanel } from '@/components/onboarding/VisualPanel';
 import { Text } from '@/components/Text';
 import { option } from '../../../styled-system/recipes/option';
@@ -49,15 +50,16 @@ export default function MakeStep({
               const sel = value === m.name;
               const cardClasses = option({ selected: sel });
               return (
-                <button
+                <Button
                   type="button"
+                  unstyled
                   key={m.name}
                   className={cardClasses.card}
                   onClick={() => onChange(m.name)}
                 >
                   <Box>{m.name}</Box>
                   <Box className={cardClasses.sub}>{m.sub}</Box>
-                </button>
+                </Button>
               );
             })}
           </Box>
