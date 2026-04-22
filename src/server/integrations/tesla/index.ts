@@ -14,3 +14,4 @@ export {
   teslaRegion,
 } from './config';
 export * from './fleet-api';
+export * from './vin';
