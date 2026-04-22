@@ -6,11 +6,11 @@
 
 export const steps = [
   'INTRO_CAR',
+  'CONNECT',
   'NAME',
   'MAKE',
   'MODEL',
   'YEAR',
-  'CONNECT',
   'PREFS',
   'SUCCESS',
 ] as const;

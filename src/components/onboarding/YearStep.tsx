@@ -52,7 +52,7 @@ export default function YearStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>04 · THE YEAR</Box>
+        <Box className={stepClasses.kicker}>05 · THE YEAR</Box>
         <Text as="h1" className={stepClasses.title}>
           Lastly, the <Box as="em">model year</Box>.
         </Text>
