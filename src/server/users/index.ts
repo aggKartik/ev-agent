@@ -131,3 +131,25 @@ export async function resolveClerkPrimaryEmail(
     return null;
   }
 }
+
+/**
+ * Clerk-sourced display name. Present for OAuth sign-ins (Google populates
+ * first/last name); typically absent for email-code users. Used to prefill
+ * the onboarding NAME step so the user doesn't have to retype what we already
+ * know.
+ */
+export async function resolveClerkFirstName(
+  clerkUserId: string,
+): Promise<string | null> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkUserId);
+    const first = user.firstName?.trim();
+    if (first) return first;
+    const full = user.fullName?.trim();
+    if (full) return full.split(/\s+/)[0] ?? null;
+    return null;
+  } catch {
+    return null;
+  }
+}

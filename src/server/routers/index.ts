@@ -7,11 +7,13 @@ import { router } from '../trpc';
 import { exampleRouter } from './example';
 import { oauthRouter } from './oauth';
 import { teslaRouter } from './tesla';
+import { userRouter } from './user';
 
 export const appRouter = router({
   example: exampleRouter,
   oauth: oauthRouter,
   tesla: teslaRouter,
+  user: userRouter,
   // Add more feature routers here
 });
 
