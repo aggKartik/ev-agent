@@ -2,6 +2,8 @@ import { Box, Stack } from 'styled-system/jsx';
 import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
 import { cleanPlanAddress } from '#/features/plan/helpers';
 import { css } from '../../../styled-system/css';
+import { panel } from '../../../styled-system/recipes/panel';
+import { progress } from '../../../styled-system/recipes/progress';
 
 type PlanningLogProps = {
   request: PlanRequest;
@@ -9,56 +11,32 @@ type PlanningLogProps = {
   phaseIndex: number;
 };
 
-const terminalClass = css({
-  height: 'full',
-  minHeight: '280px',
-  borderRadius: '24px',
-  borderWidth: '1px',
-  borderColor: 'alpha.cream.18',
-  background: 'rgba(15, 10, 36, 0.78)',
-  boxShadow: '0 24px 80px -35px rgba(0, 0, 0, 0.8)',
-  overflow: 'hidden',
-  backdropFilter: 'blur(16px)',
-});
-
 const headerClass = css({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   px: '5',
   py: '4',
-  borderBottomWidth: '1px',
+  borderBottomWidth: 'hair',
   borderBottomColor: 'alpha.cream.10',
   textStyle: 'mono-meta',
-  fontSize: '10px',
+  fontSize: '2xs',
   letterSpacing: '0.18em',
   color: 'cream.600',
 });
 
-const progressClass = css({
-  height: '3px',
-  background: 'alpha.cream.08',
-});
-
-const progressFillClass = css({
-  height: 'full',
-  background:
-    'linear-gradient(90deg, {colors.peach.400}, {colors.magenta.400})',
-  transition: 'width 0.35s ease',
-});
-
 const bodyClass = css({
   p: '5',
-  maxHeight: { base: '320px', lg: '520px' },
+  maxHeight: { base: 'plan-log-sm', lg: 'plan-log-lg' },
   overflowY: 'auto',
   fontFamily: 'mono',
-  fontSize: '12px',
+  fontSize: 'caption',
   lineHeight: '1.65',
 });
 
 const lineClass = css({
   display: 'grid',
-  gridTemplateColumns: '24px 1fr',
+  gridTemplateColumns: '{spacing.6} 1fr',
   gap: '2',
   color: 'cream.500',
   '&[data-active=true]': {
@@ -80,6 +58,7 @@ export default function PlanningLog({
   phaseIndex,
 }: PlanningLogProps) {
   const pct = Math.round(((phaseIndex + 1) / result.phases.length) * 100);
+  const progressClasses = progress({ size: 'terminal' });
   const lines = [
     { token: '→', message: 'boot :: ev-agent/0.4.2 · session 9f2c' },
     { token: '.', message: `origin :: ${cleanPlanAddress(request.from.full)}` },
@@ -91,15 +70,22 @@ export default function PlanningLog({
   ];
 
   return (
-    <Box className={terminalClass}>
+    <Box className={panel({ variant: 'terminal' })}>
       <Box className={headerClass}>
         <span>AGENT · PLANNING</span>
-        <span>{pct}%</span>
+        <span aria-live="polite">{pct}%</span>
       </Box>
-      <Box className={progressClass}>
-        <Box className={progressFillClass} style={{ width: `${pct}%` }} />
+      <Box
+        className={progressClasses.track}
+        role="progressbar"
+        aria-label="Planning progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+      >
+        <Box className={progressClasses.fill} style={{ width: `${pct}%` }} />
       </Box>
-      <Stack className={bodyClass} gap="1">
+      <Stack className={bodyClass} gap="1" aria-live="polite">
         {lines.map((line) => (
           <Box key={`${line.token}-${line.message}`} className={lineClass}>
             <span>{line.token}</span>

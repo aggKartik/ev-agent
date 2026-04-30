@@ -1,5 +1,5 @@
 import { Crosshair, Flag, MapPin } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
 import { Box, Flex, Stack } from 'styled-system/jsx';
 import Button from '#/components/Button';
 import Icon from '#/components/Icon';
@@ -12,7 +12,11 @@ import type {
   PlanRequest,
 } from '#/features/plan/contracts';
 import { suggestPlanAddresses } from '#/features/plan/helpers';
-import { css } from '../../../styled-system/css';
+import { css, cx } from '../../../styled-system/css';
+import { chip } from '../../../styled-system/recipes/chip';
+import { panel } from '../../../styled-system/recipes/panel';
+import { sectionHeader } from '../../../styled-system/recipes/section-header';
+import { selectableRow } from '../../../styled-system/recipes/selectable-row';
 import ActivitySelector from './ActivitySelector';
 
 type PlanFormProps = {
@@ -25,111 +29,35 @@ type PlanFormProps = {
 
 const panelClass = css({
   width: 'full',
-  maxWidth: '720px',
+  maxWidth: 'plan-form',
   justifySelf: 'end',
   alignSelf: 'stretch',
   px: '0',
   pt: '0',
   pb: '6',
   '@media (min-width: 880px)': {
-    px: '44px',
-    pt: '10px',
-    pb: '60px',
+    px: 'plan-form-x',
+    pt: '2.5',
+    pb: 'plan-form-bottom',
   },
 });
 
-const kickerClass = css({
-  textStyle: 'mono-kicker',
-  color: 'peach.400',
-  letterSpacing: '0.28em',
-  mb: '3.5',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '2.5',
-  _before: {
-    content: '""',
-    width: '22px',
-    height: '1px',
-    background: 'peach.400',
-  },
-});
-
-const titleClass = css({
-  fontFamily: 'display',
-  fontWeight: '700',
-  fontSize: { base: '38px', md: '56px' },
-  lineHeight: '1.02',
-  letterSpacing: '-0.03em',
-  color: 'cream.100',
-  mb: '3.5',
-  '& em': {
-    fontFamily: 'serif',
-    fontStyle: 'italic',
-    fontWeight: '400',
-    background:
-      'linear-gradient(90deg, {colors.peach.400}, {colors.magenta.400})',
-    backgroundClip: 'text',
-    color: 'transparent',
-  },
-});
-
-const subClass = css({
-  maxWidth: '540px',
-  color: 'cream.600',
-  fontSize: '15px',
-  lineHeight: '1.55',
-  mb: '8',
-});
+const heroHeaderClasses = sectionHeader();
 
 const fieldClass = css({
   position: 'relative',
   mb: '5',
 });
 
-const labelClass = css({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '2.5',
-  textStyle: 'mono-meta',
-  fontSize: '10px',
-  color: 'cream.600',
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  mb: '2.5',
-});
-
-const dotClass = css({
-  width: '8px',
-  height: '8px',
-  borderRadius: 'full',
-  background: 'peach.400',
-  boxShadow: '0 0 8px {colors.peach.400}',
-  '&[data-kind=end]': {
-    background: 'magenta.400',
-    boxShadow: '0 0 8px {colors.magenta.400}',
-  },
-});
-
 const autoChipClass = css({
   marginLeft: 'auto',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '1.5',
-  px: '2',
-  py: '1',
-  borderRadius: 'full',
-  borderWidth: '1px',
-  borderColor: 'alpha.lime.30',
-  background: 'rgba(214, 255, 61, 0.06)',
-  color: 'lime.300',
-  fontSize: '9px',
 });
 
 const inputWrapClass = css({
   display: 'flex',
   alignItems: 'center',
   gap: '2',
-  borderBottomWidth: '2px',
+  borderBottomWidth: 'med',
   borderBottomColor: 'alpha.cream.18',
   transition: 'border-color 0.2s ease',
   '&[data-focused=true]': {
@@ -138,18 +66,13 @@ const inputWrapClass = css({
 });
 
 const addrActionClass = css({
-  width: '32px',
-  height: '32px',
-  minWidth: '32px',
-  minHeight: '32px',
+  width: 'control-sm',
+  height: 'control-sm',
+  minWidth: 'control-sm',
+  minHeight: 'control-sm',
+  justifyContent: 'center',
   padding: 0,
-  borderRadius: '8px',
-  '& > span': {
-    gap: 0,
-  },
-  '& [data-part=leading-icon], & [data-part=trailing-icon]': {
-    display: 'none',
-  },
+  borderRadius: 'sm',
 });
 
 const addressInputClass = css({
@@ -161,7 +84,7 @@ const addressInputClass = css({
   px: 0,
   py: '2',
   fontFamily: 'display',
-  fontSize: { base: '19px', md: '22px' },
+  fontSize: { base: 'address', md: 'xl' },
   fontWeight: '500',
   letterSpacing: '-0.01em',
   _focus: {
@@ -169,100 +92,19 @@ const addressInputClass = css({
   },
 });
 
-const dropdownClass = css({
+const dropdownPositionClass = css({
   position: 'absolute',
   top: '100%',
   left: 0,
   right: 0,
   mt: '2',
   zIndex: 50,
-  overflow: 'hidden',
-  borderWidth: '1px',
-  borderColor: 'alpha.cream.18',
-  borderRadius: '16px',
-  background: 'rgba(15, 10, 36, 0.96)',
-  backdropFilter: 'blur(14px)',
-  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)',
-});
-
-const suggestRowClass = css({
-  width: 'full',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '3.5',
-  p: '3.5',
-  color: 'cream.100',
-  borderBottomWidth: '1px',
-  borderBottomColor: 'alpha.cream.06',
-  '& > span': {
-    width: 'full',
-    display: 'block',
-  },
-  '& > span > span:not([data-part])': {
-    width: 'full',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '3.5',
-  },
-  '& [data-part=leading-icon], & [data-part=trailing-icon]': {
-    display: 'none',
-  },
-  _hover: {
-    background: 'rgba(255, 149, 102, 0.08)',
-  },
-});
-
-const suggestIconClass = css({
-  width: '28px',
-  height: '28px',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '9px',
-  background: 'rgba(255, 149, 102, 0.12)',
-  color: 'peach.400',
-  flexShrink: 0,
-});
-
-const primaryClass = css({
-  fontSize: '14px',
-  fontWeight: '600',
-});
-
-const secondaryClass = css({
-  textStyle: 'mono-meta',
-  fontSize: '10px',
-  color: 'cream.600',
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
-  mt: '0.5',
 });
 
 const chipRowClass = css({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '2',
-});
-
-const chipClass = css({
-  px: '2.5',
-  py: '1.5',
-  borderRadius: 'full',
-  borderWidth: '1px',
-  borderColor: 'alpha.cream.18',
-  background: 'rgba(245, 234, 208, 0.03)',
-  color: 'cream.200',
-  fontSize: '11px',
-  fontWeight: '600',
-  _hover: {
-    borderColor: 'peach.400',
-  },
-  '&[data-selected=true]': {
-    borderColor: 'transparent',
-    background:
-      'linear-gradient(90deg, {colors.peach.400}, {colors.magenta.400})',
-    color: 'night.800',
-  },
 });
 
 const actionsClass = css({
@@ -315,11 +157,11 @@ export default function PlanForm({
 
   return (
     <Box className={panelClass}>
-      <Box className={kickerClass}>PLAN · A · TRIP</Box>
-      <Text as="h1" className={titleClass}>
+      <Box className={heroHeaderClasses.kicker}>PLAN · A · TRIP</Box>
+      <Text as="h1" className={heroHeaderClasses.title}>
         Where to, <em>friend?</em>
       </Text>
-      <Text className={subClass}>
+      <Text className={heroHeaderClasses.desc}>
         We'll route charging around the vibe — not the other way around. Set
         start, end, and the kinds of detours you care about.
       </Text>
@@ -333,7 +175,12 @@ export default function PlanForm({
           suggestions={fromSuggestions}
           action={
             fromLocked ? (
-              <Box className={autoChipClass}>
+              <Box
+                className={cx(
+                  chip({ size: 'status', tone: 'charge' }),
+                  autoChipClass,
+                )}
+              >
                 <Icon icon={Crosshair} size="xs" />
                 AUTO · FROM CAR
               </Box>
@@ -372,25 +219,32 @@ export default function PlanForm({
         />
 
         <Box className={fieldClass}>
-          <Box className={labelClass}>DATES</Box>
+          <Box className={heroHeaderClasses.label}>DATES</Box>
           <Box className={chipRowClass}>
-            {catalog.dateOptions.map((option) => (
-              <Button
-                key={option}
-                type="button"
-                unstyled
-                className={chipClass}
-                data-selected={dates === option}
-                onClick={() => setDates(option)}
-              >
-                {option}
-              </Button>
-            ))}
+            {catalog.dateOptions.map((option) => {
+              const selected = dates === option;
+              return (
+                <Button
+                  key={option}
+                  type="button"
+                  unstyled
+                  contentMode="custom"
+                  className={chip({ size: 'compact', selected })}
+                  aria-pressed={selected}
+                  onClick={() => setDates(option)}
+                >
+                  {option}
+                </Button>
+              );
+            })}
           </Box>
         </Box>
 
         <Box className={fieldClass}>
-          <Flex className={labelClass} justifyContent="space-between">
+          <Flex
+            className={heroHeaderClasses.label}
+            justifyContent="space-between"
+          >
             <span>ACTIVITIES · PICK & SET TIME</span>
             <span>{activities.length} SELECTED</span>
           </Flex>
@@ -445,10 +299,56 @@ function AddressField({
   onSelect,
   onUseCar,
 }: AddressFieldProps) {
+  const inputId = useId();
+  const listboxId = `${inputId}-suggestions`;
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const fieldHeaderClasses = sectionHeader({ marker: kind });
+  const rowClasses = selectableRow({ variant: 'suggestion' });
+  const expanded = focused && suggestions.length > 0;
+  const resolvedActiveIndex = expanded
+    ? Math.min(Math.max(activeIndex, 0), suggestions.length - 1)
+    : -1;
+  const activeSuggestionId =
+    resolvedActiveIndex >= 0
+      ? `${listboxId}-${resolvedActiveIndex}`
+      : undefined;
+
+  useEffect(() => {
+    setActiveIndex(expanded ? 0 : -1);
+  }, [expanded]);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!expanded) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((current) => (current + 1) % suggestions.length);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex(
+        (current) => (current - 1 + suggestions.length) % suggestions.length,
+      );
+      return;
+    }
+
+    if (event.key === 'Enter' && resolvedActiveIndex >= 0) {
+      event.preventDefault();
+      onSelect(suggestions[resolvedActiveIndex]);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.currentTarget.blur();
+    }
+  };
+
   return (
     <Box className={fieldClass}>
-      <Box className={labelClass}>
-        <Box className={dotClass} data-kind={kind} />
+      <Box className={fieldHeaderClasses.label}>
+        <Box className={fieldHeaderClasses.dot} />
         <span>{label}</span>
         {action}
       </Box>
@@ -464,12 +364,19 @@ function AddressField({
           onFocus={onFocus}
           onBlur={onBlur}
           onChange={(event) => onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={expanded}
+          aria-controls={expanded ? listboxId : undefined}
+          aria-activedescendant={activeSuggestionId}
         />
         {onUseCar ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
+            iconOnly
             aria-label="Use car location"
             className={addrActionClass}
             onClick={onUseCar}
@@ -479,27 +386,38 @@ function AddressField({
         ) : null}
       </Box>
 
-      {focused && suggestions.length > 0 ? (
-        <Box className={dropdownClass}>
-          {suggestions.map((suggestion) => (
+      {expanded ? (
+        <Box
+          id={listboxId}
+          role="listbox"
+          className={cx(panel({ variant: 'dropdown' }), dropdownPositionClass)}
+        >
+          {suggestions.map((suggestion, index) => (
             <Button
               key={suggestion.full}
               type="button"
               unstyled
-              className={suggestRowClass}
+              contentMode="custom"
+              id={`${listboxId}-${index}`}
+              role="option"
+              className={rowClasses.row}
+              aria-selected={resolvedActiveIndex === index}
               onMouseDown={(event) => {
                 event.preventDefault();
                 onSelect(suggestion);
               }}
+              onMouseEnter={() => setActiveIndex(index)}
             >
-              <Box className={suggestIconClass}>
+              <Box className={rowClasses.icon}>
                 <Icon icon={kind === 'start' ? MapPin : Flag} size="sm" />
               </Box>
-              <Box>
-                <Box className={primaryClass}>
+              <Box className={rowClasses.body}>
+                <Box className={rowClasses.primary}>
                   {suggestion.primary ?? suggestion.full}
                 </Box>
-                <Box className={secondaryClass}>{suggestion.secondary}</Box>
+                <Box className={rowClasses.secondary}>
+                  {suggestion.secondary}
+                </Box>
               </Box>
             </Button>
           ))}

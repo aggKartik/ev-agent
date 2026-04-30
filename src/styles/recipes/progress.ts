@@ -23,4 +23,22 @@ export const progressRecipe = defineSlotRecipe({
       boxShadow: '0 0 14px rgba(233, 74, 140, 0.5)',
     },
   },
+  variants: {
+    size: {
+      md: {},
+      terminal: {
+        track: {
+          height: '3px',
+          background: 'alpha.cream-06',
+        },
+        fill: {
+          transition: 'width {durations.medium} {easings.ease-out}',
+          boxShadow: 'none',
+        },
+      },
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
 });

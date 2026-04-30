@@ -9,7 +9,7 @@ import PlanningLog from '#/components/plan/PlanningLog';
 import RouteMap from '#/components/plan/RouteMap';
 import { emptyOnboardingSearch } from '#/features/onboarding/search';
 import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
-import { getPlanCatalog } from '#/features/plan/helpers';
+import { createMockPlanResult, getPlanCatalog } from '#/features/plan/helpers';
 import { trpc } from '#/lib/trpc';
 import { css, cx } from '../../../styled-system/css';
 
@@ -29,6 +29,10 @@ const itineraryStageClass = css({
   height: 'full',
 });
 
+const planningStageClass = css({
+  marginTop: 'calc({spacing.plan-stage-lift} * -1)',
+});
+
 const plannerGridClass = css({
   width: 'full',
   display: 'grid',
@@ -36,18 +40,24 @@ const plannerGridClass = css({
   gap: '0',
   alignItems: 'stretch',
   '@media (min-width: 880px)': {
-    gridTemplateColumns: 'minmax(420px, 1fr) minmax(420px, 46vw)',
+    gridTemplateColumns:
+      'minmax({sizes.plan-map}, 1fr) minmax({sizes.plan-map}, 46vw)',
   },
 });
 
+const plannerGridOffsetClass = css({
+  width: 'calc(100% + {spacing.plan-grid-overhang})',
+  transform: 'translateX(calc({spacing.plan-grid-offset} * -1))',
+});
+
 const mapColumnClass = css({
-  minHeight: '420px',
+  minHeight: 'plan-map',
   p: '0',
   order: -1,
   '@media (min-width: 880px)': {
-    minHeight: 'calc(100dvh - 68px)',
-    height: 'calc(100dvh - 68px)',
-    p: '10px 20px 20px 10px',
+    minHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    height: 'calc(100dvh - {sizes.plan-header-offset})',
+    padding: '2.5 5 5 2.5',
     order: 0,
   },
 });
@@ -55,8 +65,11 @@ const mapColumnClass = css({
 const itineraryShellClass = css({
   position: 'relative',
   width: 'full',
-  height: { base: 'auto', lg: 'calc(100dvh - 146px)' },
-  minHeight: { base: '720px', lg: '560px' },
+  height: {
+    base: 'auto',
+    lg: 'calc(100dvh - {sizes.plan-itinerary-header-offset})',
+  },
+  minHeight: { base: 'plan-itinerary-min', lg: 'plan-itinerary-min-lg' },
 });
 
 const itineraryMapClass = css({
@@ -67,11 +80,11 @@ const itineraryMapClass = css({
 const itineraryDrawerClass = css({
   position: { base: 'relative', lg: 'absolute' },
   zIndex: 5,
-  top: { lg: '20px' },
-  left: { lg: '20px' },
-  bottom: { lg: '20px' },
-  width: { base: 'full', lg: '420px' },
-  maxWidth: { base: 'full', lg: 'calc(100% - 40px)' },
+  top: { lg: '5' },
+  left: { lg: '5' },
+  bottom: { lg: '5' },
+  width: { base: 'full', lg: 'plan-drawer' },
+  maxWidth: { base: 'full', lg: 'calc(100% - {spacing.8})' },
   p: { base: '4', lg: '0' },
 });
 
@@ -91,13 +104,22 @@ function PlanRoute() {
 
   const submitPlan = useCallback(
     async (request: PlanRequest) => {
+      const optimisticResult = createMockPlanResult(request);
       setActiveRequest(request);
       setDraftRequest(request);
+      setResult(optimisticResult);
       setStatus('planning');
       setPhaseIndex(0);
       setSelectedStopId(null);
-      const nextResult = await createPlan.mutateAsync(request);
-      setResult(nextResult);
+
+      try {
+        const nextResult = await createPlan.mutateAsync(request);
+        setResult(nextResult);
+      } catch (error) {
+        setResult(null);
+        setStatus('draft');
+        throw error;
+      }
     },
     [createPlan],
   );
@@ -165,8 +187,8 @@ function PlanRoute() {
         className={cx(
           stageClass,
           status === 'ready' ? itineraryStageClass : undefined,
+          status !== 'ready' ? planningStageClass : undefined,
         )}
-        style={status === 'ready' ? undefined : { marginTop: '-38px' }}
       >
         {status === 'ready' && result ? (
           <Box className={itineraryShellClass}>
@@ -189,13 +211,7 @@ function PlanRoute() {
             </Box>
           </Box>
         ) : (
-          <Grid
-            className={plannerGridClass}
-            style={{
-              width: 'calc(100% + 138px)',
-              transform: 'translateX(-69px)',
-            }}
-          >
+          <Grid className={cx(plannerGridClass, plannerGridOffsetClass)}>
             {status === 'planning' && result && activeRequest ? (
               <PlanningLog
                 request={activeRequest}

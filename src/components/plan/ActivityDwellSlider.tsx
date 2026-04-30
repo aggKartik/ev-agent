@@ -3,6 +3,7 @@ import { formatPlanMinutes } from '#/features/plan/helpers';
 import { css } from '../../../styled-system/css';
 
 type ActivityDwellSliderProps = {
+  label: string;
   color: string;
   value: number;
   onChange: (value: number) => void;
@@ -23,15 +24,16 @@ const wrapClass = css({
 });
 
 const valueClass = css({
-  minWidth: '54px',
+  minWidth: 'plan-slider-value',
   textAlign: 'right',
   textStyle: 'mono-meta',
-  fontSize: '10px',
+  fontSize: '2xs',
   color: 'peach.300',
   letterSpacing: '0.12em',
 });
 
 export default function ActivityDwellSlider({
+  label,
   color,
   value,
   onChange,
@@ -44,7 +46,7 @@ export default function ActivityDwellSlider({
         max={180}
         step={15}
         value={value}
-        aria-label="Activity dwell time"
+        aria-label={`${label} dwell time`}
         className={sliderClass}
         style={{ accentColor: color }}
         onChange={(event) => onChange(Number(event.target.value))}

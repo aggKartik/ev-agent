@@ -19,59 +19,71 @@ export type PlanActivityCatalogItem = {
   description: string;
 };
 
+export const PLAN_COLORS = {
+  peach: 'var(--colors-peach-400)',
+  lime: 'var(--colors-lime-300)',
+  sun: 'var(--colors-sun-300)',
+  magenta: 'var(--colors-magenta-400)',
+  violet: 'var(--colors-violet-400)',
+  peachStrong: 'var(--colors-peach-500)',
+  magentaStrong: 'var(--colors-magenta-500)',
+  info: 'var(--colors-info-300)',
+  sunStrong: 'var(--colors-sun-400)',
+};
+
 export const PLAN_ACTIVITY_CATALOG: PlanActivityCatalogItem[] = [
   {
     id: 'coffee',
     label: 'Coffee roasters',
-    color: '#ff9566',
+    color: PLAN_COLORS.peach,
     description: 'Independent cafes and espresso detours.',
   },
   {
     id: 'hike',
     label: 'Hiking / trails',
-    color: '#d6ff3d',
+    color: PLAN_COLORS.lime,
     description: 'Short hikes, trailheads, and shaded loops.',
   },
   {
     id: 'scenic',
     label: 'Scenic overlooks',
-    color: '#ffcb6b',
+    color: PLAN_COLORS.sun,
     description: 'Viewpoints that justify the extra miles.',
   },
   {
     id: 'diner',
     label: 'Roadside diners',
-    color: '#e94a8c',
+    color: PLAN_COLORS.magenta,
     description: 'Classic breakfast counters and comfort stops.',
   },
   {
     id: 'thrift',
     label: 'Thrift / antique',
-    color: '#7b4bd1',
+    color: PLAN_COLORS.violet,
     description: 'Vintage shops, flea markets, and odd finds.',
   },
   {
     id: 'brewery',
     label: 'Breweries',
-    color: '#ff7a59',
+    color: PLAN_COLORS.peachStrong,
     description: 'Taprooms close enough to keep the route sane.',
   },
   {
     id: 'photo',
     label: 'Photo stops',
-    color: '#d03774',
+    color: PLAN_COLORS.magentaStrong,
     description: 'Golden-hour pullouts and iconic angles.',
   },
   {
     id: 'beach',
     label: 'Beach / swim',
-    color: '#6eb3f7',
+    color: PLAN_COLORS.info,
     description: 'Coastal breaks, swims, and foggy walks.',
   },
   {
     id: 'tacos',
     label: 'Tacos',
-    color: '#ffbf4a',
+    color: PLAN_COLORS.sunStrong,
     description: 'Taquerias worth routing around.',
   },
 ];

@@ -22,6 +22,38 @@ export const chipRecipe = defineRecipe({
     },
   },
   variants: {
+    size: {
+      md: {},
+      compact: {
+        paddingX: '2.5',
+        paddingY: '1.5',
+        fontSize: 'xs',
+        gap: '1.5',
+      },
+      status: {
+        paddingX: '2',
+        paddingY: '1',
+        fontSize: 'micro',
+        gap: '1.5',
+      },
+    },
+    tone: {
+      neutral: {},
+      charge: {
+        borderColor: 'alpha.lime-30',
+        background: 'alpha.lime-06',
+        color: 'lime.300',
+      },
+      map: {
+        borderColor: 'alpha.cream-12',
+        background: 'alpha.night-72',
+        color: 'cream.200',
+        textStyle: 'mono-meta',
+        fontSize: 'micro',
+        letterSpacing: '0.22em',
+        backdropFilter: 'blur({blurs.md})',
+      },
+    },
     selected: {
       true: {
         background:
@@ -31,5 +63,9 @@ export const chipRecipe = defineRecipe({
         fontWeight: 'semibold',
       },
     },
+  },
+  defaultVariants: {
+    size: 'md',
+    tone: 'neutral',
   },
 });

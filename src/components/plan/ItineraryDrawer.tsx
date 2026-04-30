@@ -5,6 +5,8 @@ import { Text } from '#/components/Text';
 import type { PlanResult } from '#/features/plan/contracts';
 import { cleanPlanAddress, formatPlanMinutes } from '#/features/plan/helpers';
 import { css } from '../../../styled-system/css';
+import { panel } from '../../../styled-system/recipes/panel';
+import { sectionHeader } from '../../../styled-system/recipes/section-header';
 import StopTimeline from './StopTimeline';
 
 type ItineraryDrawerProps = {
@@ -13,62 +15,26 @@ type ItineraryDrawerProps = {
   onSelectStop: (id: string) => void;
 };
 
-const drawerClass = css({
-  width: 'full',
-  height: { base: 'auto', lg: 'full' },
-  maxHeight: { base: 'none', lg: 'full' },
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  borderRadius: '18px',
-  borderWidth: '1px',
-  borderColor: 'alpha.cream.18',
-  background: 'rgba(15, 10, 36, 0.88)',
-  boxShadow: '0 24px 80px -35px rgba(0, 0, 0, 0.85)',
-  backdropFilter: 'blur(18px)',
-});
+const drawerHeaderClasses = sectionHeader({ tone: 'drawer' });
 
 const headerClass = css({
   px: '4',
   py: '3.5',
-  borderBottomWidth: '1px',
+  borderBottomWidth: 'hair',
   borderBottomColor: 'alpha.cream.10',
   flexShrink: 0,
 });
 
-const kickerClass = css({
-  textStyle: 'mono-meta',
-  fontSize: '10px',
-  color: 'lime.300',
-  letterSpacing: '0.18em',
-  mb: '2',
-});
-
-const titleClass = css({
-  fontFamily: 'display',
-  fontSize: '24px',
-  fontWeight: '700',
-  lineHeight: '1.1',
-  color: 'cream.100',
-});
-
-const subClass = css({
-  mt: '2',
-  color: 'cream.600',
-  fontSize: '13px',
-  lineHeight: '1.4',
-});
-
 const statsClass = css({
   p: '0',
-  borderBottomWidth: '1px',
+  borderBottomWidth: 'hair',
   borderBottomColor: 'alpha.cream.10',
   flexShrink: 0,
 });
 
 const statCardClass = css({
   minWidth: 0,
-  borderRightWidth: '1px',
+  borderRightWidth: 'hair',
   borderRightColor: 'alpha.cream.10',
   background: 'transparent',
   px: '2.5',
@@ -83,7 +49,7 @@ const statLabelClass = css({
   alignItems: 'center',
   gap: '1.5',
   textStyle: 'mono-meta',
-  fontSize: '9px',
+  fontSize: 'micro',
   color: 'cream.700',
   letterSpacing: '0.14em',
 });
@@ -91,7 +57,7 @@ const statLabelClass = css({
 const statValueClass = css({
   mt: '1',
   fontFamily: 'display',
-  fontSize: '20px',
+  fontSize: 'display-sm',
   fontWeight: '700',
   color: 'cream.100',
 });
@@ -111,14 +77,14 @@ export default function ItineraryDrawer({
   const { totals } = result;
 
   return (
-    <Box className={drawerClass}>
+    <Box className={panel({ variant: 'drawer' })}>
       <Box className={headerClass}>
-        <Box className={kickerClass}>ITINERARY · READY</Box>
-        <Text as="h2" className={titleClass}>
+        <Box className={drawerHeaderClasses.kicker}>ITINERARY · READY</Box>
+        <Text as="h2" className={drawerHeaderClasses.title}>
           {cleanPlanAddress(result.request.from.full)} to{' '}
           {cleanPlanAddress(result.request.to.full)}
         </Text>
-        <Text className={subClass}>
+        <Text className={drawerHeaderClasses.desc}>
           Built around {totals.activityStops} vibe stops and{' '}
           {totals.chargeStops} fast charge
           {totals.chargeStops === 1 ? '' : 's'}, arriving around{' '}
