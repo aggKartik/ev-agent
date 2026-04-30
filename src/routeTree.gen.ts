@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PlanRouteRouteImport } from './routes/plan/route'
 import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SsoCallbackIndexRouteImport } from './routes/sso-callback/index'
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
+import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as ApiTrpcTrpcRouteImport } from './routes/api.trpc.$trpc'
 import { Route as ApiOauthProviderConnectRouteImport } from './routes/api.oauth.$provider.connect'
 import { Route as ApiOauthProviderCallbackRouteImport } from './routes/api.oauth.$provider.callback'
 
+const PlanRouteRoute = PlanRouteRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -43,6 +50,11 @@ const SignInIndexRoute = SignInIndexRouteImport.update({
   id: '/sign-in/',
   path: '/sign-in/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PlanIndexRoute = PlanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PlanRouteRoute,
 } as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/',
@@ -69,7 +81,9 @@ const ApiOauthProviderCallbackRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingRouteRouteWithChildren
+  '/plan': typeof PlanRouteRouteWithChildren
   '/onboarding/': typeof OnboardingIndexRoute
+  '/plan/': typeof PlanIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
@@ -80,6 +94,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/plan': typeof PlanIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/sign-up': typeof SignUpIndexRoute
   '/sso-callback': typeof SsoCallbackIndexRoute
@@ -91,7 +106,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingRouteRouteWithChildren
+  '/plan': typeof PlanRouteRouteWithChildren
   '/onboarding/': typeof OnboardingIndexRoute
+  '/plan/': typeof PlanIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
@@ -104,7 +121,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/onboarding'
+    | '/plan'
     | '/onboarding/'
+    | '/plan/'
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
@@ -115,6 +134,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/onboarding'
+    | '/plan'
     | '/sign-in'
     | '/sign-up'
     | '/sso-callback'
@@ -125,7 +145,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/onboarding'
+    | '/plan'
     | '/onboarding/'
+    | '/plan/'
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
@@ -137,6 +159,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
+  PlanRouteRoute: typeof PlanRouteRouteWithChildren
   SignInIndexRoute: typeof SignInIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
   SsoCallbackIndexRoute: typeof SsoCallbackIndexRoute
@@ -147,6 +170,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -181,6 +211,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-in/'
       preLoaderRoute: typeof SignInIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/plan/': {
+      id: '/plan/'
+      path: '/'
+      fullPath: '/plan/'
+      preLoaderRoute: typeof PlanIndexRouteImport
+      parentRoute: typeof PlanRouteRoute
     }
     '/onboarding/': {
       id: '/onboarding/'
@@ -225,9 +262,22 @@ const OnboardingRouteRouteWithChildren = OnboardingRouteRoute._addFileChildren(
   OnboardingRouteRouteChildren,
 )
 
+interface PlanRouteRouteChildren {
+  PlanIndexRoute: typeof PlanIndexRoute
+}
+
+const PlanRouteRouteChildren: PlanRouteRouteChildren = {
+  PlanIndexRoute: PlanIndexRoute,
+}
+
+const PlanRouteRouteWithChildren = PlanRouteRoute._addFileChildren(
+  PlanRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
+  PlanRouteRoute: PlanRouteRouteWithChildren,
   SignInIndexRoute: SignInIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
   SsoCallbackIndexRoute: SsoCallbackIndexRoute,

@@ -142,4 +142,22 @@
   .step-enter {
     animation: stepIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  @keyframes wpPulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes routeDraw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
 }
