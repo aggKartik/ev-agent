@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Box } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import DashboardStage from '#/components/dashboard/DashboardStage';
 import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
@@ -72,24 +73,15 @@ function DashboardRoute() {
             <span>
               Live dashboard data is unavailable. Showing fallback data.
             </span>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              loading={summaryQuery.isFetching}
+              loadingText="Retrying…"
               onClick={() => void summaryQuery.refetch()}
-              className={css({
-                cursor: 'pointer',
-                paddingX: '3',
-                paddingY: '1.5',
-                borderRadius: 'md',
-                fontSize: 'sm',
-                fontWeight: 'medium',
-                background: 'rgba(255,255,255,0.08)',
-                color: 'inherit',
-                border: '1px solid rgba(255,255,255,0.18)',
-                _hover: { background: 'rgba(255,255,255,0.14)' },
-              })}
             >
               Retry
-            </button>
+            </Button>
           </Box>
         ) : null}
         <DashboardStage
