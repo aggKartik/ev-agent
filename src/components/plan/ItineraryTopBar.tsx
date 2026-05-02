@@ -27,7 +27,7 @@ const barClass = css({
   borderColor: 'alpha.cream-12',
   background: 'alpha.night-88',
   backdropFilter: 'blur(14px)',
-  boxShadow: 'plan-panel-strong',
+  boxShadow: 'panel-strong',
 });
 
 const backBtnClass = css({
@@ -105,8 +105,7 @@ export default function ItineraryTopBar({
 
   return (
     <Flex className={barClass}>
-      <Box
-        as="button"
+      <button
         type="button"
         className={backBtnClass}
         aria-label="Back to onboarding"
@@ -118,7 +117,7 @@ export default function ItineraryTopBar({
         }}
       >
         ←
-      </Box>
+      </button>
       <Box className={titleBlockClass}>
         <Box className={titleMainClass}>
           {cleanPlanAddress(request.from.full)}

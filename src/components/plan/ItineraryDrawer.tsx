@@ -15,9 +15,9 @@ type ItineraryDrawerProps = {
 
 const rootClass = css({
   '@media (min-width: 1024px)': {
-    mt: 'plan-overview-topbar-space',
-    height: 'calc(100% - {spacing.plan-overview-topbar-space})',
-    maxHeight: 'calc(100% - {spacing.plan-overview-topbar-space})',
+    mt: '76px',
+    height: 'calc(100% - 76px)',
+    maxHeight: 'calc(100% - 76px)',
   },
 });
 

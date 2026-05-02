@@ -29,7 +29,7 @@ export const teslaRouter = router({
     } catch (err) {
       if (err instanceof NotLinkedError) {
         throw new TRPCError({
-          code: 'FAILED_PRECONDITION',
+          code: 'PRECONDITION_FAILED',
           message: 'Tesla account not linked.',
         });
       }

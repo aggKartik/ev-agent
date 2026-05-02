@@ -24,7 +24,7 @@ const wrapClass = css({
 });
 
 const valueClass = css({
-  minWidth: 'plan-slider-value',
+  minWidth: '54px',
   textAlign: 'right',
   textStyle: 'mono-meta',
   fontSize: '2xs',

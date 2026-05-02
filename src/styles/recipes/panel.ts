@@ -7,7 +7,7 @@ export const panelRecipe = defineRecipe({
     overflow: 'hidden',
     borderWidth: '1px',
     borderColor: 'alpha.cream-18',
-    boxShadow: 'plan-panel',
+    boxShadow: 'panel',
   },
   variants: {
     variant: {
@@ -18,7 +18,7 @@ export const panelRecipe = defineRecipe({
         borderRadius: 'dropdown',
         background:
           'linear-gradient(180deg, {colors.alpha.night-96}, {colors.night.950})',
-        boxShadow: 'plan-panel, inset 0 0 80px {colors.alpha.peach-04}',
+        boxShadow: 'panel, inset 0 0 80px {colors.alpha.peach-04}',
         backdropFilter: 'blur({blurs.glass-md})',
       },
       drawer: {
@@ -29,23 +29,23 @@ export const panelRecipe = defineRecipe({
         borderColor: 'alpha.cream-28',
         borderRadius: 'dropdown',
         background: 'alpha.night-88',
-        boxShadow: 'plan-panel-strong',
+        boxShadow: 'panel-strong',
         backdropFilter: 'blur({blurs.glass-lg})',
       },
       dropdown: {
         borderRadius: 'dropdown',
         background: 'alpha.night-96',
-        boxShadow: 'plan-dropdown',
+        boxShadow: 'dropdown',
         backdropFilter: 'blur({blurs.glass-sm})',
       },
       map: {
         position: 'relative',
         height: 'full',
-        minHeight: { base: 'plan-map', lg: 'plan-map-lg' },
+        minHeight: { base: 'panel-map', lg: 'panel-map-lg' },
         borderColor: 'alpha.cream-28',
         borderRadius: 'map',
         background: 'night.500',
-        boxShadow: 'plan-panel, inset 0 0 80px {colors.alpha.peach-08}',
+        boxShadow: 'panel, inset 0 0 80px {colors.alpha.peach-08}',
       },
     },
     ready: {

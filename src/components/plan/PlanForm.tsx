@@ -1,3 +1,4 @@
+import { useStore } from '@tanstack/react-form';
 import { Crosshair, Flag, MapPin } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
 import { Box, Flex, Stack } from 'styled-system/jsx';
@@ -6,12 +7,13 @@ import Icon from '#/components/Icon';
 import Input from '#/components/Input';
 import { Text } from '#/components/Text';
 import type {
-  PlanActivitySelection,
   PlanAddress,
   PlanCatalogResponse,
   PlanRequest,
 } from '#/features/plan/contracts';
+import { planRequestSchema } from '#/features/plan/contracts';
 import { suggestPlanAddresses } from '#/features/plan/helpers';
+import { usePlanForm } from '#/features/plan/usePlanForm';
 import { css, cx } from '../../../styled-system/css';
 import { chip } from '../../../styled-system/recipes/chip';
 import { panel } from '../../../styled-system/recipes/panel';
@@ -29,18 +31,18 @@ type PlanFormProps = {
 
 const panelClass = css({
   width: 'full',
-  maxWidth: 'plan-form',
+  maxWidth: 'panel-form',
   justifySelf: 'end',
   alignSelf: 'stretch',
   px: '0',
   pt: '0',
   pb: '6',
   '@media (min-width: 880px)': {
-    px: 'plan-form-x',
+    px: '44px',
     pt: '2.5',
-    pb: 'plan-form-bottom',
-    height: 'calc(100dvh - {sizes.plan-header-offset})',
-    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    pb: '60px',
+    height: 'calc(100dvh - 96px)',
+    maxHeight: 'calc(100dvh - 96px)',
     overflowY: 'auto',
     scrollbarGutter: 'stable',
   },
@@ -127,37 +129,13 @@ export default function PlanForm({
   onBack,
   onSubmit,
 }: PlanFormProps) {
-  const [from, setFrom] = useState<PlanAddress>(catalog.carLocation);
+  const form = usePlanForm({ catalog, onSubmit, onDraftChange });
   const [fromLocked, setFromLocked] = useState(true);
-  const [to, setTo] = useState<PlanAddress>({ full: '' });
-  const [dates, setDates] = useState(catalog.dateOptions[0] ?? 'Flexible');
-  const [activities, setActivities] = useState<PlanActivitySelection[]>([]);
-  const [fromFocused, setFromFocused] = useState(false);
-  const [toFocused, setToFocused] = useState(false);
-
-  const fromSuggestions = useMemo(
-    () => suggestPlanAddresses(from.full),
-    [from.full],
+  const values = useStore(form.store, (state) => state.values);
+  const canPlan = useMemo(
+    () => planRequestSchema.safeParse(values).success,
+    [values],
   );
-  const toSuggestions = useMemo(() => suggestPlanAddresses(to.full), [to.full]);
-  const canPlan =
-    from.full.trim().length > 0 &&
-    to.full.trim().length > 0 &&
-    activities.length > 0;
-  const draftRequest = useMemo(
-    () =>
-      from.full.trim().length > 0 ? { from, to, dates, activities } : null,
-    [activities, dates, from, to],
-  );
-
-  useEffect(() => {
-    onDraftChange?.(draftRequest);
-  }, [draftRequest, onDraftChange]);
-
-  const submit = () => {
-    if (!canPlan || disabled) return;
-    onSubmit({ from, to, dates, activities });
-  };
 
   return (
     <Box className={panelClass}>
@@ -171,93 +149,97 @@ export default function PlanForm({
       </Text>
 
       <Stack gap="0">
-        <AddressField
-          label="START"
-          value={from.full}
-          focused={fromFocused}
-          kind="start"
-          suggestions={fromSuggestions}
-          action={
-            fromLocked ? (
-              <Box
-                className={cx(
-                  chip({ size: 'status', tone: 'charge' }),
-                  autoChipClass,
-                )}
-              >
-                <Icon icon={Crosshair} size="xs" />
-                AUTO · FROM CAR
+        <form.Field name="from">
+          {(field) => (
+            <AddressField
+              label="START"
+              value={field.state.value.full}
+              kind="start"
+              action={
+                fromLocked ? (
+                  <Box
+                    className={cx(
+                      chip({ size: 'status', tone: 'charge' }),
+                      autoChipClass,
+                    )}
+                  >
+                    <Icon icon={Crosshair} size="xs" />
+                    AUTO · FROM CAR
+                  </Box>
+                ) : null
+              }
+              onChange={(value) => {
+                setFromLocked(false);
+                field.handleChange({ full: value });
+              }}
+              onSelect={(address) => {
+                setFromLocked(false);
+                field.handleChange(address);
+              }}
+              onUseCar={() => {
+                field.handleChange(catalog.carLocation);
+                setFromLocked(true);
+              }}
+            />
+          )}
+        </form.Field>
+
+        <form.Field name="to">
+          {(field) => (
+            <AddressField
+              label="DESTINATION"
+              value={field.state.value.full}
+              kind="end"
+              onChange={(value) => field.handleChange({ full: value })}
+              onSelect={(address) => field.handleChange(address)}
+            />
+          )}
+        </form.Field>
+
+        <form.Field name="dates">
+          {(field) => (
+            <Box className={fieldClass}>
+              <Box className={heroHeaderClasses.label}>DATES</Box>
+              <Box className={chipRowClass}>
+                {catalog.dateOptions.map((option) => {
+                  const selected = field.state.value === option;
+                  return (
+                    <Button
+                      key={option}
+                      type="button"
+                      unstyled
+                      contentMode="custom"
+                      className={chip({ size: 'compact', selected })}
+                      aria-pressed={selected}
+                      onClick={() => field.handleChange(option)}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
               </Box>
-            ) : null
-          }
-          onFocus={() => setFromFocused(true)}
-          onBlur={() => setTimeout(() => setFromFocused(false), 160)}
-          onChange={(value) => {
-            setFromLocked(false);
-            setFrom({ full: value });
-          }}
-          onSelect={(address) => {
-            setFromLocked(false);
-            setFrom(address);
-            setFromFocused(false);
-          }}
-          onUseCar={() => {
-            setFrom(catalog.carLocation);
-            setFromLocked(true);
-          }}
-        />
+            </Box>
+          )}
+        </form.Field>
 
-        <AddressField
-          label="DESTINATION"
-          value={to.full}
-          focused={toFocused}
-          kind="end"
-          suggestions={toSuggestions}
-          onFocus={() => setToFocused(true)}
-          onBlur={() => setTimeout(() => setToFocused(false), 160)}
-          onChange={(value) => setTo({ full: value })}
-          onSelect={(address) => {
-            setTo(address);
-            setToFocused(false);
-          }}
-        />
-
-        <Box className={fieldClass}>
-          <Box className={heroHeaderClasses.label}>DATES</Box>
-          <Box className={chipRowClass}>
-            {catalog.dateOptions.map((option) => {
-              const selected = dates === option;
-              return (
-                <Button
-                  key={option}
-                  type="button"
-                  unstyled
-                  contentMode="custom"
-                  className={chip({ size: 'compact', selected })}
-                  aria-pressed={selected}
-                  onClick={() => setDates(option)}
-                >
-                  {option}
-                </Button>
-              );
-            })}
-          </Box>
-        </Box>
-
-        <Box className={fieldClass}>
-          <Flex
-            className={heroHeaderClasses.label}
-            justifyContent="space-between"
-          >
-            <span>ACTIVITIES · PICK & SET TIME</span>
-            <span>{activities.length} SELECTED</span>
-          </Flex>
-          <ActivitySelector
-            catalog={catalog.activities}
-            value={activities}
-            onChange={setActivities}
-          />
-        </Box>
+        <form.Field name="activities">
+          {(field) => (
+            <Box className={fieldClass}>
+              <Flex
+                className={heroHeaderClasses.label}
+                justifyContent="space-between"
+              >
+                <span>ACTIVITIES · PICK & SET TIME</span>
+                <span>{field.state.value.length} SELECTED</span>
+              </Flex>
+              <ActivitySelector
+                catalog={catalog.activities}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
+            </Box>
+          )}
+        </form.Field>
 
         <Box className={actionsClass}>
           <Button variant="ghost" onClick={onBack}>
@@ -266,7 +248,9 @@ export default function PlanForm({
           <Button
             disabled={!canPlan || disabled}
             loading={disabled}
-            onClick={submit}
+            onClick={() => {
+              void form.handleSubmit();
+            }}
           >
             Plan my trip
           </Button>
@@ -279,12 +263,8 @@ export default function PlanForm({
 type AddressFieldProps = {
   label: string;
   value: string;
-  focused: boolean;
   kind: 'start' | 'end';
-  suggestions: PlanAddress[];
   action?: React.ReactNode;
-  onFocus: () => void;
-  onBlur: () => void;
   onChange: (value: string) => void;
   onSelect: (address: PlanAddress) => void;
   onUseCar?: () => void;
@@ -293,19 +273,17 @@ type AddressFieldProps = {
 function AddressField({
   label,
   value,
-  focused,
   kind,
-  suggestions,
   action,
-  onFocus,
-  onBlur,
   onChange,
   onSelect,
   onUseCar,
 }: AddressFieldProps) {
   const inputId = useId();
   const listboxId = `${inputId}-suggestions`;
+  const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const suggestions = useMemo(() => suggestPlanAddresses(value), [value]);
   const fieldHeaderClasses = sectionHeader({ marker: kind });
   const rowClasses = selectableRow({ variant: 'suggestion' });
   const expanded = focused && suggestions.length > 0;
@@ -341,6 +319,7 @@ function AddressField({
     if (event.key === 'Enter' && resolvedActiveIndex >= 0) {
       event.preventDefault();
       onSelect(suggestions[resolvedActiveIndex]);
+      setFocused(false);
       return;
     }
 
@@ -365,8 +344,8 @@ function AddressField({
               ? 'Current location · address · coordinates'
               : 'Where are you headed?'
           }
-          onFocus={onFocus}
-          onBlur={onBlur}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 160)}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={handleKeyDown}
           role="combobox"
@@ -409,6 +388,7 @@ function AddressField({
               onMouseDown={(event) => {
                 event.preventDefault();
                 onSelect(suggestion);
+                setFocused(false);
               }}
               onMouseEnter={() => setActiveIndex(index)}
             >

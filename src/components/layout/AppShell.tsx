@@ -75,8 +75,8 @@ const planStageClass = css({
   overflow: 'hidden',
   '& > *': {
     width: 'full',
-    height: 'calc(100dvh - {sizes.plan-header-offset})',
-    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    height: 'calc(100dvh - 96px)',
+    maxHeight: 'calc(100dvh - 96px)',
     minWidth: 0,
     minHeight: 0,
     overflow: 'hidden',

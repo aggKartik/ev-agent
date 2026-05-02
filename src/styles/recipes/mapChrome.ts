@@ -204,7 +204,7 @@ export const mapChromeRecipe = defineSlotRecipe({
       borderColor: 'alpha.cream-28',
       borderRadius: 'lg',
       background: 'alpha.night-80',
-      boxShadow: 'plan-panel',
+      boxShadow: 'panel',
       backdropFilter: 'blur({blurs.glass-sm})',
     },
     topbarTitle: {

@@ -13,15 +13,15 @@ type PlanningLogProps = {
 
 const rootClass = css({
   width: 'full',
-  maxWidth: 'plan-form',
+  maxWidth: 'panel-form',
   justifySelf: 'end',
   alignSelf: 'stretch',
   display: 'flex',
   flexDirection: 'column',
-  minHeight: 'plan-log-sm',
+  minHeight: '320px',
   '@media (min-width: 880px)': {
-    height: 'calc(100dvh - {sizes.plan-header-offset})',
-    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    height: 'calc(100dvh - 96px)',
+    maxHeight: 'calc(100dvh - 96px)',
   },
 });
 
@@ -43,7 +43,7 @@ const bodyClass = css({
   flex: '1 1 auto',
   minHeight: 0,
   p: '5',
-  maxHeight: { base: 'plan-log-sm', lg: 'plan-log-lg' },
+  maxHeight: { base: '320px', lg: '520px' },
   overflowY: 'auto',
   fontFamily: 'mono',
   fontSize: 'caption',
