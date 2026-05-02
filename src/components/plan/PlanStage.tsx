@@ -8,12 +8,11 @@ import type { PlanCatalogResponse } from '#/features/plan/contracts';
 import {
   useActiveRequest,
   useMapMode,
-  usePhaseIndex,
   usePlanFlowStore,
   useResult,
-  useRevealCount,
   useSelectedStopId,
   useStatus,
+  useStreamedStops,
 } from '#/features/plan/store';
 import { useDraftRequest } from '#/features/plan/useDraftRequest';
 import type { PlanForm as PlanFormApi } from '#/features/plan/usePlanForm';
@@ -58,23 +57,19 @@ export default function PlanStage({
   const status = useStatus();
   const result = useResult();
   const activeRequest = useActiveRequest();
-  const phaseIndex = usePhaseIndex();
   const selectedStopId = useSelectedStopId();
-  const revealCount = useRevealCount();
+  const streamedStops = useStreamedStops();
   const mapMode = useMapMode();
   const draftRequest = useDraftRequest(form);
   const selectStop = usePlanFlowStore((s) => s.selectStop);
 
   const mapRequest = activeRequest ?? draftRequest;
+  const revealCount = status === 'planning' ? streamedStops.length : undefined;
 
   return (
     <Grid className={plannerGridClass}>
-      {status === 'planning' && result && activeRequest ? (
-        <PlanningLog
-          request={activeRequest}
-          result={result}
-          phaseIndex={phaseIndex}
-        />
+      {status === 'planning' && activeRequest ? (
+        <PlanningLog request={activeRequest} />
       ) : (
         <PlanForm
           catalog={catalog}

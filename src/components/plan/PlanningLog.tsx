@@ -1,15 +1,16 @@
 import { Box, Stack } from 'styled-system/jsx';
-import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
+import type { PlanRequest } from '#/features/plan/contracts';
 import { cleanPlanAddress } from '#/features/plan/helpers';
+import { useCurrentPhase, useNarration } from '#/features/plan/store';
 import { css, cx } from '../../../styled-system/css';
 import { panel } from '../../../styled-system/recipes/panel';
 import { progress } from '../../../styled-system/recipes/progress';
 
 type PlanningLogProps = {
   request: PlanRequest;
-  result: PlanResult;
-  phaseIndex: number;
 };
+
+const EXPECTED_PHASES = 5;
 
 const rootClass = css({
   width: 'full',
@@ -61,9 +62,6 @@ const lineClass = css({
   '&[data-active=true]': {
     color: 'peach.300',
   },
-  '&[data-done=true]': {
-    color: 'lime.300',
-  },
 });
 
 const detailClass = css({
@@ -71,21 +69,18 @@ const detailClass = css({
   color: 'cream.700',
 });
 
-export default function PlanningLog({
-  request,
-  result,
-  phaseIndex,
-}: PlanningLogProps) {
-  const totalPhases = result.phases.length;
-  const pct =
-    totalPhases > 0
-      ? Math.min(
-          100,
-          Math.max(0, Math.round(((phaseIndex + 1) / totalPhases) * 100)),
-        )
-      : 0;
+export default function PlanningLog({ request }: PlanningLogProps) {
+  const narration = useNarration();
+  const currentPhase = useCurrentPhase();
+  const phasesSeen = narration.filter((entry) =>
+    entry.text.startsWith('→'),
+  ).length;
+  const pct = Math.min(
+    100,
+    Math.max(8, Math.round((phasesSeen / EXPECTED_PHASES) * 100)),
+  );
   const progressClasses = progress({ size: 'terminal' });
-  const lines = [
+  const headerLines = [
     { token: '→', message: 'boot :: ev-agent/0.4.2 · session 9f2c' },
     { token: '.', message: `origin :: ${cleanPlanAddress(request.from.full)}` },
     { token: '.', message: `target :: ${cleanPlanAddress(request.to.full)}` },
@@ -112,26 +107,29 @@ export default function PlanningLog({
         <Box className={progressClasses.fill} style={{ width: `${pct}%` }} />
       </Box>
       <Stack className={bodyClass} gap="1" aria-live="polite">
-        {lines.map((line) => (
+        {currentPhase ? (
+          <Box className={lineClass} data-active={true}>
+            <span>▸</span>
+            <span>{currentPhase.label}</span>
+            {currentPhase.detail ? (
+              <Box className={detailClass}>{currentPhase.detail}</Box>
+            ) : null}
+          </Box>
+        ) : null}
+        {headerLines.map((line) => (
           <Box key={`${line.token}-${line.message}`} className={lineClass}>
             <span>{line.token}</span>
             <span>{line.message}</span>
           </Box>
         ))}
-        {result.phases.map((phase, index) => {
-          const active = index === phaseIndex;
-          const done = index < phaseIndex;
-          if (index > phaseIndex) return null;
+        {narration.map((entry) => {
+          const isPhase = entry.text.startsWith('→');
+          const token = isPhase ? '✓' : '·';
+          const text = isPhase ? entry.text.slice(1).trim() : entry.text;
           return (
-            <Box
-              key={phase.label}
-              className={lineClass}
-              data-active={active}
-              data-done={done}
-            >
-              <span>{done ? '✓' : '▸'}</span>
-              <span>{phase.label}</span>
-              <Box className={detailClass}>{phase.detail}</Box>
+            <Box key={entry.id} className={lineClass}>
+              <span>{token}</span>
+              <span>{text}</span>
             </Box>
           );
         })}
