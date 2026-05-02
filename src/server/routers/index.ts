@@ -6,12 +6,14 @@ import '#/server/integrations/tesla';
 import { router } from '../trpc';
 import { exampleRouter } from './example';
 import { oauthRouter } from './oauth';
+import { planRouter } from './plan';
 import { teslaRouter } from './tesla';
 import { userRouter } from './user';
 
 export const appRouter = router({
   example: exampleRouter,
   oauth: oauthRouter,
+  plan: planRouter,
   tesla: teslaRouter,
   user: userRouter,
   // Add more feature routers here

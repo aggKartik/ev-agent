@@ -50,7 +50,7 @@ export interface OAuthAccountTable {
   scope: string;
   expiresAt: ColumnType<Date, Date | string, Date | string>;
   createdAt: ColumnType<Date, string | undefined, never>;
-  updatedAt: ColumnType<Date, string | undefined, Date | string>;
+  updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface Database {

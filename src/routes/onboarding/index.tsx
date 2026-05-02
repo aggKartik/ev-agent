@@ -276,7 +276,7 @@ function OnboardingComponent() {
       <Box className={progressTrackWrapClass}>
         <Box className={progress().track} aria-hidden="true">
           <Box
-            className={progress({ fill: 'default' }).fill}
+            className={progress().fill}
             style={{ width: `${progressValue}%` }}
           />
         </Box>

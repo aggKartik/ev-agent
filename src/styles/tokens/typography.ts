@@ -18,15 +18,23 @@ export const fontWeights = {
 };
 
 export const fontSizes = {
+  micro: { value: '9px' },
   '2xs': { value: '10px' },
   xs: { value: '11px' },
+  caption: { value: '12px' },
   sm: { value: '13px' },
+  ui: { value: '14px' },
   md: { value: '15px' },
   base: { value: '16px' },
   lg: { value: '18px' },
+  address: { value: '19px' },
+  'display-sm': { value: '20px' },
   xl: { value: '22px' },
+  'panel-title': { value: '24px' },
   '2xl': { value: '28px' },
   '3xl': { value: '36px' },
+  'plan-hero-base': { value: '38px' },
+  'plan-hero-md': { value: '56px' },
   '4xl': { value: 'clamp(32px, 4vw, 58px)' },
   '5xl': { value: 'clamp(48px, 6vw, 88px)' },
   '6xl': { value: 'clamp(56px, 7vw, 110px)' },

@@ -33,8 +33,9 @@ export default function Icon(props: IconProps) {
       role={isDecorative ? undefined : 'img'}
       aria-hidden={isDecorative ? 'true' : undefined}
       aria-label={ariaLabel}
-      title={title}
       {...rest}
-    />
+    >
+      {title ? <title>{title}</title> : null}
+    </IconComponent>
   );
 }

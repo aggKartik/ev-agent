@@ -32,6 +32,17 @@ export const keyframes = {
     '0%': { opacity: '0', transform: 'translateY(20px)' },
     '100%': { opacity: '1', transform: 'translateY(0)' },
   },
+  wpPulse: {
+    '0%, 100%': { transform: 'scale(1)', opacity: '0.8' },
+    '50%': { transform: 'scale(1.1)', opacity: '1' },
+  },
+  routeDraw: {
+    to: { strokeDashoffset: '0' },
+  },
+  scanlineY: {
+    '0%': { transform: 'translateY(-100%)' },
+    '100%': { transform: 'translateY(250%)' },
+  },
 };
 
 export const animationStyles = {};

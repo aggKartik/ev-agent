@@ -11,6 +11,10 @@ export const iconRecipe = defineRecipe({
   },
   variants: {
     size: {
+      xs: {
+        width: 'icon-xs',
+        height: 'icon-xs',
+      },
       sm: {
         width: 'icon-sm',
         height: 'icon-sm',

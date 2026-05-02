@@ -1,6 +1,7 @@
 import { useSignIn, useSignUp } from '@clerk/tanstack-react-start';
 import { useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
+import { emptyOnboardingSearch } from '#/features/onboarding/search';
 
 type Mode = 'sign-in' | 'sign-up';
 type Stage = 'email' | 'code';
@@ -45,7 +46,8 @@ export function useEmailCodeAuth(
 
   const ready = mode === 'sign-in' ? Boolean(signIn) : Boolean(signUp);
 
-  const navigateOnSuccess = () => router.navigate({ to: '/onboarding' });
+  const navigateOnSuccess = () =>
+    router.navigate({ to: '/onboarding', search: emptyOnboardingSearch });
 
   const startSignIn = async (address: string) => {
     if (!signIn) return { error: 'Sign-in resource not ready.' } as const;

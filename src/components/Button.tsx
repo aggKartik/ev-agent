@@ -21,6 +21,8 @@ export type ButtonProps = Omit<
     loadingText?: ReactNode;
     leadingIcon?: ReactNode;
     trailingIcon?: ReactNode;
+    iconOnly?: boolean;
+    contentMode?: 'default' | 'custom';
   };
 
 export default function Button(props: ButtonProps) {
@@ -34,11 +36,38 @@ export default function Button(props: ButtonProps) {
     loadingText,
     leadingIcon,
     trailingIcon,
+    iconOnly,
+    contentMode = 'default',
     type,
     ...rest
   } = localProps;
 
   const isDisabled = Boolean(disabled || loading);
+
+  if (iconOnly || contentMode === 'custom') {
+    return (
+      <ark.button
+        type={type ?? 'button'}
+        className={cx(unstyled ? undefined : button(recipeProps), className)}
+        disabled={isDisabled}
+        aria-busy={loading || undefined}
+        data-loading={loading ? '' : undefined}
+        data-icon-only={iconOnly ? '' : undefined}
+        data-content-mode={contentMode === 'custom' ? 'custom' : undefined}
+        {...rest}
+      >
+        {loading ? (
+          <span className={contentClass}>
+            <span data-part="spinner" data-icon="true" aria-hidden="true">
+              <Spinner />
+            </span>
+          </span>
+        ) : (
+          children
+        )}
+      </ark.button>
+    );
+  }
 
   return (
     <ark.button
