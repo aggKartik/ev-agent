@@ -1,3 +1,4 @@
+import EventEmitter, { on } from 'node:events';
 import { tracked } from '@trpc/server';
 import {
   addressSuggestSchema,
@@ -5,7 +6,6 @@ import {
   planRequestSchema,
 } from '#/features/plan/contracts';
 import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
-import { createEventQueue } from '#/server/ai/eventQueue';
 import { runPlanAgent } from '#/server/ai/planAgent';
 import { publicProcedure, router } from '../trpc';
 
@@ -19,22 +19,30 @@ export const planRouter = router({
   stream: publicProcedure
     .input(planRequestSchema)
     .subscription(async function* ({ input, signal }) {
-      const queue = createEventQueue<PlanStreamEvent>();
-      const agentDone = runPlanAgent(input, queue.push, { signal })
-        .then(() => queue.close())
-        .catch((err: unknown) => {
-          queue.close(err instanceof Error ? err : new Error(String(err)));
-        });
+      const ee = new EventEmitter();
+      const finished = new AbortController();
+      const iterSignal = signal
+        ? AbortSignal.any([signal, finished.signal])
+        : finished.signal;
+
+      const agentDone = runPlanAgent(
+        input,
+        (event: PlanStreamEvent) => ee.emit('event', event),
+        { signal },
+      )
+        .catch(() => undefined)
+        .finally(() => finished.abort());
 
       let id = 0;
       try {
-        for await (const event of queue.iterate({ signal })) {
+        for await (const [event] of on(ee, 'event', { signal: iterSignal })) {
           id += 1;
-          yield tracked(String(id), event);
+          yield tracked(String(id), event as PlanStreamEvent);
         }
+      } catch (err) {
+        if (!finished.signal.aborted) throw err;
       } finally {
-        queue.close();
-        await agentDone.catch(() => undefined);
+        await agentDone;
       }
     }),
 });
