@@ -31,10 +31,61 @@ export const addressSuggestSchema = z.object({
   query: z.string().optional(),
 });
 
+export const planStopKindSchema = z.enum([
+  'start',
+  'activity',
+  'charge',
+  'end',
+]);
+
+export const planStopSchema = z.object({
+  id: z.string().min(1),
+  kind: planStopKindSchema,
+  name: z.string().min(1),
+  shortName: z.string().min(1),
+  sub: z.string().optional(),
+  detail: z.string().optional(),
+  activityId: planActivityIdSchema.optional(),
+  iconKey: z.string().min(1),
+  color: z.string().optional(),
+  coordinate: coordinateSchema,
+  driveMinutes: z.number().min(0),
+  miles: z.number().min(0),
+  dwellMinutes: z.number().min(0),
+  arrivalTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
+export const planTotalsSchema = z.object({
+  miles: z.number().min(0),
+  driveMinutes: z.number().min(0),
+  dwellMinutes: z.number().min(0),
+  chargeStops: z.number().int().min(0),
+  activityStops: z.number().int().min(0),
+  arrivalTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
+export const planPhaseSchema = z.object({
+  label: z.string().min(1),
+  detail: z.string().min(1),
+});
+
+export const planResultSchema = z.object({
+  id: z.string().min(1),
+  request: planRequestSchema,
+  geometry: z.array(coordinateSchema),
+  stops: z.array(planStopSchema),
+  totals: planTotalsSchema,
+  phases: z.array(planPhaseSchema),
+});
+
 export type Coordinate = z.infer<typeof coordinateSchema>;
 export type PlanAddress = z.infer<typeof planAddressSchema>;
 export type PlanActivitySelection = z.infer<typeof planActivitySelectionSchema>;
 export type PlanRequest = z.infer<typeof planRequestSchema>;
+export type PlanStopKind = z.infer<typeof planStopKindSchema>;
+export type PlanStop = z.infer<typeof planStopSchema>;
+export type PlanPhase = z.infer<typeof planPhaseSchema>;
+export type PlanResult = z.infer<typeof planResultSchema>;
 
 export type PlanCatalogResponse = {
   activities: {
@@ -47,42 +98,9 @@ export type PlanCatalogResponse = {
   carLocation: PlanAddress;
 };
 
-export type PlanStopKind = 'start' | 'activity' | 'charge' | 'end';
-
-export type PlanStop = {
-  id: string;
-  kind: PlanStopKind;
-  name: string;
-  shortName: string;
-  sub?: string;
-  detail?: string;
-  activityId?: PlanActivitySelection['id'];
-  iconKey: string;
-  color?: string;
-  coordinate: Coordinate;
-  driveMinutes: number;
-  miles: number;
-  dwellMinutes: number;
-  arrivalTime: string;
-};
-
-export type PlanPhase = {
-  label: string;
-  detail: string;
-};
-
-export type PlanResult = {
-  id: string;
-  request: PlanRequest;
-  geometry: Coordinate[];
-  stops: PlanStop[];
-  totals: {
-    miles: number;
-    driveMinutes: number;
-    dwellMinutes: number;
-    chargeStops: number;
-    activityStops: number;
-    arrivalTime: string;
-  };
-  phases: PlanPhase[];
-};
+export type PlanStreamEvent =
+  | { type: 'phase'; label: string; detail: string }
+  | { type: 'narration'; message: string }
+  | { type: 'stop'; stop: PlanStop }
+  | { type: 'result'; result: PlanResult }
+  | { type: 'error'; message: string };
