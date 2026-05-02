@@ -1,15 +1,14 @@
-import { createTRPCReact, httpBatchLink } from '@trpc/react-query';
+import { httpBatchLink, httpSubscriptionLink, splitLink } from '@trpc/client';
+import { createTRPCReact } from '@trpc/react-query';
 import type { AppRouter } from '#/server/routers';
 
 export const trpc = createTRPCReact<AppRouter>();
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') {
-    // browser should use relative path
     return '';
   }
 
-  // SSR should use full url
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : `http://localhost:${process.env.PORT ?? 3000}`;
@@ -17,10 +16,14 @@ function getBaseUrl() {
   return baseUrl;
 }
 
+const url = `${getBaseUrl()}/api/trpc`;
+
 export const trpcClient = trpc.createClient({
   links: [
-    httpBatchLink({
-      url: `${getBaseUrl()}/api/trpc`,
+    splitLink({
+      condition: (op) => op.type === 'subscription',
+      true: httpSubscriptionLink({ url }),
+      false: httpBatchLink({ url }),
     }),
   ],
 });
