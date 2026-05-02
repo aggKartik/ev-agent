@@ -2,7 +2,7 @@ import { defineSlotRecipe } from '@pandacss/dev';
 
 export const selectableRowRecipe = defineSlotRecipe({
   className: 'selectable-row',
-  slots: ['row', 'icon', 'body', 'primary', 'secondary', 'meta'],
+  slots: ['row', 'icon', 'body', 'primary', 'secondary', 'meta', 'note'],
   base: {
     row: {
       width: 'full',
@@ -32,6 +32,7 @@ export const selectableRowRecipe = defineSlotRecipe({
       color: 'cream.700',
       textStyle: 'mono-meta',
     },
+    note: {},
   },
   variants: {
     variant: {
@@ -74,7 +75,8 @@ export const selectableRowRecipe = defineSlotRecipe({
           gap: '3',
           paddingX: '4',
           paddingY: '2.5',
-          opacity: 0.78,
+          position: 'relative',
+          opacity: 0.86,
           transition:
             'opacity {durations.fast} {easings.ease-out}, background {durations.fast} {easings.ease-out}, transform {durations.fast} {easings.ease-out}',
           _hover: {
@@ -94,10 +96,11 @@ export const selectableRowRecipe = defineSlotRecipe({
           },
         },
         icon: {
-          width: '7',
-          height: '7',
+          width: '28px',
+          height: '28px',
           justifySelf: 'center',
           marginTop: '1',
+          position: 'relative',
           borderRadius: 'full',
           borderWidth: '2px',
           borderColor: 'var(--stop-color)',
@@ -105,6 +108,25 @@ export const selectableRowRecipe = defineSlotRecipe({
           background: 'alpha.night-72',
           boxShadow:
             '0 0 18px color-mix(in srgb, var(--stop-color) 30%, transparent)',
+          '&::before, &::after': {
+            content: '""',
+            position: 'absolute',
+            left: '50%',
+            width: '2px',
+            transform: 'translateX(-50%)',
+            background:
+              'linear-gradient(180deg, {colors.peach.400}, {colors.magenta.400})',
+            opacity: 0.36,
+            pointerEvents: 'none',
+          },
+          '&::before': {
+            bottom: 'calc(100% + 2px)',
+            height: '4',
+          },
+          '&::after': {
+            top: 'calc(100% + 2px)',
+            height: '5',
+          },
         },
         body: {
           borderBottomWidth: '1px',
@@ -112,7 +134,11 @@ export const selectableRowRecipe = defineSlotRecipe({
           paddingBottom: '2.5',
         },
         primary: {
-          fontSize: 'ui',
+          fontFamily: 'display',
+          fontSize: 'md',
+          fontWeight: '600',
+          letterSpacing: '-0.01em',
+          marginBottom: '3px',
           minWidth: 0,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -121,18 +147,30 @@ export const selectableRowRecipe = defineSlotRecipe({
         secondary: {
           marginTop: '1',
           fontSize: 'caption',
-          lineHeight: '1.35',
+          lineHeight: '1.4',
+          color: 'cream.600',
         },
         meta: {
-          marginTop: '2',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '2',
+          marginTop: '0',
+          fontFamily: 'mono',
+          fontWeight: 'medium',
+          fontSize: '2xs',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'peach.400',
+        },
+        note: {
+          marginTop: '1.5',
+          paddingTop: '1.5',
+          borderTopWidth: '1px',
+          borderTopStyle: 'dashed',
+          borderTopColor: 'alpha.cream-12',
+          fontFamily: 'mono',
           fontSize: 'micro',
-          letterSpacing: '0.12em',
-          '& span': {
-            whiteSpace: 'nowrap',
-          },
+          lineHeight: '1.3',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'cream.600',
         },
       },
     },

@@ -18,9 +18,10 @@ export const spacing = {
   '12': { value: '128px' },
   'plan-form-x': { value: '44px' },
   'plan-form-bottom': { value: '60px' },
-  'plan-stage-lift': { value: '38px' },
-  'plan-grid-offset': { value: '69px' },
-  'plan-grid-overhang': { value: '138px' },
+  'plan-panel-gap': { value: '12px' },
+  'plan-overview-topbar-space': { value: '76px' },
+  'plan-grid-offset': { value: '0px' },
+  'plan-grid-overhang': { value: '0px' },
 };
 
 export const sizes = {
@@ -48,8 +49,8 @@ export const sizes = {
   'plan-drawer': { value: '420px' },
   'plan-itinerary-min': { value: '720px' },
   'plan-itinerary-min-lg': { value: '560px' },
-  'plan-header-offset': { value: '68px' },
-  'plan-itinerary-header-offset': { value: '146px' },
+  'plan-header-offset': { value: '96px' },
+  'plan-itinerary-header-offset': { value: '96px' },
   'plan-log-sm': { value: '320px' },
   'plan-log-lg': { value: '520px' },
   'plan-slider-value': { value: '54px' },

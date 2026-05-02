@@ -7,16 +7,16 @@ import {
   getPlanCatalog,
   suggestPlanAddresses,
 } from '#/features/plan/helpers';
-import { protectedProcedure, router } from '../trpc';
+import { publicProcedure, router } from '../trpc';
 
 export const planRouter = router({
-  catalog: protectedProcedure.query(() => getPlanCatalog()),
+  catalog: publicProcedure.query(() => getPlanCatalog()),
 
-  suggestAddresses: protectedProcedure
+  suggestAddresses: publicProcedure
     .input(addressSuggestSchema)
     .query(({ input }) => suggestPlanAddresses(input.query)),
 
-  create: protectedProcedure.input(planRequestSchema).mutation(({ input }) => {
+  create: publicProcedure.input(planRequestSchema).mutation(({ input }) => {
     return createMockPlanResult(input);
   }),
 });

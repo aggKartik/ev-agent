@@ -39,6 +39,10 @@ export const keyframes = {
   routeDraw: {
     to: { strokeDashoffset: '0' },
   },
+  scanlineY: {
+    '0%': { transform: 'translateY(-100%)' },
+    '100%': { transform: 'translateY(250%)' },
+  },
 };
 
 export const animationStyles = {};

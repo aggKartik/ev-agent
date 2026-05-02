@@ -62,6 +62,31 @@ const stageTopAlignClass = css({
   alignItems: 'flex-start',
 });
 
+const planStageClass = css({
+  position: 'relative',
+  zIndex: 5,
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+  px: '2.5',
+  py: '2.5',
+  overflow: 'hidden',
+  '& > *': {
+    width: 'full',
+    height: 'calc(100dvh - {sizes.plan-header-offset})',
+    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    minWidth: 0,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  '& > * > *': {
+    height: 'full',
+    minHeight: 0,
+  },
+});
+
 const stageInnerClass = css({
   width: 'full',
   maxWidth: '86rem',
@@ -99,6 +124,9 @@ export default function AppShell({
   stage = 'default',
   stageTopAlign = false,
 }: AppShellProps) {
+  const usesPlanStage =
+    stage === 'default' && background === 'horizon-only' && stageTopAlign;
+
   return (
     <Box className={overlayClass}>
       <Box className="app-container">
@@ -116,11 +144,15 @@ export default function AppShell({
           {header}
           {progress}
           <Box
-            className={cx(
-              stageBaseClass,
-              stageVariantClass[stage],
-              stageTopAlign ? stageTopAlignClass : undefined,
-            )}
+            className={
+              usesPlanStage
+                ? planStageClass
+                : cx(
+                    stageBaseClass,
+                    stageVariantClass[stage],
+                    stageTopAlign ? stageTopAlignClass : undefined,
+                  )
+            }
           >
             {children}
           </Box>

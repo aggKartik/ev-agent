@@ -14,8 +14,11 @@ export const panelRecipe = defineRecipe({
       terminal: {
         height: 'full',
         minHeight: '280px',
-        borderRadius: 'xl',
-        background: 'alpha.night-78',
+        borderColor: 'alpha.cream-28',
+        borderRadius: 'dropdown',
+        background:
+          'linear-gradient(180deg, {colors.alpha.night-96}, {colors.night.950})',
+        boxShadow: 'plan-panel, inset 0 0 80px {colors.alpha.peach-04}',
         backdropFilter: 'blur({blurs.glass-md})',
       },
       drawer: {
@@ -23,7 +26,8 @@ export const panelRecipe = defineRecipe({
         maxHeight: { base: 'none', lg: 'full' },
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 'lg',
+        borderColor: 'alpha.cream-28',
+        borderRadius: 'dropdown',
         background: 'alpha.night-88',
         boxShadow: 'plan-panel-strong',
         backdropFilter: 'blur({blurs.glass-lg})',
@@ -38,9 +42,10 @@ export const panelRecipe = defineRecipe({
         position: 'relative',
         height: 'full',
         minHeight: { base: 'plan-map', lg: 'plan-map-lg' },
+        borderColor: 'alpha.cream-28',
         borderRadius: 'map',
         background: 'night.500',
-        boxShadow: 'plan-panel',
+        boxShadow: 'plan-panel, inset 0 0 80px {colors.alpha.peach-08}',
       },
     },
     ready: {

@@ -39,6 +39,10 @@ const panelClass = css({
     px: 'plan-form-x',
     pt: '2.5',
     pb: 'plan-form-bottom',
+    height: 'calc(100dvh - {sizes.plan-header-offset})',
+    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+    overflowY: 'auto',
+    scrollbarGutter: 'stable',
   },
 });
 

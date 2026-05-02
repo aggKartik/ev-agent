@@ -4,6 +4,7 @@ import { Box, Grid, Stack } from 'styled-system/jsx';
 import Header from '#/components/Header';
 import AppShell from '#/components/layout/AppShell';
 import ItineraryDrawer from '#/components/plan/ItineraryDrawer';
+import ItineraryTopBar from '#/components/plan/ItineraryTopBar';
 import PlanForm from '#/components/plan/PlanForm';
 import PlanningLog from '#/components/plan/PlanningLog';
 import RouteMap from '#/components/plan/RouteMap';
@@ -27,10 +28,6 @@ const stageClass = css({
 const itineraryStageClass = css({
   maxWidth: 'none',
   height: 'full',
-});
-
-const planningStageClass = css({
-  marginTop: 'calc({spacing.plan-stage-lift} * -1)',
 });
 
 const plannerGridClass = css({
@@ -187,11 +184,19 @@ function PlanRoute() {
         className={cx(
           stageClass,
           status === 'ready' ? itineraryStageClass : undefined,
-          status !== 'ready' ? planningStageClass : undefined,
         )}
       >
         {status === 'ready' && result ? (
           <Box className={itineraryShellClass}>
+            <ItineraryTopBar
+              result={result}
+              onEdit={() => {
+                setStatus('draft');
+                setResult(null);
+                setPhaseIndex(0);
+                setSelectedStopId(null);
+              }}
+            />
             <Box className={itineraryMapClass}>
               <RouteMap
                 request={mapRequest}

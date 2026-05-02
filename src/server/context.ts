@@ -6,19 +6,23 @@ import { getOrLinkUserByClerkId, resolveClerkPrimaryEmail } from './users';
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
   const { userId: clerkUserId, isAuthenticated } = await auth();
 
-  let userId: number | null = null;
-  if (isAuthenticated && clerkUserId) {
-    const user = await getOrLinkUserByClerkId(db, clerkUserId, () =>
+  let userIdPromise: Promise<number | null> | null = null;
+  const getUserId = async () => {
+    if (!isAuthenticated || !clerkUserId) return null;
+
+    userIdPromise ??= getOrLinkUserByClerkId(db, clerkUserId, () =>
       resolveClerkPrimaryEmail(clerkUserId),
-    );
-    userId = user.id;
-  }
+    ).then((user) => user.id);
+
+    return userIdPromise;
+  };
 
   return {
     headers: opts.req.headers,
     db,
     clerkUserId: isAuthenticated ? clerkUserId : null,
-    userId,
+    userId: null as number | null,
+    getUserId,
   };
 };
 

@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import type * as Leaflet from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import type {
   Coordinate,
   PlanRequest,
@@ -10,6 +11,7 @@ import type {
 } from '#/features/plan/contracts';
 import {
   cleanPlanAddress,
+  formatPlanMinutes,
   resolvePlanCoordinate,
 } from '#/features/plan/helpers';
 import { cx } from '../../../styled-system/css';
@@ -266,6 +268,13 @@ export default function RouteMap({
     : request
       ? `Route preview from ${cleanPlanAddress(request.from.full)}`
       : 'Route preview map';
+  const readySummary = result
+    ? `${result.request.dates} · ${formatPlanMinutes(result.totals.driveMinutes + result.totals.dwellMinutes)} · ${result.totals.miles} mi · ${result.totals.chargeStops} charge stops`
+    : null;
+
+  const editPlan = () => {
+    window.location.assign('/plan');
+  };
 
   return (
     <Box
@@ -278,6 +287,28 @@ export default function RouteMap({
     >
       <Box ref={elRef} className={chromeClasses.viewport} />
       <Box className={chromeClasses.vignette} />
+      {isReady && result ? (
+        <Box className={chromeClasses.topbar}>
+          <Box className={chromeClasses.topbarTitle}>
+            <Box className={chromeClasses.topbarMain}>
+              {cleanPlanAddress(result.request.from.full)}
+              <Box as="span" className={chromeClasses.topbarArrow}>
+                →
+              </Box>
+              {cleanPlanAddress(result.request.to.full)}
+            </Box>
+            <Box className={chromeClasses.topbarSub}>{readySummary}</Box>
+          </Box>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={chromeClasses.editButton}
+            onClick={editPlan}
+          >
+            Edit plan
+          </Button>
+        </Box>
+      ) : null}
       <Box className={chromeClasses.chrome}>
         <Box className={chromeClasses.pill}>
           <Box className={chromeClasses.statusDot} />

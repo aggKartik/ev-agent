@@ -72,6 +72,36 @@ export const selectableCardRecipe = defineSlotRecipe({
     },
   },
   variants: {
+    density: {
+      compact: {
+        grid: {
+          gridTemplateColumns: {
+            base: '1fr',
+            sm: 'repeat(auto-fit, minmax(140px, 1fr))',
+          },
+          gap: '1.5',
+        },
+        head: {
+          gap: '1.5',
+          padding: '1.5 2',
+        },
+        icon: {
+          width: '18px',
+          height: '18px',
+        },
+        label: {
+          minWidth: 0,
+        },
+        title: {
+          fontSize: 'sm',
+          lineHeight: 'close',
+        },
+        toggle: {
+          width: '5',
+          height: '5',
+        },
+      },
+    },
     selected: {
       true: {
         card: {

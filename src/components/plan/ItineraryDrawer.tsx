@@ -1,12 +1,10 @@
-import { BatteryCharging, Clock, MapPinned, Route } from 'lucide-react';
-import { Box, Flex, Grid, Stack } from 'styled-system/jsx';
-import Icon from '#/components/Icon';
-import { Text } from '#/components/Text';
+import { ArrowRight } from 'lucide-react';
+import { Box, Grid, Stack } from 'styled-system/jsx';
+import Button from '#/components/Button';
 import type { PlanResult } from '#/features/plan/contracts';
-import { cleanPlanAddress, formatPlanMinutes } from '#/features/plan/helpers';
-import { css } from '../../../styled-system/css';
+import { formatPlanMinutes } from '#/features/plan/helpers';
+import { css, cx } from '../../../styled-system/css';
 import { panel } from '../../../styled-system/recipes/panel';
-import { sectionHeader } from '../../../styled-system/recipes/section-header';
 import StopTimeline from './StopTimeline';
 
 type ItineraryDrawerProps = {
@@ -15,51 +13,65 @@ type ItineraryDrawerProps = {
   onSelectStop: (id: string) => void;
 };
 
-const drawerHeaderClasses = sectionHeader({ tone: 'drawer' });
+const rootClass = css({
+  '@media (min-width: 1024px)': {
+    mt: 'plan-overview-topbar-space',
+    height: 'calc(100% - {spacing.plan-overview-topbar-space})',
+    maxHeight: 'calc(100% - {spacing.plan-overview-topbar-space})',
+  },
+});
 
-const headerClass = css({
+const drawerHandleClass = css({
   px: '4',
   py: '3.5',
   borderBottomWidth: 'hair',
-  borderBottomColor: 'alpha.cream.10',
+  borderBottomColor: 'alpha.cream-12',
   flexShrink: 0,
+  fontFamily: 'mono',
+  fontSize: 'xs',
+  letterSpacing: 'widest',
+  textTransform: 'uppercase',
+  color: 'peach.400',
 });
 
 const statsClass = css({
   p: '0',
   borderBottomWidth: 'hair',
-  borderBottomColor: 'alpha.cream.10',
+  borderBottomColor: 'alpha.cream-12',
   flexShrink: 0,
 });
 
 const statCardClass = css({
   minWidth: 0,
   borderRightWidth: 'hair',
-  borderRightColor: 'alpha.cream.10',
+  borderRightColor: 'alpha.cream-12',
   background: 'transparent',
   px: '2.5',
   py: '3.5',
+  textAlign: 'center',
   _last: {
     borderRightWidth: '0',
   },
 });
 
 const statLabelClass = css({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.5',
-  textStyle: 'mono-meta',
+  fontFamily: 'mono',
+  fontWeight: 'medium',
   fontSize: 'micro',
-  color: 'cream.700',
-  letterSpacing: '0.14em',
+  lineHeight: 'close',
+  color: 'cream.600',
+  letterSpacing: '0.24em',
+  textTransform: 'uppercase',
+  marginTop: '0.5',
 });
 
 const statValueClass = css({
-  mt: '1',
   fontFamily: 'display',
-  fontSize: 'display-sm',
+  fontSize: 'xl',
   fontWeight: '700',
   color: 'cream.100',
+  letterSpacing: '-0.02em',
+  lineHeight: '1',
 });
 
 const timelineWrapClass = css({
@@ -69,46 +81,58 @@ const timelineWrapClass = css({
   py: '2.5',
 });
 
+const ctaClass = css({
+  flexShrink: 0,
+  px: '4',
+  py: '3.5',
+  borderTopWidth: 'hair',
+  borderTopColor: 'alpha.cream-12',
+});
+
+const ctaButtonClass = css({
+  width: 'full',
+  justifyContent: 'center',
+  fontSize: 'ui',
+  fontWeight: 'semibold',
+  gap: '2.5',
+});
+
+const ctaSubClass = css({
+  mt: '2',
+  fontFamily: 'mono',
+  fontSize: '2xs',
+  lineHeight: 'close',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  textAlign: 'center',
+  color: 'cream.600',
+});
+
 export default function ItineraryDrawer({
   result,
   selectedStopId,
   onSelectStop,
 }: ItineraryDrawerProps) {
   const { totals } = result;
+  const totalDuration = totals.driveMinutes + totals.dwellMinutes;
+  const totalHours =
+    totalDuration >= 60
+      ? `${Math.floor(totalDuration / 60)}h`
+      : formatPlanMinutes(totalDuration);
 
   return (
-    <Box className={panel({ variant: 'drawer' })}>
-      <Box className={headerClass}>
-        <Box className={drawerHeaderClasses.kicker}>ITINERARY · READY</Box>
-        <Text as="h2" className={drawerHeaderClasses.title}>
-          {cleanPlanAddress(result.request.from.full)} to{' '}
-          {cleanPlanAddress(result.request.to.full)}
-        </Text>
-        <Text className={drawerHeaderClasses.desc}>
-          Built around {totals.activityStops} vibe stops and{' '}
-          {totals.chargeStops} fast charge
-          {totals.chargeStops === 1 ? '' : 's'}, arriving around{' '}
-          {totals.arrivalTime}.
-        </Text>
-      </Box>
+    <Box className={cx(panel({ variant: 'drawer' }), rootClass)}>
+      <Box className={drawerHandleClass}>ITINERARY</Box>
 
       <Grid
         className={statsClass}
         gridTemplateColumns="repeat(4, minmax(0, 1fr))"
         gap="0"
       >
-        <Stat icon={Route} label="Miles" value={`${totals.miles}`} />
-        <Stat
-          icon={Clock}
-          label="Drive"
-          value={formatPlanMinutes(totals.driveMinutes)}
-        />
-        <Stat
-          icon={BatteryCharging}
-          label="Charge"
-          value={`${totals.chargeStops}`}
-        />
-        <Stat icon={MapPinned} label="Stops" value={`${result.stops.length}`} />
+        <Stat label="Total" value={totalHours} />
+        <Stat label="Miles" value={`${totals.miles}`} />
+        <Stat label="Charges" value={`${totals.chargeStops}`} />
+        <Stat label="Stops" value={`${totals.activityStops}`} />
       </Grid>
 
       <Box className={timelineWrapClass}>
@@ -118,26 +142,28 @@ export default function ItineraryDrawer({
           onSelectStop={onSelectStop}
         />
       </Box>
+
+      <Box className={ctaClass}>
+        <Button
+          type="button"
+          className={ctaButtonClass}
+          trailingIcon={<ArrowRight size={16} />}
+        >
+          Start navigation
+        </Button>
+        <Box className={ctaSubClass}>
+          We&apos;ll sync to your car and start routing.
+        </Box>
+      </Box>
     </Box>
   );
 }
 
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: Parameters<typeof Icon>[0]['icon'];
-  label: string;
-  value: string;
-}) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Stack className={statCardClass}>
-      <Flex className={statLabelClass}>
-        <Icon icon={icon} size="xs" />
-        {label}
-      </Flex>
       <Box className={statValueClass}>{value}</Box>
+      <Box className={statLabelClass}>{label}</Box>
     </Stack>
   );
 }

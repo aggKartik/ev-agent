@@ -39,7 +39,7 @@ const activityIcons = {
   tacos: Fish,
 } satisfies Record<PlanActivityId, typeof Coffee>;
 
-const cardGrid = selectableCard();
+const cardGrid = selectableCard({ density: 'compact' });
 
 export default function ActivitySelector({
   catalog,
@@ -70,7 +70,10 @@ export default function ActivitySelector({
       {catalog.map((activity) => {
         const selected = byId.get(activity.id);
         const ActivityIcon = activityIcons[activity.id];
-        const cardClasses = selectableCard({ selected: Boolean(selected) });
+        const cardClasses = selectableCard({
+          density: 'compact',
+          selected: Boolean(selected),
+        });
         return (
           <Box key={activity.id} className={cardClasses.card}>
             <Button

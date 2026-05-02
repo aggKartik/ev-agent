@@ -21,24 +21,12 @@ const listClass = css({
   gap: '0',
 });
 
-const topRowClass = css({
-  display: 'flex',
-  alignItems: 'baseline',
-  justifyContent: 'space-between',
-  gap: '3',
-  minWidth: 0,
-});
-
-const timeClass = css({
-  textStyle: 'mono-meta',
-  fontSize: '2xs',
-  color: 'peach.300',
-  letterSpacing: '0.14em',
-  whiteSpace: 'nowrap',
-  flexShrink: 0,
-});
-
 const timelineClasses = selectableRow({ variant: 'timeline' });
+
+const timelineIconClass = css({
+  width: '14px',
+  height: '14px',
+});
 
 export default function StopTimeline({
   stops,
@@ -56,6 +44,11 @@ export default function StopTimeline({
               : stop.kind === 'activity'
                 ? Sparkles
                 : MapPin;
+        const stopMeta = getStopMeta(stop);
+        const driveNote =
+          stop.driveMinutes > 0
+            ? `${formatPlanMinutes(stop.driveMinutes)} · ${stop.miles} mi from prev`
+            : null;
         return (
           <Button
             key={stop.id}
@@ -72,29 +65,35 @@ export default function StopTimeline({
             onClick={() => onSelectStop?.(stop.id)}
           >
             <Box className={timelineClasses.icon}>
-              <Icon icon={StopIcon} size="sm" />
+              <Icon
+                icon={StopIcon}
+                size="sm"
+                strokeWidth={1.75}
+                className={timelineIconClass}
+              />
             </Box>
             <Box className={timelineClasses.body}>
-              <Box className={topRowClass}>
-                <Box className={timelineClasses.primary}>{stop.name}</Box>
-                <Box className={timeClass}>{stop.arrivalTime}</Box>
-              </Box>
+              <Box className={timelineClasses.primary}>{stop.name}</Box>
+              <Box className={timelineClasses.meta}>{stopMeta}</Box>
               {stop.sub ? (
                 <Box className={timelineClasses.secondary}>{stop.sub}</Box>
               ) : null}
-              <Box className={timelineClasses.meta}>
-                {stop.miles > 0 ? <span>{stop.miles} MI</span> : null}
-                {stop.driveMinutes > 0 ? (
-                  <span>{formatPlanMinutes(stop.driveMinutes)} DRIVE</span>
-                ) : null}
-                {stop.dwellMinutes > 0 ? (
-                  <span>{formatPlanMinutes(stop.dwellMinutes)} STOP</span>
-                ) : null}
-              </Box>
+              {driveNote ? (
+                <Box className={timelineClasses.note}>{driveNote}</Box>
+              ) : null}
             </Box>
           </Button>
         );
       })}
     </Stack>
   );
+}
+
+function getStopMeta(stop: PlanStop) {
+  if (stop.kind === 'start') return `Depart · ${stop.arrivalTime}`;
+  if (stop.kind === 'end') return `Arrive · ${stop.arrivalTime}`;
+  if (stop.kind === 'charge') {
+    return `${formatPlanMinutes(stop.dwellMinutes)} · ${stop.detail ?? 'Fast charge'}`;
+  }
+  return `${formatPlanMinutes(stop.dwellMinutes)} · ${stop.detail ?? stop.kind}`;
 }

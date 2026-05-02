@@ -10,6 +10,12 @@ export const mapChromeRecipe = defineSlotRecipe({
     'statusDot',
     'vignette',
     'empty',
+    'topbar',
+    'topbarTitle',
+    'topbarMain',
+    'topbarSub',
+    'topbarArrow',
+    'editButton',
   ],
   base: {
     root: {
@@ -169,7 +175,7 @@ export const mapChromeRecipe = defineSlotRecipe({
       pointerEvents: 'none',
       zIndex: 1,
       background:
-        'radial-gradient(circle at 20% 15%, {colors.alpha.peach-18}, transparent 30%), linear-gradient(180deg, {colors.alpha.night-12}, {colors.alpha.night-40})',
+        'radial-gradient(ellipse 80% 60% at 50% 110%, {colors.alpha.magenta-20}, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 0%, {colors.alpha.peach-18}, transparent 60%), linear-gradient(180deg, {colors.alpha.night-12}, {colors.alpha.night-40})',
     },
     empty: {
       position: 'absolute',
@@ -183,12 +189,70 @@ export const mapChromeRecipe = defineSlotRecipe({
       letterSpacing: '0.18em',
       pointerEvents: 'none',
     },
+    topbar: {
+      position: 'absolute',
+      zIndex: 4,
+      top: '5',
+      left: '5',
+      right: '5',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '3.5',
+      px: '4.5',
+      py: '3.5',
+      borderWidth: '1px',
+      borderColor: 'alpha.cream-28',
+      borderRadius: 'lg',
+      background: 'alpha.night-80',
+      boxShadow: 'plan-panel',
+      backdropFilter: 'blur({blurs.glass-sm})',
+    },
+    topbarTitle: {
+      flex: 1,
+      minWidth: 0,
+    },
+    topbarMain: {
+      fontFamily: 'display',
+      fontWeight: '600',
+      fontSize: 'base',
+      lineHeight: '1.2',
+      letterSpacing: '-0.01em',
+      color: 'cream.100',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
+    topbarSub: {
+      mt: '1',
+      fontFamily: 'mono',
+      fontSize: '2xs',
+      lineHeight: '1.2',
+      letterSpacing: '0.16em',
+      textTransform: 'uppercase',
+      color: 'cream.600',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
+    topbarArrow: {
+      color: 'peach.400',
+      mx: '1.5',
+    },
+    editButton: {
+      flexShrink: 0,
+      px: '3.5',
+      py: '2',
+      fontSize: 'sm',
+    },
   },
   variants: {
     ready: {
       true: {
         chrome: {
           display: 'none',
+        },
+        topbar: {
+          display: 'flex',
         },
       },
     },

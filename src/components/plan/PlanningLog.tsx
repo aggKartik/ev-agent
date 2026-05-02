@@ -1,7 +1,7 @@
 import { Box, Stack } from 'styled-system/jsx';
 import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
 import { cleanPlanAddress } from '#/features/plan/helpers';
-import { css } from '../../../styled-system/css';
+import { css, cx } from '../../../styled-system/css';
 import { panel } from '../../../styled-system/recipes/panel';
 import { progress } from '../../../styled-system/recipes/progress';
 
@@ -10,6 +10,20 @@ type PlanningLogProps = {
   result: PlanResult;
   phaseIndex: number;
 };
+
+const rootClass = css({
+  width: 'full',
+  maxWidth: 'plan-form',
+  justifySelf: 'end',
+  alignSelf: 'stretch',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 'plan-log-sm',
+  '@media (min-width: 880px)': {
+    height: 'calc(100dvh - {sizes.plan-header-offset})',
+    maxHeight: 'calc(100dvh - {sizes.plan-header-offset})',
+  },
+});
 
 const headerClass = css({
   display: 'flex',
@@ -26,12 +40,17 @@ const headerClass = css({
 });
 
 const bodyClass = css({
+  flex: '1 1 auto',
+  minHeight: 0,
   p: '5',
   maxHeight: { base: 'plan-log-sm', lg: 'plan-log-lg' },
   overflowY: 'auto',
   fontFamily: 'mono',
   fontSize: 'caption',
   lineHeight: '1.65',
+  '@media (min-width: 880px)': {
+    maxHeight: 'none',
+  },
 });
 
 const lineClass = css({
@@ -70,7 +89,7 @@ export default function PlanningLog({
   ];
 
   return (
-    <Box className={panel({ variant: 'terminal' })}>
+    <Box className={cx(panel({ variant: 'terminal' }), rootClass)}>
       <Box className={headerClass}>
         <span>AGENT · PLANNING</span>
         <span aria-live="polite">{pct}%</span>
