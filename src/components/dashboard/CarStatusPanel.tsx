@@ -53,7 +53,7 @@ export default function CarStatusPanel({
         <Box
           className={slots.battery}
           aria-label={
-            displayBattery === null
+            displayBattery == null
               ? 'Battery unavailable'
               : `Battery ${displayBattery}%`
           }
@@ -77,12 +77,14 @@ export default function CarStatusPanel({
       <Box className={slots.carStats}>
         <CarStat
           label="Range"
-          value={range ? Math.round(range) : '--'}
+          value={range == null ? '--' : Math.round(range)}
           unit="mi"
         />
         <CarStat
           label="Odometer"
-          value={odometer ? Math.round(odometer).toLocaleString() : '--'}
+          value={
+            odometer == null ? '--' : Math.round(odometer).toLocaleString()
+          }
           unit="mi"
         />
         <CarStat

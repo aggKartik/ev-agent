@@ -3,6 +3,10 @@ type CarSilhouetteProps = {
 };
 
 export default function CarSilhouette({ battery }: CarSilhouetteProps) {
+  const safeBattery = Number.isFinite(battery)
+    ? Math.min(100, Math.max(0, battery))
+    : 0;
+
   return (
     <svg
       viewBox="0 0 320 80"
@@ -74,7 +78,7 @@ export default function CarSilhouette({ battery }: CarSilhouetteProps) {
       <rect
         x="253"
         y="41"
-        width={Math.max(2, battery * 0.12)}
+        width={Math.max(2, safeBattery * 0.12)}
         height="4"
         fill="#d6ff3d"
       />

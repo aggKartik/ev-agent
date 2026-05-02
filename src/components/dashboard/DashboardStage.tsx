@@ -27,7 +27,7 @@ export default function DashboardStage({
 }: DashboardStageProps) {
   const slots = dashboard();
   const driverFirstName =
-    summary.profile.driverLabel.split(/\s+/)[0] ?? 'Driver';
+    summary.profile.driverLabel.trim().split(/\s+/)[0] || 'Driver';
 
   return (
     <>
