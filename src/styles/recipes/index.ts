@@ -2,6 +2,7 @@ export { buttonRecipe } from './button';
 export { cardRecipe } from './card';
 export { chipRecipe } from './chip';
 export { connectRecipe } from './connect';
+export { dashboardRecipe } from './dashboard';
 export { iconRecipe } from './icon';
 export { inputRecipe } from './input';
 export { mapChromeRecipe } from './mapChrome';

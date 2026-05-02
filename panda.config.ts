@@ -40,7 +40,8 @@ import {
   stepRecipe, 
   optionRecipe, 
   connectRecipe, 
-  welcomeRecipe 
+  welcomeRecipe,
+  dashboardRecipe
 } from "./src/styles/recipes";
 
 export default defineConfig({
@@ -96,6 +97,7 @@ export default defineConfig({
         option: optionRecipe,
         connect: connectRecipe,
         welcome: welcomeRecipe,
+        dashboard: dashboardRecipe,
       }
     },
   },

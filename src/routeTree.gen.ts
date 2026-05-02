@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PlanRouteRouteImport } from './routes/plan/route'
 import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SsoCallbackIndexRouteImport } from './routes/sso-callback/index'
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as ApiTrpcTrpcRouteImport } from './routes/api.trpc.$trpc'
 import { Route as ApiOauthProviderConnectRouteImport } from './routes/api.oauth.$provider.connect'
 import { Route as ApiOauthProviderCallbackRouteImport } from './routes/api.oauth.$provider.callback'
@@ -29,6 +31,11 @@ const PlanRouteRoute = PlanRouteRouteImport.update({
 const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,6 +68,11 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const ApiTrpcTrpcRoute = ApiTrpcTrpcRouteImport.update({
   id: '/api/trpc/$trpc',
   path: '/api/trpc/$trpc',
@@ -80,8 +92,10 @@ const ApiOauthProviderCallbackRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/plan': typeof PlanRouteRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/sign-in/': typeof SignInIndexRoute
@@ -93,6 +107,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/plan': typeof PlanIndexRoute
   '/sign-in': typeof SignInIndexRoute
@@ -105,8 +120,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/plan': typeof PlanRouteRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/sign-in/': typeof SignInIndexRoute
@@ -120,8 +137,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/onboarding'
     | '/plan'
+    | '/dashboard/'
     | '/onboarding/'
     | '/plan/'
     | '/sign-in/'
@@ -133,6 +152,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard'
     | '/onboarding'
     | '/plan'
     | '/sign-in'
@@ -144,8 +164,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/dashboard'
     | '/onboarding'
     | '/plan'
+    | '/dashboard/'
     | '/onboarding/'
     | '/plan/'
     | '/sign-in/'
@@ -158,6 +180,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   PlanRouteRoute: typeof PlanRouteRouteWithChildren
   SignInIndexRoute: typeof SignInIndexRoute
@@ -182,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -226,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof OnboardingRouteRoute
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/api/trpc/$trpc': {
       id: '/api/trpc/$trpc'
       path: '/api/trpc/$trpc'
@@ -249,6 +286,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface DashboardRouteRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
 
 interface OnboardingRouteRouteChildren {
   OnboardingIndexRoute: typeof OnboardingIndexRoute
@@ -276,6 +325,7 @@ const PlanRouteRouteWithChildren = PlanRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   PlanRouteRoute: PlanRouteRouteWithChildren,
   SignInIndexRoute: SignInIndexRoute,
