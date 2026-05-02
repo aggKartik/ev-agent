@@ -2,6 +2,14 @@ import { Box, Center, Flex, Grid } from 'styled-system/jsx';
 import { Text } from '@/components/Text';
 import { css } from '../../../styled-system/css';
 
+export type VisualPanelData = {
+  make?: string;
+  model?: string;
+  year?: number | string;
+  prefs?: string[];
+  car?: string;
+};
+
 type VisualPanelProps = {
   kind:
     | 'welcome'
@@ -12,7 +20,7 @@ type VisualPanelProps = {
     | 'connect'
     | 'prefs'
     | 'success';
-  data?: any;
+  data?: VisualPanelData;
 };
 
 const visualClass = css({
@@ -268,7 +276,7 @@ function NameVisual() {
   );
 }
 
-function MakeVisual({ data }: { data: any }) {
+function MakeVisual({ data }: { data?: VisualPanelData }) {
   const badges = ['TESLA', 'RIVIAN', 'FORD', 'HYUNDAI', 'POLESTAR', 'LUCID'];
   return (
     <>
@@ -319,7 +327,7 @@ function MakeVisual({ data }: { data: any }) {
   );
 }
 
-function ModelVisual({ data }: { data: any }) {
+function ModelVisual({ data }: { data?: VisualPanelData }) {
   const modelLabel = data?.model ? data.model.toUpperCase() : '—';
   return (
     <>
@@ -409,7 +417,7 @@ function ModelVisual({ data }: { data: any }) {
   );
 }
 
-function YearVisual({ data }: { data: any }) {
+function YearVisual({ data }: { data?: VisualPanelData }) {
   const yearStr = data?.year ? String(data.year) : '20—';
   const hasFacts = data?.year && data?.model;
   return (
@@ -559,7 +567,7 @@ function ConnectVisual() {
   );
 }
 
-function PrefsVisual({ data }: { data: any }) {
+function PrefsVisual({ data }: { data?: VisualPanelData }) {
   const prefs = data?.prefs || [];
   const rows = [
     { label: 'CAFFEINE', val: prefs.includes('Coffee roasters') ? 0.9 : 0.2 },
@@ -630,7 +638,7 @@ function PrefsVisual({ data }: { data: any }) {
   );
 }
 
-function SuccessVisual({ data }: { data: any }) {
+function SuccessVisual({ data }: { data?: VisualPanelData }) {
   return (
     <>
       <VLabel>READY · DEPART</VLabel>
