@@ -15,6 +15,8 @@ export type PlanFormValues = {
   to: PlanRequest['to'];
   dates: PlanRequest['dates'];
   activities: PlanRequest['activities'];
+  vehicleLabel: PlanRequest['vehicleLabel'];
+  usableRangeMiles: PlanRequest['usableRangeMiles'];
   fromLocked: boolean;
 };
 
@@ -25,6 +27,8 @@ export function usePlanForm({ catalog, onSubmit }: UsePlanFormArgs) {
       to: { full: '' } as PlanRequest['to'],
       dates: catalog.dateOptions[0] ?? 'Flexible',
       activities: [] as PlanRequest['activities'],
+      vehicleLabel: catalog.defaultVehicleLabel,
+      usableRangeMiles: catalog.defaultUsableRangeMiles,
       fromLocked: true as boolean,
     } satisfies PlanFormValues,
     onSubmit: ({ value }) => {

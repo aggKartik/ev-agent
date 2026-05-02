@@ -120,6 +120,19 @@ const actionsClass = css({
   flexWrap: 'wrap',
 });
 
+const vehicleRangeInputClass = css({
+  width: '120px',
+  flexShrink: 0,
+});
+
+const vehicleSublabelClass = css({
+  fontSize: '2xs',
+  color: 'cream.600',
+  mb: '1',
+  textStyle: 'mono-meta',
+  letterSpacing: '0.12em',
+});
+
 export default function PlanForm({
   catalog,
   form,
@@ -134,6 +147,8 @@ export default function PlanForm({
         to: values.to,
         dates: values.dates,
         activities: values.activities,
+        vehicleLabel: values.vehicleLabel,
+        usableRangeMiles: values.usableRangeMiles,
       }).success,
     [values],
   );
@@ -200,6 +215,51 @@ export default function PlanForm({
             />
           )}
         </form.Field>
+
+        <Box className={fieldClass}>
+          <Box className={heroHeaderClasses.label}>VEHICLE</Box>
+          <Flex gap="4" flexWrap="wrap" alignItems="flex-end">
+            <form.Field name="vehicleLabel">
+              {(field) => (
+                <Box flex="1" minWidth="200px" width="full">
+                  <Box className={vehicleSublabelClass}>MODEL</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      value={field.state.value}
+                      className={addressInputClass}
+                      placeholder="e.g. Tesla Model 3 Long Range"
+                      onChange={(event) =>
+                        field.handleChange(event.target.value)
+                      }
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+            <form.Field name="usableRangeMiles">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>RANGE (MI)</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={500}
+                      step={1}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+          </Flex>
+        </Box>
 
         <form.Field name="dates">
           {(field) => (

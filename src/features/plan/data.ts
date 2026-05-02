@@ -103,6 +103,10 @@ export const CAR_LOCATION = {
   lng: -118.2437,
 };
 
+/** Defaults for plan requests; surfaced via catalog and Zod defaults on `PlanRequest`. */
+export const PLAN_DEFAULT_VEHICLE_LABEL = 'Tesla Model 3 Long Range';
+export const PLAN_DEFAULT_USABLE_RANGE_MILES = 320;
+
 export const MOCK_ADDRESSES = [
   {
     full: '1337 Sunset Blvd, Los Angeles, CA 90026',

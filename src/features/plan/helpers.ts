@@ -12,6 +12,8 @@ import {
   PLAN_ACTIVITY_CATALOG,
   PLAN_COLORS,
   PLAN_DATE_OPTIONS,
+  PLAN_DEFAULT_USABLE_RANGE_MILES,
+  PLAN_DEFAULT_VEHICLE_LABEL,
   PLANNING_PHASES,
 } from './data';
 
@@ -73,6 +75,8 @@ export function getPlanCatalog(): PlanCatalogResponse {
       secondary: CAR_LOCATION.secondary,
       coordinate: { lat: CAR_LOCATION.lat, lng: CAR_LOCATION.lng },
     },
+    defaultVehicleLabel: PLAN_DEFAULT_VEHICLE_LABEL,
+    defaultUsableRangeMiles: PLAN_DEFAULT_USABLE_RANGE_MILES,
   };
 }
 

@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { PLAN_ACTIVITY_IDS } from './data';
+import {
+  PLAN_ACTIVITY_IDS,
+  PLAN_DEFAULT_USABLE_RANGE_MILES,
+  PLAN_DEFAULT_VEHICLE_LABEL,
+} from './data';
 
 export const coordinateSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -20,11 +24,21 @@ export const planActivitySelectionSchema = z.object({
   dwellMinutes: z.number().int().min(15).max(180),
 });
 
+export const planArrivalTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected 24h HH:MM');
+
 export const planRequestSchema = z.object({
   from: planAddressSchema,
   to: planAddressSchema,
   dates: z.string().min(1),
   activities: z.array(planActivitySelectionSchema).min(1),
+  vehicleLabel: z.string().min(1).default(PLAN_DEFAULT_VEHICLE_LABEL),
+  usableRangeMiles: z
+    .number()
+    .positive()
+    .max(500)
+    .default(PLAN_DEFAULT_USABLE_RANGE_MILES),
 });
 
 export const addressSuggestSchema = z.object({
@@ -52,7 +66,7 @@ export const planStopSchema = z.object({
   driveMinutes: z.number().min(0),
   miles: z.number().min(0),
   dwellMinutes: z.number().min(0),
-  arrivalTime: z.string().regex(/^\d{2}:\d{2}$/),
+  arrivalTime: planArrivalTimeSchema,
 });
 
 export const planTotalsSchema = z.object({
@@ -61,7 +75,7 @@ export const planTotalsSchema = z.object({
   dwellMinutes: z.number().min(0),
   chargeStops: z.number().int().min(0),
   activityStops: z.number().int().min(0),
-  arrivalTime: z.string().regex(/^\d{2}:\d{2}$/),
+  arrivalTime: planArrivalTimeSchema,
 });
 
 export const planPhaseSchema = z.object({
@@ -96,6 +110,8 @@ export type PlanCatalogResponse = {
   }[];
   dateOptions: string[];
   carLocation: PlanAddress;
+  defaultVehicleLabel: string;
+  defaultUsableRangeMiles: number;
 };
 
 export type PlanStreamEvent =

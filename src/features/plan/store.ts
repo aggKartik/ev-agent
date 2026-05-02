@@ -11,6 +11,11 @@ export type PlanMapMode = 'preview' | 'building' | 'ready';
 
 const NARRATION_CAP = 80;
 
+function capNarrationEntries<T>(entries: T[], cap: number): T[] {
+  if (entries.length <= cap) return entries;
+  return entries.slice(entries.length - cap);
+}
+
 export type NarrationEntry = {
   id: number;
   text: string;
@@ -69,20 +74,20 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
     appendNarration: (message) => {
       const { narration, narrationCounter } = get();
       const id = narrationCounter + 1;
-      const next = [...narration, { id, text: message }];
-      if (next.length > NARRATION_CAP) {
-        next.splice(0, next.length - NARRATION_CAP);
-      }
+      const next = capNarrationEntries(
+        [...narration, { id, text: message }],
+        NARRATION_CAP,
+      );
       set({ narration: next, narrationCounter: id });
     },
 
     setPhase: (phase) => {
       const { narration, narrationCounter } = get();
       const id = narrationCounter + 1;
-      const next = [...narration, { id, text: `→ ${phase.label}` }];
-      if (next.length > NARRATION_CAP) {
-        next.splice(0, next.length - NARRATION_CAP);
-      }
+      const next = capNarrationEntries(
+        [...narration, { id, text: `→ ${phase.label}` }],
+        NARRATION_CAP,
+      );
       set({ currentPhase: phase, narration: next, narrationCounter: id });
     },
 

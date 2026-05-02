@@ -9,8 +9,16 @@ import type { PlanForm } from '#/features/plan/usePlanForm';
  */
 export function useDraftRequest(form: PlanForm): PlanRequest | null {
   return useStore(form.store, (state) => {
-    const { from, to, dates, activities } = state.values;
+    const { from, to, dates, activities, vehicleLabel, usableRangeMiles } =
+      state.values;
     if (from.full.trim().length === 0) return null;
-    return { from, to, dates, activities };
+    return {
+      from,
+      to,
+      dates,
+      activities,
+      vehicleLabel,
+      usableRangeMiles,
+    };
   });
 }

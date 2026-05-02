@@ -12,7 +12,12 @@ import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
 import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
 import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
 
-const SYSTEM_PROMPT = `You are EV-AGENT, an electric-vehicle road-trip planner. You design a single day-trip route from a start address to a destination address. The driver is in a Tesla Model 3 Long Range with roughly 320 miles of usable range from a full charge.
+function buildSystemPrompt(request: PlanRequest): string {
+  const chargeHintMiles = Math.max(
+    60,
+    Math.round(request.usableRangeMiles * 0.625),
+  );
+  return `You are EV-AGENT, an electric-vehicle road-trip planner. You design a single day-trip route from a start address to a destination address. The driver is in ${request.vehicleLabel} with roughly ${request.usableRangeMiles} miles of usable range from a full charge.
 
 Your job is to:
 1. Use the narrateProgress tool between phases so the user sees a live "thought process". Recommended phases (call narrateProgress with phase + detail for each):
@@ -22,7 +27,7 @@ Your job is to:
    - "Optimizing for stops" — order stops in driving direction and tune dwell times.
    - "Finalizing itinerary" — call getDirections, then return the final result.
 2. Call searchPlaces once per requested activity, near a coordinate that lies on the corridor between origin and destination. Pick the best candidate and use it as an activity stop.
-3. Call findChargingStations whenever the cumulative miles since the last charge approaches ~200 miles. Pick a station with the highest power (kW). Insert a charging stop with kind: "charge" and a sensible dwellMinutes (20-35).
+3. Call findChargingStations whenever the cumulative miles since the last charge approaches ~${chargeHintMiles} miles (about 60–65% of usable range). Pick a station with the highest power (kW). Insert a charging stop with kind: "charge" and a sensible dwellMinutes (20-35).
 4. Call getDirections EXACTLY ONCE near the end with the full ordered list of waypoints (start, every activity/charge stop in driving order, end). Use its totalMiles, totalMinutes, per-leg miles+driveMinutes, and full geometry in your final answer.
 5. Return the final structured PlanResult. Stops must be in driving order, starting with kind:"start" and ending with kind:"end". For each stop set:
    - id (unique short string),
@@ -35,6 +40,7 @@ Your job is to:
 8. The "geometry" field MUST be the geometry array returned by getDirections, not just the stop coordinates.
 
 Be efficient: do not call any tool more than necessary. Pick reasonable defaults rather than asking the user.`;
+}
 
 function buildUserPrompt(request: PlanRequest): string {
   const fromCoord = request.from.coordinate
@@ -54,6 +60,8 @@ function buildUserPrompt(request: PlanRequest): string {
 From: ${request.from.full}${fromCoord}
 To: ${request.to.full}${toCoord}
 When: ${request.dates}
+
+Vehicle: ${request.vehicleLabel} · ~${request.usableRangeMiles} mi usable range
 
 Activities the driver wants (one stop each, in any order that flows with the route):
 ${activities}
@@ -82,7 +90,7 @@ export async function runPlanAgent(
   try {
     const result = streamText({
       model: getPlanModel(),
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(request),
       prompt: buildUserPrompt(request),
       tools,
       output: Output.object({ schema: planResultSchema }),
