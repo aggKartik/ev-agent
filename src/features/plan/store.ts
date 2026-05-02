@@ -56,7 +56,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
 
     advancePhase: () => {
       const { phaseIndex, result } = get();
-      if (!result) return;
+      if (!result || result.phases.length === 0) return;
       const next = Math.min(phaseIndex + 1, result.phases.length - 1);
       if (next === phaseIndex) return;
       set({ phaseIndex: next });
@@ -96,6 +96,7 @@ export const useMapMode = (): PlanMapMode =>
 export const useRevealCount = (): number | undefined =>
   usePlanFlowStore((s) => {
     if (s.status !== 'planning' || !s.result) return undefined;
+    if (s.result.phases.length === 0) return s.result.stops.length;
     return Math.max(
       2,
       Math.ceil(

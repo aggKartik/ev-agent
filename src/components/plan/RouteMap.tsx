@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Box } from 'styled-system/jsx';
 import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
 import {
@@ -15,6 +15,7 @@ import MapChrome from './map/MapChrome';
 import MapTopBar from './map/MapTopBar';
 import RouteMapEmptyState from './map/RouteMapEmptyState';
 import { useLeafletMap } from './map/useLeafletMap';
+import { useMapInvalidateOnMode } from './map/useMapInvalidateOnMode';
 import { useRouteLayers } from './map/useRouteLayers';
 
 type RouteMapProps = {
@@ -65,14 +66,7 @@ export default function RouteMap({
     onSelectStop,
   });
 
-  useEffect(() => {
-    if (!mode) return undefined;
-    const timeout = window.setTimeout(
-      () => mapRef.current?.invalidateSize(),
-      240,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [mode, mapRef]);
+  useMapInvalidateOnMode(mapRef, mode);
 
   const isReady = mode === 'ready';
   const chromeClasses = mapChrome({ ready: isReady });

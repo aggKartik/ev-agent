@@ -724,7 +724,7 @@ function SuccessVisual({ data }: { data?: VisualPanelData }) {
         </svg>
       </Box>
       <MetaStrip>
-        <MetaPill>{data?.model || '—'}</MetaPill>
+        <MetaPill>{data?.car || '—'}</MetaPill>
         <MetaPill>ALL SYSTEMS GO</MetaPill>
       </MetaStrip>
     </>

@@ -52,6 +52,7 @@ export function useRouteLayers({
   onSelectStop,
 }: UseRouteLayersArgs) {
   const layersRef = useRef<LayerState>({ markers: [] });
+  const lastPointsKeyRef = useRef<string>('');
 
   useEffect(() => {
     const leaflet = leafletRef.current;
@@ -104,7 +105,11 @@ export function useRouteLayers({
       addPreviewMarkers(leaflet, map, request, layersRef.current);
     }
 
-    fitViewport(leaflet, map, points);
+    const pointsKey = points.map((p) => `${p.lat},${p.lng}`).join('|');
+    if (pointsKey !== lastPointsKeyRef.current) {
+      fitViewport(leaflet, map, points);
+      lastPointsKeyRef.current = pointsKey;
+    }
   }, [
     leafletRef,
     mapRef,

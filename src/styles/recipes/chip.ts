@@ -35,6 +35,7 @@ export const chipRecipe = defineRecipe({
         paddingY: '1',
         fontSize: 'micro',
         gap: '1.5',
+        cursor: 'default',
       },
     },
     tone: {

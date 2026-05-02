@@ -14,18 +14,25 @@ export function usePlanPhaseTicker() {
 
   useEffect(() => {
     if (status !== 'planning' || phasesLength === 0) return;
+    let finishTimeout: number | null = null;
 
     const interval = window.setInterval(() => {
       const { phaseIndex, advancePhase, finishPlanning } =
         usePlanFlowStore.getState();
       if (phaseIndex >= phasesLength - 1) {
         window.clearInterval(interval);
-        window.setTimeout(finishPlanning, FINISH_DELAY_MS);
+        finishTimeout = window.setTimeout(() => {
+          const { status: currentStatus } = usePlanFlowStore.getState();
+          if (currentStatus === 'planning') finishPlanning();
+        }, FINISH_DELAY_MS);
         return;
       }
       advancePhase();
     }, PHASE_TICK_MS);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearInterval(interval);
+      if (finishTimeout !== null) window.clearTimeout(finishTimeout);
+    };
   }, [status, phasesLength]);
 }

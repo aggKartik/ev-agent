@@ -30,6 +30,7 @@
 - Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
 
 ## State Management & Hooks
+
 - Form values live in TanStack Form. Don't mirror them into another store; project from the form via `useStore(form.store, selector)` when other parts of the UI need to react.
 - Workflow / cross-component UI state lives in Zustand (e.g. `src/features/plan/store.ts`). Stores hold data + synchronous transitions only — no timers, no async, no derived `useEffect`.
 - Side effects (timers, mutations, subscriptions) live in single-purpose hooks named for what they do (e.g. `usePlanPhaseTicker`, `usePlanSubmit`, `useDraftRequest`). One hook = one effect.

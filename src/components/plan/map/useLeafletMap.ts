@@ -24,6 +24,7 @@ export function useLeafletMap(
     let disposed = false;
     let resizeObserver: ResizeObserver | null = null;
     let resizeHandler: (() => void) | null = null;
+    const invalidateTimeouts: number[] = [];
 
     async function mountMap() {
       if (!elRef.current || mapRef.current) return;
@@ -69,7 +70,7 @@ export function useLeafletMap(
       resizeObserver.observe(elRef.current);
       window.addEventListener('resize', invalidate);
       for (const delay of [60, 200, 500, 1000]) {
-        window.setTimeout(invalidate, delay);
+        invalidateTimeouts.push(window.setTimeout(invalidate, delay));
       }
       setMapReady(true);
     }
@@ -78,6 +79,9 @@ export function useLeafletMap(
 
     return () => {
       disposed = true;
+      for (const timeoutId of invalidateTimeouts) {
+        window.clearTimeout(timeoutId);
+      }
       resizeObserver?.disconnect();
       if (resizeHandler) window.removeEventListener('resize', resizeHandler);
       mapRef.current?.remove();

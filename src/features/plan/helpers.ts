@@ -254,7 +254,8 @@ function buildStops(
     }
   });
 
-  elapsedMinutes += 60 + Math.floor(stops.length * 18);
+  const finalLegDriveMinutes = 60 + Math.floor(stops.length * 18);
+  elapsedMinutes += finalLegDriveMinutes;
   stops.push({
     id: 'end',
     kind: 'end',
@@ -263,7 +264,7 @@ function buildStops(
     iconKey: 'flag',
     color: PLAN_COLORS.magenta,
     coordinate: toCoordinate,
-    driveMinutes: 60,
+    driveMinutes: finalLegDriveMinutes,
     miles: 48,
     dwellMinutes: 0,
     arrivalTime: formatClock(elapsedMinutes),

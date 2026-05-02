@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { PLAN_ACTIVITY_IDS } from './data';
 
 export const coordinateSchema = z.object({
-  lat: z.number(),
-  lng: z.number(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
 });
 
 export const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);

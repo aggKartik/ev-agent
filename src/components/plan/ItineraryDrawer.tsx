@@ -11,6 +11,7 @@ type ItineraryDrawerProps = {
   result: PlanResult;
   selectedStopId?: string | null;
   onSelectStop: (id: string) => void;
+  onStartNavigation?: () => void;
 };
 
 const rootClass = css({
@@ -112,12 +113,17 @@ export default function ItineraryDrawer({
   result,
   selectedStopId,
   onSelectStop,
+  onStartNavigation,
 }: ItineraryDrawerProps) {
   const { totals } = result;
   const totalDuration = totals.driveMinutes + totals.dwellMinutes;
+  const hours = Math.floor(totalDuration / 60);
+  const mins = totalDuration % 60;
   const totalHours =
     totalDuration >= 60
-      ? `${Math.floor(totalDuration / 60)}h`
+      ? mins === 0
+        ? `${hours}h`
+        : `${hours}h ${mins}m`
       : formatPlanMinutes(totalDuration);
 
   return (
@@ -148,6 +154,8 @@ export default function ItineraryDrawer({
           type="button"
           className={ctaButtonClass}
           trailingIcon={<ArrowRight size={16} />}
+          onClick={onStartNavigation}
+          disabled={!onStartNavigation}
         >
           Start navigation
         </Button>

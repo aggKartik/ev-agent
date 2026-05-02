@@ -76,7 +76,14 @@ export default function PlanningLog({
   result,
   phaseIndex,
 }: PlanningLogProps) {
-  const pct = Math.round(((phaseIndex + 1) / result.phases.length) * 100);
+  const totalPhases = result.phases.length;
+  const pct =
+    totalPhases > 0
+      ? Math.min(
+          100,
+          Math.max(0, Math.round(((phaseIndex + 1) / totalPhases) * 100)),
+        )
+      : 0;
   const progressClasses = progress({ size: 'terminal' });
   const lines = [
     { token: '→', message: 'boot :: ev-agent/0.4.2 · session 9f2c' },
