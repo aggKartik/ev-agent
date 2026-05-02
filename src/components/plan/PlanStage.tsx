@@ -5,12 +5,24 @@ import PlanningLog from '#/components/plan/PlanningLog';
 import RouteMap from '#/components/plan/RouteMap';
 import { emptyOnboardingSearch } from '#/features/onboarding/search';
 import type { PlanCatalogResponse } from '#/features/plan/contracts';
-import type { PlanFlow } from '#/features/plan/usePlanFlow';
+import {
+  useActiveRequest,
+  useMapMode,
+  usePhaseIndex,
+  usePlanFlowStore,
+  useResult,
+  useRevealCount,
+  useSelectedStopId,
+  useStatus,
+} from '#/features/plan/store';
+import { useDraftRequest } from '#/features/plan/useDraftRequest';
+import type { PlanForm as PlanFormApi } from '#/features/plan/usePlanForm';
 import { css } from '../../../styled-system/css';
 
 type PlanStageProps = {
   catalog: PlanCatalogResponse;
-  flow: PlanFlow;
+  form: PlanFormApi;
+  isSubmitting: boolean;
 };
 
 const plannerGridClass = css({
@@ -37,40 +49,54 @@ const mapColumnClass = css({
   },
 });
 
-export default function PlanStage({ catalog, flow }: PlanStageProps) {
+export default function PlanStage({
+  catalog,
+  form,
+  isSubmitting,
+}: PlanStageProps) {
   const navigate = useNavigate();
+  const status = useStatus();
+  const result = useResult();
+  const activeRequest = useActiveRequest();
+  const phaseIndex = usePhaseIndex();
+  const selectedStopId = useSelectedStopId();
+  const revealCount = useRevealCount();
+  const mapMode = useMapMode();
+  const draftRequest = useDraftRequest(form);
+  const selectStop = usePlanFlowStore((s) => s.selectStop);
+
+  const mapRequest = activeRequest ?? draftRequest;
 
   return (
     <Grid className={plannerGridClass}>
-      {flow.status === 'planning' && flow.result && flow.activeRequest ? (
+      {status === 'planning' && result && activeRequest ? (
         <PlanningLog
-          request={flow.activeRequest}
-          result={flow.result}
-          phaseIndex={flow.phaseIndex}
+          request={activeRequest}
+          result={result}
+          phaseIndex={phaseIndex}
         />
       ) : (
         <PlanForm
           catalog={catalog}
-          disabled={flow.isSubmitting}
-          onDraftChange={flow.setDraftRequest}
+          form={form}
+          disabled={isSubmitting}
           onBack={() => {
             void navigate({
               to: '/onboarding',
               search: emptyOnboardingSearch,
             });
           }}
-          onSubmit={flow.submit}
         />
       )}
 
       <Stack className={mapColumnClass}>
         <RouteMap
-          request={flow.mapRequest}
-          result={flow.result}
-          revealCount={flow.revealCount}
-          selectedStopId={flow.selectedStopId}
-          mode={flow.mapMode}
-          onSelectStop={flow.selectStop}
+          request={mapRequest}
+          result={result}
+          revealCount={revealCount}
+          selectedStopId={selectedStopId}
+          mode={mapMode}
+          onSelectStop={selectStop}
         />
       </Stack>
     </Grid>

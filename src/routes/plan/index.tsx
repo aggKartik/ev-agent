@@ -5,7 +5,10 @@ import AppShell from '#/components/layout/AppShell';
 import ItineraryStage from '#/components/plan/ItineraryStage';
 import PlanStage from '#/components/plan/PlanStage';
 import { getPlanCatalog } from '#/features/plan/helpers';
-import { usePlanFlow } from '#/features/plan/usePlanFlow';
+import { useStatus } from '#/features/plan/store';
+import { usePlanForm } from '#/features/plan/usePlanForm';
+import { usePlanPhaseTicker } from '#/features/plan/usePlanPhaseTicker';
+import { usePlanSubmit } from '#/features/plan/usePlanSubmit';
 import { trpc } from '#/lib/trpc';
 import { css, cx } from '../../../styled-system/css';
 
@@ -30,12 +33,16 @@ function PlanRoute() {
     initialData: getPlanCatalog,
     staleTime: 5 * 60_000,
   });
-  const flow = usePlanFlow();
+  const { submit, isSubmitting } = usePlanSubmit();
+  const form = usePlanForm({ catalog: catalogQuery.data, onSubmit: submit });
+  const status = useStatus();
+
+  usePlanPhaseTicker();
 
   const sessionLabel =
-    flow.status === 'ready'
+    status === 'ready'
       ? 'TRIP · READY'
-      : flow.status === 'planning'
+      : status === 'planning'
         ? 'TRIP · PLANNING'
         : 'TRIP · NEW';
 
@@ -50,13 +57,17 @@ function PlanRoute() {
       <Box
         className={cx(
           stageClass,
-          flow.status === 'ready' ? itineraryStageClass : undefined,
+          status === 'ready' ? itineraryStageClass : undefined,
         )}
       >
-        {flow.status === 'ready' ? (
-          <ItineraryStage flow={flow} />
+        {status === 'ready' ? (
+          <ItineraryStage />
         ) : (
-          <PlanStage catalog={catalogQuery.data} flow={flow} />
+          <PlanStage
+            catalog={catalogQuery.data}
+            form={form}
+            isSubmitting={isSubmitting}
+          />
         )}
       </Box>
     </AppShell>

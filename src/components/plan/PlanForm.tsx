@@ -9,11 +9,10 @@ import { Text } from '#/components/Text';
 import type {
   PlanAddress,
   PlanCatalogResponse,
-  PlanRequest,
 } from '#/features/plan/contracts';
 import { planRequestSchema } from '#/features/plan/contracts';
 import { suggestPlanAddresses } from '#/features/plan/helpers';
-import { usePlanForm } from '#/features/plan/usePlanForm';
+import type { PlanForm as PlanFormApi } from '#/features/plan/usePlanForm';
 import { css, cx } from '../../../styled-system/css';
 import { chip } from '../../../styled-system/recipes/chip';
 import { panel } from '../../../styled-system/recipes/panel';
@@ -23,10 +22,9 @@ import ActivitySelector from './ActivitySelector';
 
 type PlanFormProps = {
   catalog: PlanCatalogResponse;
+  form: PlanFormApi;
   disabled?: boolean;
-  onDraftChange?: (request: PlanRequest | null) => void;
   onBack?: () => void;
-  onSubmit: (request: PlanRequest) => void;
 };
 
 const panelClass = css({
@@ -124,16 +122,19 @@ const actionsClass = css({
 
 export default function PlanForm({
   catalog,
+  form,
   disabled = false,
-  onDraftChange,
   onBack,
-  onSubmit,
 }: PlanFormProps) {
-  const form = usePlanForm({ catalog, onSubmit, onDraftChange });
-  const [fromLocked, setFromLocked] = useState(true);
   const values = useStore(form.store, (state) => state.values);
   const canPlan = useMemo(
-    () => planRequestSchema.safeParse(values).success,
+    () =>
+      planRequestSchema.safeParse({
+        from: values.from,
+        to: values.to,
+        dates: values.dates,
+        activities: values.activities,
+      }).success,
     [values],
   );
 
@@ -150,37 +151,41 @@ export default function PlanForm({
 
       <Stack gap="0">
         <form.Field name="from">
-          {(field) => (
-            <AddressField
-              label="START"
-              value={field.state.value.full}
-              kind="start"
-              action={
-                fromLocked ? (
-                  <Box
-                    className={cx(
-                      chip({ size: 'status', tone: 'charge' }),
-                      autoChipClass,
-                    )}
-                  >
-                    <Icon icon={Crosshair} size="xs" />
-                    AUTO · FROM CAR
-                  </Box>
-                ) : null
-              }
-              onChange={(value) => {
-                setFromLocked(false);
-                field.handleChange({ full: value });
-              }}
-              onSelect={(address) => {
-                setFromLocked(false);
-                field.handleChange(address);
-              }}
-              onUseCar={() => {
-                field.handleChange(catalog.carLocation);
-                setFromLocked(true);
-              }}
-            />
+          {(fromField) => (
+            <form.Field name="fromLocked">
+              {(lockedField) => (
+                <AddressField
+                  label="START"
+                  value={fromField.state.value.full}
+                  kind="start"
+                  action={
+                    lockedField.state.value ? (
+                      <Box
+                        className={cx(
+                          chip({ size: 'status', tone: 'charge' }),
+                          autoChipClass,
+                        )}
+                      >
+                        <Icon icon={Crosshair} size="xs" />
+                        AUTO · FROM CAR
+                      </Box>
+                    ) : null
+                  }
+                  onChange={(value) => {
+                    lockedField.handleChange(false);
+                    fromField.handleChange({ full: value });
+                  }}
+                  onSelect={(address) => {
+                    lockedField.handleChange(false);
+                    fromField.handleChange(address);
+                  }}
+                  onUseCar={() => {
+                    fromField.handleChange(catalog.carLocation);
+                    lockedField.handleChange(true);
+                  }}
+                />
+              )}
+            </form.Field>
           )}
         </form.Field>
 

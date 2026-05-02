@@ -29,6 +29,14 @@
 - Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths).
 - Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
 
+## State Management & Hooks
+- Form values live in TanStack Form. Don't mirror them into another store; project from the form via `useStore(form.store, selector)` when other parts of the UI need to react.
+- Workflow / cross-component UI state lives in Zustand (e.g. `src/features/plan/store.ts`). Stores hold data + synchronous transitions only — no timers, no async, no derived `useEffect`.
+- Side effects (timers, mutations, subscriptions) live in single-purpose hooks named for what they do (e.g. `usePlanPhaseTicker`, `usePlanSubmit`, `useDraftRequest`). One hook = one effect.
+- Components read state via colocated Zustand selectors (e.g. `useStatus`, `useResult`) and dispatch actions. They don't receive a "flow blob" prop and don't own workflow state.
+- Every piece of state has exactly one writer. Don't sync two stores; project from one into the other.
+- See `.agents/skills/linear-state-management/SKILL.md` for the full pattern.
+
 ## Auth / Local Testing
 - Auth is handled by Clerk (`@clerk/tanstack-react-start`). Two entry points live at `/sign-in` and `/sign-up` — both offer Google SSO and an email-code (OTP) fallback rendered by `src/components/auth/EmailCodeForm.tsx`.
 - For local development, running agents, and anything that shouldn't touch Google OAuth: use a Clerk **test email** (any address containing the `+clerk_test` subaddress, e.g. `devin+clerk_test@ev-agent.test`). On development Clerk instances, no email is sent and the verification code is always `424242`. See [Clerk's test emails docs](https://clerk.com/docs/guides/development/testing/test-emails-and-phones).

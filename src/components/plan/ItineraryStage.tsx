@@ -2,12 +2,15 @@ import { Box } from 'styled-system/jsx';
 import ItineraryDrawer from '#/components/plan/ItineraryDrawer';
 import ItineraryTopBar from '#/components/plan/ItineraryTopBar';
 import RouteMap from '#/components/plan/RouteMap';
-import type { PlanFlow } from '#/features/plan/usePlanFlow';
+import {
+  useActiveRequest,
+  useMapMode,
+  usePlanFlowStore,
+  useResult,
+  useRevealCount,
+  useSelectedStopId,
+} from '#/features/plan/store';
 import { css } from '../../../styled-system/css';
-
-type ItineraryStageProps = {
-  flow: PlanFlow;
-};
 
 const itineraryShellClass = css({
   position: 'relative',
@@ -35,28 +38,35 @@ const itineraryDrawerClass = css({
   p: { base: '4', lg: '0' },
 });
 
-export default function ItineraryStage({ flow }: ItineraryStageProps) {
-  if (!flow.result) return null;
-  const { result } = flow;
+export default function ItineraryStage() {
+  const result = useResult();
+  const activeRequest = useActiveRequest();
+  const selectedStopId = useSelectedStopId();
+  const revealCount = useRevealCount();
+  const mapMode = useMapMode();
+  const selectStop = usePlanFlowStore((s) => s.selectStop);
+  const editPlan = usePlanFlowStore((s) => s.editPlan);
+
+  if (!result) return null;
 
   return (
     <Box className={itineraryShellClass}>
-      <ItineraryTopBar result={result} onEdit={flow.editPlan} />
+      <ItineraryTopBar result={result} onEdit={editPlan} />
       <Box className={itineraryMapClass}>
         <RouteMap
-          request={flow.mapRequest}
+          request={activeRequest}
           result={result}
-          revealCount={flow.revealCount}
-          selectedStopId={flow.selectedStopId}
-          mode={flow.mapMode}
-          onSelectStop={flow.selectStop}
+          revealCount={revealCount}
+          selectedStopId={selectedStopId}
+          mode={mapMode}
+          onSelectStop={selectStop}
         />
       </Box>
       <Box className={itineraryDrawerClass}>
         <ItineraryDrawer
           result={result}
-          selectedStopId={flow.selectedStopId}
-          onSelectStop={flow.selectStop}
+          selectedStopId={selectedStopId}
+          onSelectStop={selectStop}
         />
       </Box>
     </Box>

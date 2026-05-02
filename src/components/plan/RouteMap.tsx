@@ -7,7 +7,7 @@ import {
   cleanPlanAddress,
   resolvePlanCoordinate,
 } from '#/features/plan/helpers';
-import type { PlanMapMode } from '#/features/plan/usePlanFlow';
+import { type PlanMapMode, usePlanFlowStore } from '#/features/plan/store';
 import { cx } from '../../../styled-system/css';
 import { mapChrome } from '../../../styled-system/recipes/map-chrome';
 import { panel } from '../../../styled-system/recipes/panel';
@@ -82,9 +82,7 @@ export default function RouteMap({
       ? `Route preview from ${cleanPlanAddress(request.from.full)}`
       : 'Route preview map';
 
-  const editPlan = () => {
-    window.location.assign('/plan');
-  };
+  const editPlan = usePlanFlowStore((s) => s.editPlan);
 
   return (
     <Box

@@ -1,5 +1,5 @@
 import { Box } from 'styled-system/jsx';
-import type { PlanMapMode } from '#/features/plan/usePlanFlow';
+import type { PlanMapMode } from '#/features/plan/store';
 
 type MapChromeClasses = {
   chrome: string;
