@@ -62,3 +62,16 @@ export function getDashboardFallbackSummary(): DashboardSummary {
     tesla: DASHBOARD_FALLBACK_TESLA,
   });
 }
+
+export function formatDashboardDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Today';
+
+  return date
+    .toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    })
+    .toUpperCase();
+}

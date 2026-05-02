@@ -24,6 +24,11 @@ export const keyframes = {
     '0%, 100%': { opacity: '1' },
     '50%': { opacity: '0.35' },
   },
+  pulseHalo: {
+    '0%': { boxShadow: '0 0 0 0 {colors.alpha.peach-45}' },
+    '70%': { boxShadow: '0 0 0 12px transparent' },
+    '100%': { boxShadow: '0 0 0 0 transparent' },
+  },
   'grid-drift': {
     '0%': { backgroundPosition: '0 0' },
     '100%': { backgroundPosition: '0 10%' },
