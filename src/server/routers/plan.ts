@@ -6,7 +6,7 @@ import {
   planRequestSchema,
 } from '#/features/plan/contracts';
 import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
-import { runPlanAgent } from '#/server/ai/planAgent';
+import { runPlanAgent } from '#/server/ai/agents';
 import { publicProcedure, router } from '../trpc';
 
 export const planRouter = router({
