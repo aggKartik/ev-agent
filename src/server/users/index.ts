@@ -1,6 +1,6 @@
 import { clerkClient } from '@clerk/tanstack-react-start/server';
 import type { Kysely } from 'kysely';
-import type { Database } from '#/server/db/types';
+import type { Database } from '#/server/platform/db/types';
 
 /**
  * User directory. The `users` table is our internal source of truth;

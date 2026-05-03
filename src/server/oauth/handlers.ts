@@ -1,6 +1,6 @@
 import { auth } from '@clerk/tanstack-react-start/server';
 import { env } from '#/lib/env';
-import { db } from '#/server/db';
+import { db } from '#/server/platform/db';
 import {
   getOrLinkUserByClerkId,
   resolveClerkPrimaryEmail,

@@ -16,19 +16,19 @@
 - File routes live in `src/routes/**`; current user-facing routes are `/` and `/onboarding/`.
 - tRPC HTTP handler is wired through `src/routes/api.trpc.$trpc.ts` at `/api/trpc`.
 - OAuth connect/callback handlers live at `src/routes/api.oauth.$provider.connect.ts` and `src/routes/api.oauth.$provider.callback.ts` (URLs `/api/oauth/:provider/connect` and `/api/oauth/:provider/callback`).
-- Client tRPC setup is in `src/lib/trpc.ts`; server router composition is in `src/server/routers/index.ts`.
+- Client tRPC setup is in `src/lib/trpc.ts`; server router composition is in `src/server/platform/trpc/router.ts`.
 - Root providers (QueryClient, tRPC provider, devtools, global CSS) are in `src/routes/__root.tsx`.
 
 ## Database / Local Infra
 - Local Postgres is managed with `docker-compose.dev.yml` via `bun run db:start` / `bun run db:stop`.
 - Required env var for DB work: `DATABASE_URL` (see `.env.example`).
 - Run migrations with `bun run db:migrate`; full rollback helper: `bun run db:migrate:reset`.
-- Kysely DB singleton is created in `src/server/db/index.ts` and injected via tRPC context (`src/server/context.ts`).
+- Kysely DB singleton is created in `src/server/platform/db/index.ts` and injected via tRPC context (`src/server/platform/context.ts`).
 
 ## Trip planner APIs
-- `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch (`computeEvRoute` → `src/server/evRouting/tomtom/longDistanceEv.ts`) supplies corridor geometry + charger-hint anchors for the plan agent.
+- `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch (`computeEvRoute` → `src/server/capabilities/evRouting/adapters/tomtom/longDistanceEv.ts`) supplies corridor geometry + charger-hint anchors for the plan agent.
 - `MAPBOX_TOKEN`: Mapbox Places + final `getDirections` polyline in plan agent tools (unchanged UX contract).
-- Plan LLM (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL` in `src/server/ai/helpers/getPlanModel.ts`): defaults target OpenRouter. If you see structured-output failures (*No object generated* / parse errors) after the agent’s jsonrepair + repair pass, switch `OPENAI_MODEL` to a stronger paid or hosted model; free-tier models are more likely to emit malformed or truncated JSON on long itineraries.
+- Plan LLM (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL` in `src/server/capabilities/ai/orchestration/getPlanModel.ts`): defaults target OpenRouter. If you see structured-output failures (*No object generated* / parse errors) after the agent’s jsonrepair + repair pass, switch `OPENAI_MODEL` to a stronger paid or hosted model; free-tier models are more likely to emit malformed or truncated JSON on long itineraries.
 
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
