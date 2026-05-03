@@ -28,6 +28,21 @@ export function teslaPrefillVehicleFromFleetSummary(
   };
 }
 
+export type TeslaPrefillFromFleet = ReturnType<
+  typeof teslaPrefillVehicleFromFleetSummary
+>;
+
+/** Fleet row plus VIN-decoded identity for onboarding / dashboard list UIs. */
+export type TeslaVehicleClientRow = TeslaVehicleSummary & {
+  onboardingIdentity: TeslaPrefillFromFleet;
+};
+
+export function fleetVehicleWithOnboardingIdentity(
+  v: TeslaVehicleSummary,
+): TeslaVehicleClientRow {
+  return { ...v, onboardingIdentity: teslaPrefillVehicleFromFleetSummary(v) };
+}
+
 function normalizeVin(vin: string | null | undefined): string | undefined {
   if (typeof vin !== 'string') return undefined;
   const trimmed = vin.trim().toUpperCase();
