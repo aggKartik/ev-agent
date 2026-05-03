@@ -1,3 +1,4 @@
+import type { inferRouterOutputs } from '@trpc/server';
 import { useCallback, useEffect } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
@@ -5,9 +6,13 @@ import Spinner from '#/components/ui/Spinner';
 import { Text } from '#/components/ui/Text';
 import { VisualPanel } from '#/features/onboarding/components/VisualPanel';
 import { trpc } from '#/lib/trpc';
+import type { AppRouter } from '#/server/platform/trpc/router';
 import { chip } from '#/styled-system/recipes/chip';
 import { connect } from '#/styled-system/recipes/connect';
 import { step } from '#/styled-system/recipes/step';
+
+export type TeslaFleetRow =
+  inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
 
 type ConnectStepProps = {
   value: string;
@@ -19,6 +24,11 @@ type ConnectStepProps = {
    * once it's connected (e.g. the linked vehicle summary).
    */
   connectedDetails?: Partial<Record<string, string | null>>;
+  isTeslaLinked: boolean;
+  teslaFleetVehicles: TeslaFleetRow[] | null;
+  teslaFleetLoading: boolean;
+  selectedTeslaVehicleId: string;
+  onTeslaVehicleIdChange: (teslaVehicleId: string) => void;
 };
 
 type ProviderTile = {
@@ -172,11 +182,35 @@ function formatConnectError(reason: string): string {
   return map[reason] ?? reason.replaceAll('_', ' ');
 }
 
+function teslaVehicleOptionLabel(v: TeslaFleetRow): string {
+  const name =
+    v.onboardingIdentity.displayName?.trim() ||
+    v.displayName?.trim() ||
+    'Tesla';
+  const vin = v.vin?.trim();
+  const vinHint = vin && vin.length >= 6 ? ` · ${vin.slice(-6)}` : '';
+  return `${name}${vinHint}`;
+}
+
+function teslaVehicleOptionDetail(v: TeslaFleetRow): string | null {
+  const { year, model } = v.onboardingIdentity;
+  const parts = [year, model].filter(
+    (p): p is string => typeof p === 'string' && p.trim().length > 0,
+  );
+  if (parts.length === 0) return null;
+  return parts.join(' ');
+}
+
 export default function ConnectStep({
   value,
   onChange,
   errorReason,
   connectedDetails,
+  isTeslaLinked,
+  teslaFleetVehicles,
+  teslaFleetLoading,
+  selectedTeslaVehicleId,
+  onTeslaVehicleIdChange,
 }: ConnectStepProps) {
   const stepClasses = step();
 
@@ -250,6 +284,96 @@ export default function ConnectStep({
             ) : null}
           </Stack>
         </Box>
+
+        {isTeslaLinked && teslaFleetLoading ? (
+          <Box
+            marginTop="6"
+            maxWidth="520px"
+            display="flex"
+            alignItems="center"
+            gap="3"
+          >
+            <Spinner size="1em" label="Loading Tesla vehicles" />
+            <Text textStyle="caption" color="cream.600">
+              Loading your vehicles…
+            </Text>
+          </Box>
+        ) : null}
+
+        {isTeslaLinked &&
+        !teslaFleetLoading &&
+        teslaFleetVehicles &&
+        teslaFleetVehicles.length > 0 ? (
+          <Box className={stepClasses.field} maxWidth="520px" marginTop="6">
+            <Text
+              as="p"
+              fontSize="13px"
+              fontWeight="semibold"
+              color="cream.300"
+              marginBottom="3"
+            >
+              Which vehicle should we plan for?
+            </Text>
+            <Stack gap="2.5" role="radiogroup" aria-label="Tesla vehicles">
+              {teslaFleetVehicles.map((v) => {
+                const checked = selectedTeslaVehicleId === v.id;
+                const detail = teslaVehicleOptionDetail(v);
+                return (
+                  <label
+                    key={v.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '14px',
+                      border: `1px solid ${
+                        checked
+                          ? 'rgba(255, 149, 102, 0.65)'
+                          : 'rgba(245, 234, 208, 0.18)'
+                      }`,
+                      background: checked
+                        ? 'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))'
+                        : 'linear-gradient(160deg, rgba(245, 234, 208, 0.06), rgba(123, 75, 209, 0.08))',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="onboarding-tesla-vehicle"
+                      value={v.id}
+                      checked={checked}
+                      onChange={() => onTeslaVehicleIdChange(v.id)}
+                      style={{ marginTop: '3px', accentColor: '#ff9566' }}
+                    />
+                    <Box flex="1" minWidth="0">
+                      <Text
+                        as="span"
+                        display="block"
+                        fontSize="14px"
+                        fontWeight="semibold"
+                        color="cream.200"
+                      >
+                        {teslaVehicleOptionLabel(v)}
+                      </Text>
+                      {detail ? (
+                        <Text
+                          as="span"
+                          display="block"
+                          marginTop="1"
+                          textStyle="caption"
+                          color="cream.600"
+                        >
+                          {detail}
+                        </Text>
+                      ) : null}
+                    </Box>
+                  </label>
+                );
+              })}
+            </Stack>
+          </Box>
+        ) : null}
       </Stack>
       <VisualPanel kind="connect" />
     </Box>

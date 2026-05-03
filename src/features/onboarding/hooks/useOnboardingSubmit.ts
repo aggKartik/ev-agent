@@ -4,8 +4,9 @@ import { clearPersisted } from '#/features/onboarding/utils/onboarding-storage';
 import { trpc } from '#/lib/trpc';
 
 /**
- * Applies Clerk first name then inserts the Fleet-derived vehicle identity
- * on the server. Clears onboarding sessionStorage; routes to `/dashboard`.
+ * Applies Clerk first name then persists the **Driver**-picked Tesla Fleet
+ * vehicle (`teslaVehicleId`) on the server. Clears onboarding sessionStorage;
+ * routes to `/dashboard`.
  */
 export function useOnboardingSubmit() {
   const navigate = useNavigate();
@@ -17,18 +18,27 @@ export function useOnboardingSubmit() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const submit = useCallback(
-    async (firstNameRaw: string) => {
+    async (firstNameRaw: string, formValues: { teslaVehicleId: string }) => {
       setSubmitError(null);
       try {
         const firstName = firstNameRaw.trim();
         if (!firstName) return;
 
         await setFirstName.mutateAsync({ firstName });
-        await completeTeslaOnboarding.mutateAsync();
+        const tid = formValues.teslaVehicleId.trim();
+        if (!tid) {
+          setSubmitError('Pick a Tesla vehicle to continue.');
+          return;
+        }
+
+        await completeTeslaOnboarding.mutateAsync({
+          teslaVehicleId: tid,
+        });
 
         clearPersisted();
         await utils.user.profile.invalidate();
         await utils.vehicle.get.invalidate();
+        await utils.tesla.vehicles.invalidate();
         void navigate({ to: '/dashboard' });
       } catch (err) {
         const message =
@@ -44,6 +54,7 @@ export function useOnboardingSubmit() {
       completeTeslaOnboarding,
       utils.user.profile,
       utils.vehicle.get,
+      utils.tesla.vehicles,
     ],
   );
 

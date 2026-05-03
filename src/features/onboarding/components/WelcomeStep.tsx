@@ -40,7 +40,6 @@ const WelcomeStep = ({ onContinue }: WelcomeStepProps) => {
         </Text>
         <Stack direction="row" className={actionsClass}>
           <Button onClick={onContinue}>Start the tour</Button>
-          <Button variant="ghost">I have an account</Button>
         </Stack>
       </Stack>
     </Box>
