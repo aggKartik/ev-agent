@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Box } from 'styled-system/jsx';
-import Button from '#/components/Button';
-import DashboardStage from '#/components/dashboard/DashboardStage';
-import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
+import Header from '#/components/layout/Header';
+import Button from '#/components/ui/Button';
+import DashboardStage from '#/features/dashboard/components/DashboardStage';
 import { getDashboardFallbackSummary } from '#/features/dashboard/helpers';
 import { trpc } from '#/lib/trpc';
-import { css, cx } from '../../../styled-system/css';
-import { dashboard } from '../../../styled-system/recipes/dashboard';
-import { panel } from '../../../styled-system/recipes/panel';
+import { css, cx } from '#/styled-system/css';
+import { dashboard } from '#/styled-system/recipes/dashboard';
+import { panel } from '#/styled-system/recipes/panel';
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardRoute,

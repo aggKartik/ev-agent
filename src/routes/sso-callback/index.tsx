@@ -1,9 +1,9 @@
 import { AuthenticateWithRedirectCallback } from '@clerk/tanstack-react-start';
 import { createFileRoute } from '@tanstack/react-router';
 import { Box, Stack } from 'styled-system/jsx';
-import AuthShell from '#/components/auth/AuthShell';
-import Spinner from '#/components/Spinner';
-import { Text } from '#/components/Text';
+import Spinner from '#/components/ui/Spinner';
+import { Text } from '#/components/ui/Text';
+import AuthShell from '#/features/auth/components/AuthShell';
 
 export const Route = createFileRoute('/sso-callback/')({
   component: SsoCallbackRoute,

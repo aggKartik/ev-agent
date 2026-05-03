@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Box, Stack } from 'styled-system/jsx';
-import AuthShell from '#/components/auth/AuthShell';
-import EmailCodeForm from '#/components/auth/EmailCodeForm';
-import GoogleButton from '#/components/auth/GoogleButton';
-import { Text } from '#/components/Text';
-import { useGoogleOAuth } from '#/lib/useGoogleOAuth';
-import { css } from '../../../styled-system/css';
-import { step } from '../../../styled-system/recipes/step';
+import { Text } from '#/components/ui/Text';
+import AuthShell from '#/features/auth/components/AuthShell';
+import EmailCodeForm from '#/features/auth/components/EmailCodeForm';
+import GoogleButton from '#/features/auth/components/GoogleButton';
+import { useGoogleOAuth } from '#/features/auth/hooks/useGoogleOAuth';
+import { css } from '#/styled-system/css';
+import { step } from '#/styled-system/recipes/step';
 
 export const Route = createFileRoute('/sign-up/')({ component: SignUpRoute });
 

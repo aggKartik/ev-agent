@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
-import { css, cx } from '../../../styled-system/css';
+import { css, cx } from '#/styled-system/css';
 
 /**
  * Horizon/Stage layout primitive. Every top-level route shares this

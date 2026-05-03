@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Box } from 'styled-system/jsx';
-import Header from '#/components/Header';
 import AppShell from '#/components/layout/AppShell';
-import ItineraryStage from '#/components/plan/ItineraryStage';
-import PlanStage from '#/components/plan/PlanStage';
+import Header from '#/components/layout/Header';
+import ItineraryStage from '#/features/plan/components/ItineraryStage';
+import PlanStage from '#/features/plan/components/PlanStage';
 import { getPlanCatalog } from '#/features/plan/helpers';
 import { useStatus } from '#/features/plan/store';
 import { usePlanForm } from '#/features/plan/usePlanForm';
@@ -12,7 +12,7 @@ import {
   usePlanSubmit,
 } from '#/features/plan/usePlanSubmit';
 import { trpc } from '#/lib/trpc';
-import { css, cx } from '../../../styled-system/css';
+import { css, cx } from '#/styled-system/css';
 
 export const Route = createFileRoute('/plan/')({
   component: PlanRoute,

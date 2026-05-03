@@ -5,9 +5,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { useState } from 'react';
-import Header from '#/components/Header';
+import Header from '#/components/layout/Header';
 import { trpc, trpcClient } from '#/lib/trpc';
-import { css } from '../../styled-system/css';
+import { css } from '#/styled-system/css';
 import '../styles/global.css';
 
 import appCss from '../styles.css?url';

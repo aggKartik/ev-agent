@@ -46,7 +46,7 @@ section below cites it.
 | Workflow state (status, server result, selection, indices)  | Zustand `create()` store             | `src/features/plan/store.ts`                     |
 | Side effects (intervals, subscriptions, mutation lifecycle) | Single-purpose hook                  | `src/features/plan/usePlanPhaseTicker.ts`        |
 | Derived projection (form → request, store → mode)           | `useStore` selector / store selector | `src/features/plan/useDraftRequest.ts`           |
-| Component-local UI (focus, hover, dropdown open)            | `useState` inside the component      | `AddressField` in `src/components/plan/PlanForm.tsx` |
+| Component-local UI (focus, hover, dropdown open)            | `useState` inside the component      | `AddressField` in `src/features/plan/components/PlanForm.tsx` |
 
 If a piece of state doesn't fit cleanly into one of those rows, the design is
 wrong — don't add a sixth row.
@@ -165,7 +165,7 @@ export function useDraftRequest(form: PlanForm): PlanRequest | null {
 
 ### The components
 
-`src/components/plan/PlanStage.tsx` reads selectors at the point of use. No
+`src/features/plan/components/PlanStage.tsx` reads selectors at the point of use. No
 `flow` prop:
 
 ```ts
