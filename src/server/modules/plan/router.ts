@@ -10,6 +10,7 @@ import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEv
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import { resolveEnergyProfile } from '#/server/capabilities/vehicles/domain/resolveEnergyProfile';
 import { getVehicle } from '#/server/capabilities/vehicles/store';
+import { liveBatteryPercentForPlanContext } from '#/server/modules/plan/liveBatteryForContext';
 import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
 import {
   addressRetrieveSchema,
@@ -39,9 +40,15 @@ export const planRouter = router({
     }): Promise<PlanContextResponse<VehicleEnergyProfile | null>> => {
       const vehicle = await getVehicle(ctx.db, ctx.userId);
       const profile = vehicle ? resolveEnergyProfile(vehicle) : null;
+      const liveBatteryPercent = await liveBatteryPercentForPlanContext({
+        ctx,
+        vehicle,
+      });
+
       return {
         activities: getPlanActivityCatalog(),
         vehicleProfile: profile,
+        liveBatteryPercent,
       };
     },
   ),
