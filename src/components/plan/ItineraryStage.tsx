@@ -7,7 +7,6 @@ import {
   useMapMode,
   usePlanFlowStore,
   useResult,
-  useRevealCount,
   useSelectedStopId,
 } from '#/features/plan/store';
 import { css } from '../../../styled-system/css';
@@ -42,7 +41,6 @@ export default function ItineraryStage() {
   const result = useResult();
   const activeRequest = useActiveRequest();
   const selectedStopId = useSelectedStopId();
-  const revealCount = useRevealCount();
   const mapMode = useMapMode();
   const selectStop = usePlanFlowStore((s) => s.selectStop);
   const editPlan = usePlanFlowStore((s) => s.editPlan);
@@ -56,7 +54,6 @@ export default function ItineraryStage() {
         <RouteMap
           request={activeRequest}
           result={result}
-          revealCount={revealCount}
           selectedStopId={selectedStopId}
           mode={mapMode}
           onSelectStop={selectStop}

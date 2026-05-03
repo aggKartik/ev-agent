@@ -1,5 +1,6 @@
 import type {
   Coordinate,
+  EvConnectorSlug,
   PlanAddress,
   PlanCatalogResponse,
   PlanRequest,
@@ -12,6 +13,14 @@ import {
   PLAN_ACTIVITY_CATALOG,
   PLAN_COLORS,
   PLAN_DATE_OPTIONS,
+  PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+  PLAN_DEFAULT_CONNECTOR_TYPES,
+  PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
+  PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
+  PLAN_DEFAULT_STARTING_SOC_PERCENT,
+  PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
+  PLAN_DEFAULT_USABLE_RANGE_MILES,
+  PLAN_DEFAULT_VEHICLE_LABEL,
   PLANNING_PHASES,
 } from './data';
 
@@ -73,6 +82,16 @@ export function getPlanCatalog(): PlanCatalogResponse {
       secondary: CAR_LOCATION.secondary,
       coordinate: { lat: CAR_LOCATION.lat, lng: CAR_LOCATION.lng },
     },
+    defaultVehicleLabel: PLAN_DEFAULT_VEHICLE_LABEL,
+    defaultUsableRangeMiles: PLAN_DEFAULT_USABLE_RANGE_MILES,
+    defaultStartingSocPercent: PLAN_DEFAULT_STARTING_SOC_PERCENT,
+    defaultTargetArrivalSocPercent: PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
+    defaultBatteryCapacityKWh: PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+    defaultConsumptionWhPerMile: PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
+    defaultConnectorTypes: [
+      ...PLAN_DEFAULT_CONNECTOR_TYPES,
+    ] satisfies EvConnectorSlug[],
+    defaultPostChargeSocPercent: PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
   };
 }
 

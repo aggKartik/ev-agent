@@ -1,35 +1,62 @@
-import { useCallback, useRef } from 'react';
-import type { PlanRequest } from '#/features/plan/contracts';
-import { createMockPlanResult } from '#/features/plan/helpers';
-import { usePlanFlowStore } from '#/features/plan/store';
+import { skipToken } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import type { PlanRequest, PlanStreamEvent } from '#/features/plan/contracts';
+import {
+  useActiveRequest,
+  usePlanFlowStore,
+  useStatus,
+} from '#/features/plan/store';
 import { trpc } from '#/lib/trpc';
 
-/**
- * Wraps `trpc.plan.create` and translates its lifecycle into store actions.
- * The only place that bridges async work into plan flow state.
- */
 export function usePlanSubmit() {
-  const createPlan = trpc.plan.create.useMutation();
-  const submitSeqRef = useRef(0);
+  const status = useStatus();
 
-  const submit = useCallback(
-    async (request: PlanRequest) => {
-      const seq = ++submitSeqRef.current;
-      const { startPlanning, setResult, failPlanning } =
-        usePlanFlowStore.getState();
-      startPlanning(request, createMockPlanResult(request));
-      try {
-        const result = await createPlan.mutateAsync(request);
-        if (submitSeqRef.current !== seq) return;
-        setResult(result);
-      } catch (error) {
-        if (submitSeqRef.current !== seq) throw error;
-        failPlanning();
-        throw error;
-      }
+  const submit = useCallback((request: PlanRequest) => {
+    usePlanFlowStore.getState().startPlanning(request);
+  }, []);
+
+  return { submit, isSubmitting: status === 'planning' };
+}
+
+function dispatchStreamEvent(event: PlanStreamEvent) {
+  const store = usePlanFlowStore.getState();
+  switch (event.type) {
+    case 'phase':
+      store.setPhase({ label: event.label, detail: event.detail });
+      return;
+    case 'narration':
+      store.appendNarration(event.message);
+      return;
+    case 'stop':
+      store.appendStop(event.stop);
+      return;
+    case 'result':
+      store.applyResult(event.result);
+      return;
+    case 'error':
+      store.failPlanning(event.message);
+      return;
+    default: {
+      const _exhaustive: never = event;
+      void _exhaustive;
+    }
+  }
+}
+
+export function usePlanStreamSubscription() {
+  const status = useStatus();
+  const activeRequest = useActiveRequest();
+
+  const shouldStream = status === 'planning' && activeRequest !== null;
+
+  trpc.plan.stream.useSubscription(shouldStream ? activeRequest : skipToken, {
+    onData: (envelope) => {
+      dispatchStreamEvent(envelope.data);
     },
-    [createPlan],
-  );
-
-  return { submit, isSubmitting: createPlan.isPending };
+    onError: (err) => {
+      const message =
+        err instanceof Error ? err.message : 'Connection error while planning.';
+      usePlanFlowStore.getState().failPlanning(message);
+    },
+  });
 }

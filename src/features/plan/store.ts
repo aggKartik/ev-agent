@@ -1,22 +1,46 @@
 import { create } from 'zustand';
-import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
+import type {
+  PlanPhase,
+  PlanRequest,
+  PlanResult,
+  PlanStop,
+} from '#/features/plan/contracts';
 
 export type PlanFlowStatus = 'draft' | 'planning' | 'ready';
 export type PlanMapMode = 'preview' | 'building' | 'ready';
+
+const NARRATION_CAP = 80;
+
+function capNarrationEntries<T>(entries: T[], cap: number): T[] {
+  if (entries.length <= cap) return entries;
+  return entries.slice(entries.length - cap);
+}
+
+export type NarrationEntry = {
+  id: number;
+  text: string;
+};
 
 type PlanFlowState = {
   status: PlanFlowStatus;
   result: PlanResult | null;
   activeRequest: PlanRequest | null;
   selectedStopId: string | null;
-  phaseIndex: number;
+  narration: NarrationEntry[];
+  narrationCounter: number;
+  currentPhase: PlanPhase | null;
+  streamedStops: PlanStop[];
+  /** Set when planning fails so the form can show a short reason. */
+  lastPlanningError: string | null;
 };
 
 type PlanFlowActions = {
-  startPlanning: (request: PlanRequest, optimistic: PlanResult) => void;
-  setResult: (result: PlanResult) => void;
-  failPlanning: () => void;
-  advancePhase: () => void;
+  startPlanning: (request: PlanRequest) => void;
+  appendNarration: (message: string) => void;
+  setPhase: (phase: PlanPhase) => void;
+  appendStop: (stop: PlanStop) => void;
+  applyResult: (result: PlanResult) => void;
+  failPlanning: (message?: string) => void;
   finishPlanning: () => void;
   selectStop: (id: string) => void;
   editPlan: () => void;
@@ -27,40 +51,74 @@ const initialState: PlanFlowState = {
   result: null,
   activeRequest: null,
   selectedStopId: null,
-  phaseIndex: 0,
+  narration: [],
+  narrationCounter: 0,
+  currentPhase: null,
+  streamedStops: [],
+  lastPlanningError: null,
 };
 
 export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
   (set, get) => ({
     ...initialState,
 
-    startPlanning: (request, optimistic) =>
+    startPlanning: (request) =>
       set({
         status: 'planning',
         activeRequest: request,
-        result: optimistic,
-        phaseIndex: 0,
+        result: null,
         selectedStopId: null,
+        narration: [],
+        narrationCounter: 0,
+        currentPhase: null,
+        streamedStops: [],
+        lastPlanningError: null,
       }),
 
-    setResult: (result) => set({ result }),
+    appendNarration: (message) => {
+      const { narration, narrationCounter } = get();
+      const id = narrationCounter + 1;
+      const next = capNarrationEntries(
+        [...narration, { id, text: message }],
+        NARRATION_CAP,
+      );
+      set({ narration: next, narrationCounter: id });
+    },
 
-    failPlanning: () =>
+    setPhase: (phase) => {
+      const { narration, narrationCounter } = get();
+      const id = narrationCounter + 1;
+      const next = capNarrationEntries(
+        [...narration, { id, text: `→ ${phase.label}` }],
+        NARRATION_CAP,
+      );
+      set({ currentPhase: phase, narration: next, narrationCounter: id });
+    },
+
+    appendStop: (stop) => {
+      const existing = get().streamedStops;
+      if (existing.some((s) => s.id === stop.id)) return;
+      set({ streamedStops: [...existing, stop] });
+    },
+
+    applyResult: (result) => {
+      set({ result });
+      get().finishPlanning();
+    },
+
+    failPlanning: (message) =>
       set({
         status: 'draft',
         result: null,
         activeRequest: null,
-        phaseIndex: 0,
         selectedStopId: null,
+        narration: [],
+        narrationCounter: 0,
+        currentPhase: null,
+        streamedStops: [],
+        lastPlanningError:
+          message ?? 'Something went wrong while planning. Try again.',
       }),
-
-    advancePhase: () => {
-      const { phaseIndex, result } = get();
-      if (!result || result.phases.length === 0) return;
-      const next = Math.min(phaseIndex + 1, result.phases.length - 1);
-      if (next === phaseIndex) return;
-      set({ phaseIndex: next });
-    },
 
     finishPlanning: () => {
       const { result } = get();
@@ -82,7 +140,11 @@ export const useResult = () => usePlanFlowStore((s) => s.result);
 export const useActiveRequest = () => usePlanFlowStore((s) => s.activeRequest);
 export const useSelectedStopId = () =>
   usePlanFlowStore((s) => s.selectedStopId);
-export const usePhaseIndex = () => usePlanFlowStore((s) => s.phaseIndex);
+export const useNarration = () => usePlanFlowStore((s) => s.narration);
+export const useCurrentPhase = () => usePlanFlowStore((s) => s.currentPhase);
+export const useStreamedStops = () => usePlanFlowStore((s) => s.streamedStops);
+export const useLastPlanningError = () =>
+  usePlanFlowStore((s) => s.lastPlanningError);
 
 export const useMapMode = (): PlanMapMode =>
   usePlanFlowStore((s) =>
@@ -92,15 +154,3 @@ export const useMapMode = (): PlanMapMode =>
         ? 'ready'
         : 'preview',
   );
-
-export const useRevealCount = (): number | undefined =>
-  usePlanFlowStore((s) => {
-    if (s.status !== 'planning' || !s.result) return undefined;
-    if (s.result.phases.length === 0) return s.result.stops.length;
-    return Math.max(
-      2,
-      Math.ceil(
-        ((s.phaseIndex + 1) / s.result.phases.length) * s.result.stops.length,
-      ),
-    );
-  });

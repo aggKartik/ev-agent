@@ -7,8 +7,10 @@ import PlanStage from '#/components/plan/PlanStage';
 import { getPlanCatalog } from '#/features/plan/helpers';
 import { useStatus } from '#/features/plan/store';
 import { usePlanForm } from '#/features/plan/usePlanForm';
-import { usePlanPhaseTicker } from '#/features/plan/usePlanPhaseTicker';
-import { usePlanSubmit } from '#/features/plan/usePlanSubmit';
+import {
+  usePlanStreamSubscription,
+  usePlanSubmit,
+} from '#/features/plan/usePlanSubmit';
 import { trpc } from '#/lib/trpc';
 import { css, cx } from '../../../styled-system/css';
 
@@ -37,7 +39,7 @@ function PlanRoute() {
   const form = usePlanForm({ catalog: catalogQuery.data, onSubmit: submit });
   const status = useStatus();
 
-  usePlanPhaseTicker();
+  usePlanStreamSubscription();
 
   const sessionLabel =
     status === 'ready'

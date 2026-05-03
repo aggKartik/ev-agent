@@ -1,5 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import type {
+  EvConnectorSlug,
   PlanCatalogResponse,
   PlanRequest,
 } from '#/features/plan/contracts';
@@ -15,8 +16,25 @@ export type PlanFormValues = {
   to: PlanRequest['to'];
   dates: PlanRequest['dates'];
   activities: PlanRequest['activities'];
+  vehicleLabel: PlanRequest['vehicleLabel'];
+  usableRangeMiles: PlanRequest['usableRangeMiles'];
+  startingSocPercent: PlanRequest['startingSocPercent'];
+  targetArrivalSocPercent: PlanRequest['targetArrivalSocPercent'];
+  batteryCapacityKWh: PlanRequest['batteryCapacityKWh'];
+  consumptionWhPerMile: PlanRequest['consumptionWhPerMile'];
+  connectorTypes: PlanRequest['connectorTypes'];
+  postChargeSocPercent: PlanRequest['postChargeSocPercent'];
   fromLocked: boolean;
 };
+
+/** UI chip order matches common US EV configs first. */
+export const CONNECTOR_OPTION_ORDER: EvConnectorSlug[] = [
+  'NACS',
+  'CCS1',
+  'J1772',
+  'TYPE_2',
+  'CHADEMO',
+];
 
 export function usePlanForm({ catalog, onSubmit }: UsePlanFormArgs) {
   return useForm({
@@ -25,6 +43,14 @@ export function usePlanForm({ catalog, onSubmit }: UsePlanFormArgs) {
       to: { full: '' } as PlanRequest['to'],
       dates: catalog.dateOptions[0] ?? 'Flexible',
       activities: [] as PlanRequest['activities'],
+      vehicleLabel: catalog.defaultVehicleLabel,
+      usableRangeMiles: catalog.defaultUsableRangeMiles,
+      startingSocPercent: catalog.defaultStartingSocPercent,
+      targetArrivalSocPercent: catalog.defaultTargetArrivalSocPercent,
+      batteryCapacityKWh: catalog.defaultBatteryCapacityKWh,
+      consumptionWhPerMile: catalog.defaultConsumptionWhPerMile,
+      connectorTypes: [...catalog.defaultConnectorTypes],
+      postChargeSocPercent: catalog.defaultPostChargeSocPercent,
       fromLocked: true as boolean,
     } satisfies PlanFormValues,
     onSubmit: ({ value }) => {
