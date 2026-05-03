@@ -114,6 +114,10 @@ _Avoid_: integration (the noun), service.
 One **Driver**'s link to one **Provider**, holding encrypted access and refresh tokens.
 _Avoid_: connection, OAuth row.
 
+## Process-local runtime state
+
+Tesla Fleet responses and plan-stream concurrency use **in-memory `Map` state** in the Node process. They are not shared across server replicas; multiple instances or cold starts change cache hit rates and per-instance rate limits. See [`cache.ts`](src/server/integrations/tesla/fleet/cache.ts) and [`streamGuards.ts`](src/server/modules/plan/streamGuards.ts).
+
 ## Relationships
 
 - A **Driver** maps to exactly one **User**; a **User** has zero or more **Provider Accounts** (at most one per **Provider**) and at most one **Vehicle**.

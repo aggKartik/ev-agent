@@ -97,7 +97,7 @@ describe('diffOverrides', () => {
     });
   });
 
-  it('tolerates float drift within ABS_EPSILON', () => {
+  it('tolerates float drift within VEHICLE_NUMERIC_OVERRIDE_EPSILON', () => {
     const overrides = diffOverrides(TESLA_2024, {
       usableRangeMiles: 320.4,
       batteryCapacityKWh: 75.49,

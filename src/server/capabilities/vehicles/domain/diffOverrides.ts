@@ -5,6 +5,10 @@ import {
   PLAN_DEFAULT_USABLE_RANGE_MILES,
 } from '#/shared/plan/constants';
 import type { EvConnectorSlug } from '#/shared/plan/contracts';
+import {
+  connectorSetsDifferForOverride,
+  numericValuesDifferForOverride,
+} from '#/shared/vehicles/overrideCompare';
 import { findCatalogEntry } from './catalog';
 import type { VehicleOverrides, VehicleRow } from './types';
 
@@ -21,14 +25,12 @@ export type PlanFormVehicleSnapshot = {
   connectorTypes: EvConnectorSlug[];
 };
 
-const ABS_EPSILON = 0.5;
-
 /**
- * Compute the override columns we should persist after the **Driver**
- * submits a plan. A field becomes a **Driver Override** only when it
- * meaningfully diverges from the catalog (or `PLAN_DEFAULT_*` if no
- * catalog hit) — otherwise we set it to `null` so reads stay tied to
- * the canonical catalog value as it evolves.
+ * Catalog-relative override diff (baseline = `findCatalogEntry` or
+ * `PLAN_DEFAULT_*`). Used for tests and as the canonical spec when
+ * comparing form snapshots to factory numbers; the live plan-submit path
+ * uses `usePersistVehicleOverrides`, which diffs against the **resolved**
+ * `VehicleEnergyProfile` so unchanged values do not bump `updated_at`.
  *
  * Non-trivial choice: connectors are compared as a **set**. Order in
  * the chip row doesn't matter; coverage does.
@@ -49,39 +51,29 @@ export function diffOverrides(
   ];
 
   return {
-    usableRangeMiles: differsNumeric(snapshot.usableRangeMiles, baselineRange)
+    usableRangeMiles: numericValuesDifferForOverride(
+      snapshot.usableRangeMiles,
+      baselineRange,
+    )
       ? snapshot.usableRangeMiles
       : null,
-    batteryCapacityKWh: differsNumeric(
+    batteryCapacityKWh: numericValuesDifferForOverride(
       snapshot.batteryCapacityKWh,
       baselineCapacity,
     )
       ? snapshot.batteryCapacityKWh
       : null,
-    consumptionWhPerMile: differsNumeric(
+    consumptionWhPerMile: numericValuesDifferForOverride(
       snapshot.consumptionWhPerMile,
       baselineConsumption,
     )
       ? snapshot.consumptionWhPerMile
       : null,
-    connectorTypes: differsConnectorSet(
+    connectorTypes: connectorSetsDifferForOverride(
       snapshot.connectorTypes,
       baselineConnectors,
     )
       ? snapshot.connectorTypes
       : null,
   };
-}
-
-function differsNumeric(value: number, baseline: number): boolean {
-  return Math.abs(value - baseline) > ABS_EPSILON;
-}
-
-function differsConnectorSet(
-  value: EvConnectorSlug[],
-  baseline: EvConnectorSlug[],
-): boolean {
-  if (value.length !== baseline.length) return true;
-  const set = new Set(baseline);
-  return value.some((slug) => !set.has(slug));
 }

@@ -1,10 +1,14 @@
 import { useCallback } from 'react';
 import { trpc } from '#/lib/trpc';
-import type { EvConnectorSlug, PlanRequest } from '#/shared/plan/contracts';
+import type { PlanRequest } from '#/shared/plan/contracts';
 import type {
   VehicleEnergyProfile,
   VehicleOverrides,
 } from '#/shared/vehicles/contracts';
+import {
+  connectorSetsDifferForOverride,
+  numericValuesDifferForOverride,
+} from '#/shared/vehicles/overrideCompare';
 
 /**
  * Single-purpose hook: persist any **Driver Override** that diverges from
@@ -92,16 +96,14 @@ function numericOverride(
   value: number,
   resolved: number,
 ): number | null | undefined {
-  if (Math.abs(value - resolved) < 0.5) return undefined;
+  if (!numericValuesDifferForOverride(value, resolved)) return undefined;
   return value;
 }
 
 function connectorOverride(
-  value: EvConnectorSlug[],
-  resolved: EvConnectorSlug[],
-): EvConnectorSlug[] | null | undefined {
-  if (value.length !== resolved.length) return value;
-  const set = new Set(resolved);
-  if (value.every((slug) => set.has(slug))) return undefined;
+  value: VehicleEnergyProfile['connectorTypes'],
+  resolved: VehicleEnergyProfile['connectorTypes'],
+): VehicleOverrides['connectorTypes'] {
+  if (!connectorSetsDifferForOverride(value, resolved)) return undefined;
   return value;
 }
