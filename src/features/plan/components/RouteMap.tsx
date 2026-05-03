@@ -6,11 +6,11 @@ import { useLeafletMap } from '#/features/plan/hooks/useLeafletMap';
 import { useMapInvalidateOnMode } from '#/features/plan/hooks/useMapInvalidateOnMode';
 import { useRouteLayers } from '#/features/plan/hooks/useRouteLayers';
 import { type PlanMapMode, usePlanFlowStore } from '#/features/plan/store';
-import type { PlanRequest, PlanResult } from '#/features/plan/types/contracts';
 import {
   cleanPlanAddress,
   resolvePlanCoordinate,
 } from '#/features/plan/utils/helpers';
+import type { PlanRequest, PlanResult } from '#/shared/plan/contracts';
 import { cx } from '#/styled-system/css';
 import { mapChrome } from '#/styled-system/recipes/map-chrome';
 import { panel } from '#/styled-system/recipes/panel';

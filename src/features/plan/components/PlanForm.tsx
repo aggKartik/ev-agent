@@ -11,12 +11,13 @@ import {
   type PlanForm as PlanFormApi,
 } from '#/features/plan/hooks/usePlanForm';
 import { useLastPlanningError } from '#/features/plan/store';
-import type { PlanCatalogResponse } from '#/features/plan/types/contracts';
-import { planRequestSchema } from '#/features/plan/types/contracts';
+import type { PlanCatalogResponse } from '#/shared/plan/contracts';
+import { planRequestSchema } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { sectionHeader } from '#/styled-system/recipes/section-header';
 import ActivitySelector from './ActivitySelector';
+import NumericFormField from './NumericFormField';
 import {
   PlanAddressField,
   planFormInputWrapClass,
@@ -73,11 +74,6 @@ const actionsClass = css({
   justifyContent: 'space-between',
   gap: '3',
   flexWrap: 'wrap',
-});
-
-const vehicleRangeInputClass = css({
-  width: '120px',
-  flexShrink: 0,
 });
 
 const vehicleSublabelClass = css({
@@ -218,136 +214,67 @@ export default function PlanForm({
             </form.Field>
             <form.Field name="usableRangeMiles">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>RANGE (MI)</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={500}
-                      step={1}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="RANGE (MI)"
+                  min={1}
+                  max={500}
+                />
               )}
             </form.Field>
           </Flex>
           <Flex gap="4" flexWrap="wrap" alignItems="flex-end" mt="4">
             <form.Field name="startingSocPercent">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>START SOC %</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="START SOC %"
+                  min={0}
+                  max={100}
+                />
               )}
             </form.Field>
             <form.Field name="targetArrivalSocPercent">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>ARRIVE % MIN</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="ARRIVE % MIN"
+                  min={0}
+                  max={100}
+                />
               )}
             </form.Field>
             <form.Field name="batteryCapacityKWh">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>PACK (KW·H)</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      min={10}
-                      max={250}
-                      step={1}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="PACK (KW·H)"
+                  min={10}
+                  max={250}
+                  inputMode="decimal"
+                />
               )}
             </form.Field>
             <form.Field name="consumptionWhPerMile">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>WH/MI</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      min={100}
-                      max={800}
-                      step={5}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="WH/MI"
+                  min={100}
+                  max={800}
+                  step={5}
+                  inputMode="decimal"
+                />
               )}
             </form.Field>
             <form.Field name="postChargeSocPercent">
               {(field) => (
-                <Box className={vehicleRangeInputClass}>
-                  <Box className={vehicleSublabelClass}>AFTER DCFC %</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={50}
-                      max={100}
-                      step={1}
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      onChange={(event) => {
-                        const n = event.target.valueAsNumber;
-                        if (Number.isFinite(n)) field.handleChange(n);
-                      }}
-                    />
-                  </Box>
-                </Box>
+                <NumericFormField
+                  field={field}
+                  label="AFTER DCFC %"
+                  min={50}
+                  max={100}
+                />
               )}
             </form.Field>
           </Flex>

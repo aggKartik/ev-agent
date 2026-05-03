@@ -1,4 +1,4 @@
-import type { PlanRequest } from '#/features/plan/types/contracts';
+import type { PlanRequest } from '#/shared/plan/contracts';
 
 type ConnectorSlug = PlanRequest['connectorTypes'][number];
 

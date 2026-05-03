@@ -5,11 +5,8 @@ import {
   usePlanFlowStore,
   useStatus,
 } from '#/features/plan/store';
-import type {
-  PlanRequest,
-  PlanStreamEvent,
-} from '#/features/plan/types/contracts';
 import { trpc } from '#/lib/trpc';
+import type { PlanRequest, PlanStreamEvent } from '#/shared/plan/contracts';
 
 export function usePlanSubmit() {
   const status = useStatus();
@@ -21,7 +18,7 @@ export function usePlanSubmit() {
   return { submit, isSubmitting: status === 'planning' };
 }
 
-function dispatchStreamEvent(event: PlanStreamEvent) {
+export function dispatchStreamEvent(event: PlanStreamEvent) {
   const store = usePlanFlowStore.getState();
   switch (event.type) {
     case 'phase':

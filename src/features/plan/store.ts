@@ -4,7 +4,7 @@ import type {
   PlanRequest,
   PlanResult,
   PlanStop,
-} from '#/features/plan/types/contracts';
+} from '#/shared/plan/contracts';
 
 export type PlanFlowStatus = 'draft' | 'planning' | 'ready';
 export type PlanMapMode = 'preview' | 'building' | 'ready';

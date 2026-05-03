@@ -1,6 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import type { PlanStreamEvent } from '#/features/plan/types/contracts';
+import type { PlanStreamEvent } from '#/shared/plan/contracts';
 
 type Deps = {
   emit: (event: PlanStreamEvent) => void;

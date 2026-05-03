@@ -1,12 +1,3 @@
-import type {
-  Coordinate,
-  EvConnectorSlug,
-  PlanAddress,
-  PlanCatalogResponse,
-  PlanRequest,
-  PlanResult,
-  PlanStop,
-} from '#/features/plan/types/contracts';
 import {
   CAR_LOCATION,
   MOCK_ADDRESSES,
@@ -23,6 +14,15 @@ import {
   PLAN_DEFAULT_VEHICLE_LABEL,
   PLANNING_PHASES,
 } from '#/features/plan/utils/data';
+import type {
+  Coordinate,
+  EvConnectorSlug,
+  PlanAddress,
+  PlanCatalogResponse,
+  PlanRequest,
+  PlanResult,
+  PlanStop,
+} from '#/shared/plan/contracts';
 
 const ACTIVITY_PLACES = {
   coffee: {

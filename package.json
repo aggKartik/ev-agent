@@ -18,7 +18,7 @@
     "db:migrate": "bun run src/server/platform/db/migrate.ts",
     "db:migrate:reset": "bun run src/server/platform/db/migrate-rollback-all.ts",
     "smoke:tools": "bun --env-file=.env run scripts/smoke/plan-tools/main.ts",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"

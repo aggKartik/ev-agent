@@ -8,6 +8,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 const config = defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
+    setupFiles: ['./src/test/setup.ts'],
   },
   plugins: [
     devtools(),

@@ -1,8 +1,4 @@
 import type { Tool } from 'ai';
-import {
-  type PlanStreamEvent,
-  planRequestSchema,
-} from '#/features/plan/types/contracts';
 import { makeFindChargingStationsTool } from '#/server/ai/tools/findChargingStations';
 import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
 import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
@@ -10,6 +6,10 @@ import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
 import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
 import type { TomTomLdevPrefetchResult } from '#/server/evRouting/tomtom/longDistanceEv';
 import { tryTomTomLongDistanceEvRouteDetailed } from '#/server/evRouting/tomtom/longDistanceEv';
+import {
+  type PlanStreamEvent,
+  planRequestSchema,
+} from '#/shared/plan/contracts';
 import { OAKLAND, SF } from './fixtures';
 
 function summarizeTomTomDiag(

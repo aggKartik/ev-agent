@@ -1,6 +1,6 @@
-import type { PlanRequest } from '#/features/plan/types/contracts';
 import { resolvePlanCoordinate } from '#/features/plan/utils/helpers';
 import type { Coordinate } from '#/lib/geoTypes';
+import type { PlanRequest } from '#/shared/plan/contracts';
 import { tryTomTomLongDistanceEvRoute } from '../adapters/tomtom/longDistanceEv';
 import {
   interpolateStraightLine,

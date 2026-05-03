@@ -1,6 +1,16 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
+/**
+ * Centralized environment validation. Importing `env` (or any module that
+ * does) parses `process.env` once and throws if a required key is missing or
+ * malformed, so misconfiguration fails at startup rather than deep in a
+ * request handler.
+ *
+ * `envSchema` is exported for unit-testing the validation rules without
+ * relying on `process.env`.
+ */
+
+export const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
@@ -17,6 +27,23 @@ const envSchema = z.object({
   TESLA_CLIENT_ID: z.string().optional(),
   TESLA_CLIENT_SECRET: z.string().optional(),
   TESLA_REGION: z.enum(['na', 'eu']).default('na'),
+
+  // Plan agent LLM. OpenAI-compatible HTTP API; see
+  // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.
+  OPENAI_API_KEY: z.string(),
+  OPENAI_BASE_URL: z.string().url().optional(),
+  OPENAI_MODEL: z.string().optional(),
+
+  // Mapbox token for places + directions tools.
+  MAPBOX_TOKEN: z.string(),
+
+  // TomTom Long Distance EV Routing prefetch.
+  TOMTOM_API_KEY: z.string(),
+
+  // OpenChargeMap API key (optional but recommended for higher quotas).
+  OPENCHARGEMAP_KEY: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+export type Env = z.infer<typeof envSchema>;
+
+export const env: Env = envSchema.parse(process.env);
