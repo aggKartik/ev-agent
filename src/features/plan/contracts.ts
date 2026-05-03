@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { type Coordinate, coordinateSchema } from '#/lib/geoTypes';
 import {
   PLAN_ACTIVITY_IDS,
   PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+  PLAN_DEFAULT_CONNECTOR_TYPES,
   PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
   PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
   PLAN_DEFAULT_STARTING_SOC_PERCENT,
@@ -10,6 +12,8 @@ import {
   PLAN_DEFAULT_VEHICLE_LABEL,
 } from './data';
 
+export { coordinateSchema, type Coordinate };
+
 export const evConnectorSlugSchema = z.enum([
   'NACS',
   'CCS1',
@@ -17,11 +21,6 @@ export const evConnectorSlugSchema = z.enum([
   'TYPE_2',
   'CHADEMO',
 ]);
-
-export const coordinateSchema = z.object({
-  lat: z.number().min(-90).max(90),
-  lng: z.number().min(-180).max(180),
-});
 
 export const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);
 
@@ -80,7 +79,7 @@ export const planRequestSchema = z.object({
   connectorTypes: z
     .array(evConnectorSlugSchema)
     .min(1)
-    .default(['NACS', 'CCS1']),
+    .default([...PLAN_DEFAULT_CONNECTOR_TYPES]),
   /** Rough SOC target after each DC fast charge (for spacing subsequent legs). */
   postChargeSocPercent: z
     .number()
@@ -147,7 +146,6 @@ export const planAgentModelResultSchema = planResultSchema.omit({
 
 export type PlanAgentModelResult = z.infer<typeof planAgentModelResultSchema>;
 
-export type Coordinate = z.infer<typeof coordinateSchema>;
 export type PlanAddress = z.infer<typeof planAddressSchema>;
 export type PlanActivitySelection = z.infer<typeof planActivitySelectionSchema>;
 export type PlanRequest = z.infer<typeof planRequestSchema>;

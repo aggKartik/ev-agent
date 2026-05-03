@@ -1,4 +1,4 @@
-import type { Coordinate } from '#/features/plan/contracts';
+import type { Coordinate } from '#/lib/geoTypes';
 import { decodeGoogleEncodedPolyline } from '#/server/evRouting/decodePolyline';
 import type { EvChargeStopCandidate } from '#/server/evRouting/types';
 

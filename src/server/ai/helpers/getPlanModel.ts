@@ -12,7 +12,13 @@ export function getPlanModel() {
   }
 
   const baseURL = process.env.OPENAI_BASE_URL?.trim() || DEFAULT_BASE_URL;
-  const modelId = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
+  const modelFromEnv = process.env.OPENAI_MODEL?.trim();
+  if (!modelFromEnv && baseURL !== DEFAULT_BASE_URL) {
+    throw new Error(
+      'OPENAI_MODEL is required when OPENAI_BASE_URL is not the default OpenRouter URL.',
+    );
+  }
+  const modelId = modelFromEnv || DEFAULT_MODEL;
 
   const openai = createOpenAI({
     baseURL,

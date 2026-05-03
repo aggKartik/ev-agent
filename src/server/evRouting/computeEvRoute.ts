@@ -1,5 +1,6 @@
-import type { Coordinate, PlanRequest } from '#/features/plan/contracts';
+import type { PlanRequest } from '#/features/plan/contracts';
 import { resolvePlanCoordinate } from '#/features/plan/helpers';
+import type { Coordinate } from '#/lib/geoTypes';
 import {
   interpolateStraightLine,
   metersToRouteMiles,

@@ -1,4 +1,4 @@
-import type { Coordinate } from '#/features/plan/contracts';
+import type { Coordinate } from '#/lib/geoTypes';
 
 /** International mile per meter (survey / statute). */
 const METERS_PER_MILE = 1609.344;

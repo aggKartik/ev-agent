@@ -1,4 +1,5 @@
-import type { Coordinate, PlanRequest } from '#/features/plan/contracts';
+import type { PlanRequest } from '#/features/plan/contracts';
+import type { Coordinate } from '#/lib/geoTypes';
 import {
   buildTomTomChargingConnectorBlocks,
   consumptionWhPerMileToInkWhPerHundredKm,

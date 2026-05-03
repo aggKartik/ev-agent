@@ -44,13 +44,27 @@ export const planRouter = router({
         .finally(() => finished.abort());
 
       let id = 0;
+      id += 1;
+      yield tracked(String(id), {
+        type: 'phase',
+        label: 'Route preflight',
+        detail: 'Grounding EV corridor and charge anchors',
+      });
+      id += 1;
+      yield tracked(String(id), {
+        type: 'narration',
+        message:
+          'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
+      });
+
       try {
         for await (const [event] of on(ee, 'event', { signal: iterSignal })) {
           id += 1;
           yield tracked(String(id), event as PlanStreamEvent);
         }
       } catch (err) {
-        if (!finished.signal.aborted) throw err;
+        if (finished.signal.aborted || signal?.aborted) return;
+        throw err;
       } finally {
         await agentDone;
       }

@@ -1,4 +1,4 @@
-import type { Coordinate } from '#/features/plan/contracts';
+import type { Coordinate } from '#/lib/geoTypes';
 
 export type EvRoutePlanSource = 'tomtom_ld_ev' | 'straight_line_fallback';
 

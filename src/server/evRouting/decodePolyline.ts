@@ -5,7 +5,7 @@
 
 import polyline from '@mapbox/polyline';
 
-import type { Coordinate } from '#/features/plan/contracts';
+import type { Coordinate } from '#/lib/geoTypes';
 
 /**
  * Decode to `{ lat, lng }`; `precision` is polyline fractional digits (typically `5`; use `7` for TomTom max precision routes).
