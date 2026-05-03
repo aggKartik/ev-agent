@@ -1,4 +1,4 @@
-import type { PlanRequest } from '#/features/plan/contracts';
+import type { PlanRequest } from '#/features/plan/types/contracts';
 import type { Coordinate } from '#/lib/geoTypes';
 import type { EvChargeStopCandidate } from '../../domain/types';
 import {

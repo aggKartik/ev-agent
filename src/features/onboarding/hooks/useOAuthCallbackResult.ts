@@ -1,7 +1,10 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
-import { emptyOnboardingSearch, type OnboardingSearch } from './search';
-import type { Step } from './steps';
+import type { Step } from '#/features/onboarding/types/steps';
+import {
+  emptyOnboardingSearch,
+  type OnboardingSearch,
+} from '#/features/onboarding/utils/search';
 
 /**
  * Consumes the one-shot `?connected=` / `?connect=error&reason=` search params

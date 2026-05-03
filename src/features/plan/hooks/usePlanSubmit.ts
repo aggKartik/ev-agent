@@ -1,11 +1,14 @@
 import { skipToken } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import type { PlanRequest, PlanStreamEvent } from '#/features/plan/contracts';
 import {
   useActiveRequest,
   usePlanFlowStore,
   useStatus,
 } from '#/features/plan/store';
+import type {
+  PlanRequest,
+  PlanStreamEvent,
+} from '#/features/plan/types/contracts';
 import { trpc } from '#/lib/trpc';
 
 export function usePlanSubmit() {

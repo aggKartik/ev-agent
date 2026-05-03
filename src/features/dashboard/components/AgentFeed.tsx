@@ -1,6 +1,6 @@
 import { Box } from 'styled-system/jsx';
-import type { DashboardActivityEvent } from '#/features/dashboard/contracts';
-import { toneStyle } from '#/features/dashboard/tone';
+import type { DashboardActivityEvent } from '#/features/dashboard/types/contracts';
+import { toneStyle } from '#/features/dashboard/utils/tone';
 import { cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { dashboard } from '#/styled-system/recipes/dashboard';

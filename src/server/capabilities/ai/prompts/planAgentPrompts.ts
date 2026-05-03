@@ -1,5 +1,5 @@
-import type { PlanRequest } from '#/features/plan/contracts';
-import { PLAN_ACTIVITY_CATALOG } from '#/features/plan/data';
+import type { PlanRequest } from '#/features/plan/types/contracts';
+import { PLAN_ACTIVITY_CATALOG } from '#/features/plan/utils/data';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import {
   evPreplanPolicyBlock,

@@ -6,7 +6,7 @@ import {
   type PlanResult,
   type PlanStreamEvent,
   planAgentModelResultSchema,
-} from '#/features/plan/contracts';
+} from '#/features/plan/types/contracts';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import { recoverPlanResultAfterNoObjectError } from '../parsing/planAgentRecovery';
 import {

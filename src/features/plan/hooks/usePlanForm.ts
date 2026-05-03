@@ -3,8 +3,8 @@ import type {
   EvConnectorSlug,
   PlanCatalogResponse,
   PlanRequest,
-} from '#/features/plan/contracts';
-import { planRequestSchema } from '#/features/plan/contracts';
+} from '#/features/plan/types/contracts';
+import { planRequestSchema } from '#/features/plan/types/contracts';
 
 type UsePlanFormArgs = {
   catalog: PlanCatalogResponse;

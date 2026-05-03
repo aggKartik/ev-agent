@@ -1,5 +1,5 @@
 import type * as Leaflet from 'leaflet';
-import type { PlanResult } from '#/features/plan/contracts';
+import type { PlanResult } from '#/features/plan/types/contracts';
 
 export type LeafletModule = typeof import('leaflet');
 

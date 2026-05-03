@@ -1,22 +1,22 @@
 import type * as Leaflet from 'leaflet';
 import { type RefObject, useEffect, useRef } from 'react';
-import type {
-  Coordinate,
-  PlanRequest,
-  PlanResult,
-  PlanStop,
-} from '#/features/plan/contracts';
-import {
-  cleanPlanAddress,
-  resolvePlanCoordinate,
-} from '#/features/plan/helpers';
 import {
   type LeafletModule,
   makePinIcon,
   makeWaypointIcon,
   PLAN_COLORS,
   toLatLngs,
-} from './icons';
+} from '#/features/plan/map/icons';
+import type {
+  Coordinate,
+  PlanRequest,
+  PlanResult,
+  PlanStop,
+} from '#/features/plan/types/contracts';
+import {
+  cleanPlanAddress,
+  resolvePlanCoordinate,
+} from '#/features/plan/utils/helpers';
 
 type LayerState = {
   route?: Leaflet.Polyline;

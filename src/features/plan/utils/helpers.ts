@@ -6,7 +6,7 @@ import type {
   PlanRequest,
   PlanResult,
   PlanStop,
-} from './contracts';
+} from '#/features/plan/types/contracts';
 import {
   CAR_LOCATION,
   MOCK_ADDRESSES,
@@ -22,7 +22,7 @@ import {
   PLAN_DEFAULT_USABLE_RANGE_MILES,
   PLAN_DEFAULT_VEHICLE_LABEL,
   PLANNING_PHASES,
-} from './data';
+} from '#/features/plan/utils/data';
 
 const ACTIVITY_PLACES = {
   coffee: {

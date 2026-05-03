@@ -1,6 +1,6 @@
 import { Box } from 'styled-system/jsx';
-import type { DashboardSummary } from '#/features/dashboard/contracts';
-import { toneStyle } from '#/features/dashboard/tone';
+import type { DashboardSummary } from '#/features/dashboard/types/contracts';
+import { toneStyle } from '#/features/dashboard/utils/tone';
 import { chip } from '#/styled-system/recipes/chip';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 

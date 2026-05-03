@@ -1,5 +1,5 @@
 import { Box } from 'styled-system/jsx';
-import { formatPlanMinutes } from '#/features/plan/helpers';
+import { formatPlanMinutes } from '#/features/plan/utils/helpers';
 import { css } from '#/styled-system/css';
 
 type ActivityDwellSliderProps = {

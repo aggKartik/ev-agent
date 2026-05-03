@@ -2,21 +2,21 @@ import 'leaflet/dist/leaflet.css';
 
 import { useMemo, useRef } from 'react';
 import { Box } from 'styled-system/jsx';
-import type { PlanRequest, PlanResult } from '#/features/plan/contracts';
+import { useLeafletMap } from '#/features/plan/hooks/useLeafletMap';
+import { useMapInvalidateOnMode } from '#/features/plan/hooks/useMapInvalidateOnMode';
+import { useRouteLayers } from '#/features/plan/hooks/useRouteLayers';
+import { type PlanMapMode, usePlanFlowStore } from '#/features/plan/store';
+import type { PlanRequest, PlanResult } from '#/features/plan/types/contracts';
 import {
   cleanPlanAddress,
   resolvePlanCoordinate,
-} from '#/features/plan/helpers';
-import { type PlanMapMode, usePlanFlowStore } from '#/features/plan/store';
+} from '#/features/plan/utils/helpers';
 import { cx } from '#/styled-system/css';
 import { mapChrome } from '#/styled-system/recipes/map-chrome';
 import { panel } from '#/styled-system/recipes/panel';
 import MapChrome from '../map/MapChrome';
 import MapTopBar from '../map/MapTopBar';
 import RouteMapEmptyState from '../map/RouteMapEmptyState';
-import { useLeafletMap } from '../map/useLeafletMap';
-import { useMapInvalidateOnMode } from '../map/useMapInvalidateOnMode';
-import { useRouteLayers } from '../map/useRouteLayers';
 
 type RouteMapProps = {
   request?: PlanRequest | null;

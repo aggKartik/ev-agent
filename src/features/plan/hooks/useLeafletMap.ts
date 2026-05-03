@@ -1,6 +1,6 @@
 import type * as Leaflet from 'leaflet';
 import { type RefObject, useEffect, useRef, useState } from 'react';
-import type { LeafletModule } from './icons';
+import type { LeafletModule } from '#/features/plan/map/icons';
 
 type UseLeafletMapResult = {
   mapRef: RefObject<Leaflet.Map | null>;

@@ -3,7 +3,7 @@ import { Box } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import CarSilhouette from '#/features/dashboard/components/CarSilhouette';
 import CarStat from '#/features/dashboard/components/CarStat';
-import type { DashboardTeslaSummary } from '#/features/dashboard/contracts';
+import type { DashboardTeslaSummary } from '#/features/dashboard/types/contracts';
 import { cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { dashboard } from '#/styled-system/recipes/dashboard';

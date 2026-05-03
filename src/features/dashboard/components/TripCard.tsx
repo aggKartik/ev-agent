@@ -1,8 +1,8 @@
 import { Box } from 'styled-system/jsx';
 import { Text } from '#/components/ui/Text';
 import TripMiniMap from '#/features/dashboard/components/TripMiniMap';
-import type { DashboardRecentTrip } from '#/features/dashboard/contracts';
-import { toneStyle } from '#/features/dashboard/tone';
+import type { DashboardRecentTrip } from '#/features/dashboard/types/contracts';
+import { toneStyle } from '#/features/dashboard/utils/tone';
 import { chip } from '#/styled-system/recipes/chip';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 

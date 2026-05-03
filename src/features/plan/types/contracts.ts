@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { type Coordinate, coordinateSchema } from '#/lib/geoTypes';
 import {
   PLAN_ACTIVITY_IDS,
   PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
@@ -10,7 +9,8 @@ import {
   PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
   PLAN_DEFAULT_USABLE_RANGE_MILES,
   PLAN_DEFAULT_VEHICLE_LABEL,
-} from './data';
+} from '#/features/plan/utils/data';
+import { type Coordinate, coordinateSchema } from '#/lib/geoTypes';
 
 export { coordinateSchema, type Coordinate };
 
