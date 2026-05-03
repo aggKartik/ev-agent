@@ -13,6 +13,7 @@ import OnboardingStepStage from '#/features/onboarding/components/OnboardingStep
 import SuccessStep from '#/features/onboarding/components/SuccessStep';
 import { useKeyboardStepNavigation } from '#/features/onboarding/hooks/useKeyboardStepNavigation';
 import { useOAuthCallbackResult } from '#/features/onboarding/hooks/useOAuthCallbackResult';
+import { useOnboardingAutofillSingleTeslaVehicle } from '#/features/onboarding/hooks/useOnboardingAutofillSingleTeslaVehicle';
 import { useOnboardingFleetContext } from '#/features/onboarding/hooks/useOnboardingFleetContext';
 import { useOnboardingForm } from '#/features/onboarding/hooks/useOnboardingForm';
 import { useOnboardingInitialState } from '#/features/onboarding/hooks/useOnboardingInitialState';
@@ -97,8 +98,20 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
 
   useOnboardingPersist(form, currentStep);
 
-  const fleet = useOnboardingFleetContext();
+  const formValues = useStore(form.store, (state) => state.values);
+
+  const fleet = useOnboardingFleetContext({
+    selectedTeslaVehicleId: formValues.teslaVehicleId,
+  });
   const { resolveProviderLabel } = fleet;
+
+  useOnboardingAutofillSingleTeslaVehicle({
+    teslaLinked: fleet.teslaLinked,
+    fleetLoading: fleet.fleetLoading,
+    fleetVehicles: fleet.fleetVehicles,
+    teslaVehicleId: formValues.teslaVehicleId,
+    form,
+  });
 
   const { errorReason: connectErrorReason } = useOAuthCallbackResult({
     search,
@@ -111,8 +124,6 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
       [form, resolveProviderLabel],
     ),
   });
-
-  const formValues = useStore(form.store, (state) => state.values);
 
   const chrome = useOnboardingStepChrome({
     currentStep,
@@ -191,6 +202,13 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
                   onChange={field.handleChange}
                   errorReason={connectErrorReason}
                   connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
+                  isTeslaLinked={fleet.teslaLinked}
+                  teslaFleetVehicles={fleet.fleetVehicles}
+                  teslaFleetLoading={fleet.fleetLoading}
+                  selectedTeslaVehicleId={formValues.teslaVehicleId}
+                  onTeslaVehicleIdChange={(id) =>
+                    form.setFieldValue('teslaVehicleId', id)
+                  }
                 />
               )}
             </form.Field>
@@ -210,7 +228,9 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
             errorMessage={submitError}
             isSubmitting={isSubmitting}
             onNext={() => {
-              void submitOnboarding(formValues.name.trim());
+              void submitOnboarding(formValues.name.trim(), {
+                teslaVehicleId: formValues.teslaVehicleId,
+              });
             }}
           />
         ) : null}
