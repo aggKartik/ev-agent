@@ -5,7 +5,7 @@ import type { OAuthProvider } from './types';
  * Process-global OAuth provider registry.
  *
  * Each integration calls {@link registerProvider} at import time (see
- * `src/server/integrations/<slug>/index.ts`). `src/server/routers/index.ts`
+ * `src/server/integrations/<slug>/index.ts`). `src/server/platform/trpc/router.ts`
  * imports every integration once so registration runs before any tRPC
  * request arrives.
  */

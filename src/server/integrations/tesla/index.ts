@@ -2,8 +2,8 @@ import { registerProvider } from '#/server/oauth/registry';
 import { teslaProvider } from './auth/provider';
 
 // Side-effect registration: importing this module registers the provider
-// with the global OAuth registry. `src/server/routers/index.ts` imports it
-// once so registration runs before any request arrives.
+// with the global OAuth registry. `src/server/platform/trpc/router.ts` imports
+// it once so registration runs before any request arrives.
 registerProvider(teslaProvider);
 
 export { teslaProvider };

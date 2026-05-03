@@ -21,7 +21,7 @@ async function migrateToLatest() {
   const db = createDb();
   const migrationFolder = path.resolve(
     process.cwd(),
-    'src/server/db/migrations',
+    'src/server/platform/db/migrations',
   );
 
   try {

@@ -25,11 +25,11 @@ ev-agent/
 │   │   ├── about.tsx              # About page
 │   │   └── -api.trpc.$trpc.ts     # tRPC API handler (ignored by route tree)
 │   ├── server/                    # Server-side code
-│   │   ├── routers/               # Feature-based tRPC routers
-│   │   │   ├── index.ts           # Root router (combines all routers)
-│   │   │   └── example.ts         # Example feature router
-│   │   ├── trpc.ts                # tRPC initialization & procedures
-│   │   └── context.ts             # Request context creator
+│   │   ├── platform/              # Infra + tRPC wiring
+│   │   │   ├── trpc/              # Root router + procedures
+│   │   │   └── context.ts         # Request context creator
+│   │   ├── modules/               # Feature-based tRPC routers
+│   │   └── capabilities/          # Cross-cutting server capabilities
 │   ├── lib/                       # Shared utilities
 │   │   ├── trpc.ts                # Client-side tRPC setup
 │   │   └── env.ts                 # Type-safe environment variables
@@ -100,7 +100,7 @@ http://localhost:3000
 ### Type-Safe API with tRPC
 
 The application includes a fully configured tRPC setup with:
-- Feature-based router organization (`src/server/routers/`)
+- Feature-based router organization (`src/server/modules/`)
 - End-to-end type safety from server to client
 - Integration with TanStack Query for data fetching
 - Example procedures for queries and mutations
@@ -180,7 +180,7 @@ For Postgres, configure:
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ev_agent
 ```
 
-The database client is initialized in `src/server/db/index.ts` and injected into tRPC context via `src/server/context.ts`.
+The database client is initialized in `src/server/platform/db/index.ts` and injected into tRPC context via `src/server/platform/context.ts`.
 
 Run migrations:
 
@@ -204,11 +204,11 @@ docker compose -f docker-compose.dev.yml down
 
 ### Adding a New tRPC Router
 
-1. Create a new router file in `src/server/routers/`:
+1. Create a new router file in `src/server/modules/`:
 ```tsx
-// src/server/routers/users.ts
+// src/server/modules/users/router.ts
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { router, publicProcedure } from "#/server/platform/trpc/procedures";
 
 export const usersRouter = router({
   getAll: publicProcedure.query(() => {
@@ -223,12 +223,11 @@ export const usersRouter = router({
 });
 ```
 
-2. Add it to the root router in `src/server/routers/index.ts`:
+2. Add it to the root router in `src/server/platform/trpc/router.ts`:
 ```tsx
-import { usersRouter } from "./users";
+import { usersRouter } from "#/server/modules/users/router";
 
 export const appRouter = router({
-  example: exampleRouter,
   users: usersRouter,  // Add here
 });
 ```
