@@ -4,7 +4,7 @@ import {
   type PlanResult,
   planAgentModelResultSchema,
   planResultSchema,
-} from '#/features/plan/types/contracts';
+} from '#/shared/plan/contracts';
 import { getPlanModel } from '../orchestration/getPlanModel';
 import {
   PLAN_AGENT_REPAIR_MAX_OUTPUT_TOKENS,

@@ -1,6 +1,6 @@
 import { useStore } from '@tanstack/react-form';
 import type { PlanForm } from '#/features/plan/hooks/usePlanForm';
-import type { PlanRequest } from '#/features/plan/types/contracts';
+import type { PlanRequest } from '#/shared/plan/contracts';
 
 /**
  * Reads the live form values and returns them as a PlanRequest preview when

@@ -1,5 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { env } from '#/lib/env';
 
 type Deps = {
   signal?: AbortSignal;
@@ -43,7 +44,7 @@ export function makeSearchPlacesTool({ signal }: Deps) {
         .describe('Optional Mapbox category slug (e.g. "coffee", "park").'),
     }),
     execute: async ({ query, near, radiusMiles, category }) => {
-      const token = process.env.MAPBOX_TOKEN;
+      const token = env.MAPBOX_TOKEN;
       if (!token) {
         throw new Error(
           'MAPBOX_TOKEN is not set. Configure it in .env to enable place search.',

@@ -5,7 +5,7 @@ import {
   type PlanResult,
   planAgentModelResultSchema,
   planResultSchema,
-} from '#/features/plan/types/contracts';
+} from '#/shared/plan/contracts';
 
 /**
  * Deterministic path: repair almost-JSON from the model, parse, validate slim

@@ -3,8 +3,8 @@ import type { CSSProperties } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
-import type { PlanStop } from '#/features/plan/types/contracts';
 import { formatPlanMinutes } from '#/features/plan/utils/helpers';
+import type { PlanStop } from '#/shared/plan/contracts';
 import { css } from '#/styled-system/css';
 import { selectableRow } from '#/styled-system/recipes/selectable-row';
 

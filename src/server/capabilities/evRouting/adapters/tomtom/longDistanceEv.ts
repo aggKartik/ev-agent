@@ -1,5 +1,6 @@
-import type { PlanRequest } from '#/features/plan/types/contracts';
+import { env } from '#/lib/env';
 import type { Coordinate } from '#/lib/geoTypes';
+import type { PlanRequest } from '#/shared/plan/contracts';
 import type { EvChargeStopCandidate } from '../../domain/types';
 import {
   buildTomTomChargingConnectorBlocks,
@@ -68,7 +69,7 @@ export async function tryTomTomLongDistanceEvRouteDetailed(opts: {
   destination: Coordinate;
   signal?: AbortSignal;
 }): Promise<TomTomLdevPrefetchResult> {
-  const key = process.env.TOMTOM_API_KEY?.trim();
+  const key = env.TOMTOM_API_KEY.trim();
   if (!key) return { ok: false, reason: 'no_api_key' };
 
   const { request, origin, destination, signal: userSignal } = opts;

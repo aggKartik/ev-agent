@@ -15,7 +15,7 @@ import {
   useStatus,
   useStreamedStops,
 } from '#/features/plan/store';
-import type { PlanCatalogResponse } from '#/features/plan/types/contracts';
+import type { PlanCatalogResponse } from '#/shared/plan/contracts';
 import { css } from '#/styled-system/css';
 
 type PlanStageProps = {

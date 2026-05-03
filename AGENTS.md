@@ -4,7 +4,7 @@
 - Use Bun for everything (`bun install`, not npm/pnpm/yarn).
 - Dev server: `bun dev` (Vite on port `3000`).
 - Quality checks: `bun run check` (Biome lint+format), `bun run lint`, `bun run format`.
-- Tests: `bun test` (configured as `vitest run --passWithNoTests`, so empty suites still exit 0).
+- Tests: `bun test` (runs Vitest; missing tests now surface as failures since `--passWithNoTests` was removed).
 - Manual smoke (plan tools + EV prefetch, no LLM): `bun run smoke:tools` (entry `scripts/smoke/plan-tools/main.ts`; use `--help` for flags).
 - Production build: `bun run build` (runs `prepare` first, then Vite build).
 
@@ -33,7 +33,7 @@
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
 - Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths); `#/styled-system/*` maps to repo-root `styled-system/*` for Panda output.
-- Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
+- Keep claims in docs aligned with executable config: CI runs on every PR via `.github/workflows/ci.yml` (Bun install + `bun run check` + `bun test`).
 - **Frontend features** — Product UI and logic for a vertical slice live under `src/features/<name>/` with `components/` (and optional colocated areas such as `map/` for plan), `hooks/` (effects and subscriptions), `types/` (schemas and shared TS types), and `utils/` (pure helpers and static data). Cross-cutting workflow state for a feature may stay at `src/features/<name>/store.ts` (Zustand). Route files in `src/routes/**` stay thin and compose from `features/` and `src/components/` (`ui/`, `layout/`, `branding/`).
 - **Backend** — Server code under `src/server/`: `platform/` holds shared infrastructure (DB in `platform/db/`, tRPC composition in `platform/trpc/`, request context in `platform/context.ts`); `modules/<domain>/` exposes domain routers wired into the app router; `capabilities/<area>/` holds capability code with **domain** logic (`domain/`, pure types) separated from **adapters** (`adapters/<vendor>/`) and orchestration (`orchestration/`, `tools/`, `prompts/`); `integrations/<vendor>/` is for third-party SDK-style clients; top-level `oauth/` is shared OAuth PKCE/state/cookie plumbing used by route handlers.
 

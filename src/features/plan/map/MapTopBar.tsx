@@ -1,10 +1,10 @@
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
-import type { PlanResult } from '#/features/plan/types/contracts';
 import {
   cleanPlanAddress,
   formatPlanMinutes,
 } from '#/features/plan/utils/helpers';
+import type { PlanResult } from '#/shared/plan/contracts';
 
 type MapTopBarClasses = {
   topbar: string;

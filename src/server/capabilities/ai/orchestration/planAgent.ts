@@ -1,4 +1,5 @@
 import { NoObjectGeneratedError, Output, stepCountIs, streamText } from 'ai';
+import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import {
   mergePlanResultFromAgentOutput,
   type PlanAgentModelResult,
@@ -6,8 +7,7 @@ import {
   type PlanResult,
   type PlanStreamEvent,
   planAgentModelResultSchema,
-} from '#/features/plan/types/contracts';
-import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
+} from '#/shared/plan/contracts';
 import { recoverPlanResultAfterNoObjectError } from '../parsing/planAgentRecovery';
 import {
   buildSystemPrompt,

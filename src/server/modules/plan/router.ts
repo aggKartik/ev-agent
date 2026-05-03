@@ -1,46 +1,47 @@
 import EventEmitter, { on } from 'node:events';
 import { tracked } from '@trpc/server';
+import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
+import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
+import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
+import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
 import {
   addressSuggestSchema,
   type PlanStreamEvent,
   planRequestSchema,
-} from '#/features/plan/types/contracts';
-import {
-  getPlanCatalog,
-  suggestPlanAddresses,
-} from '#/features/plan/utils/helpers';
-import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
-import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
-import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
-import { publicProcedure, router } from '#/server/platform/trpc/procedures';
+} from '#/shared/plan/contracts';
+import { getPlanCatalog, suggestPlanAddresses } from '#/shared/plan/helpers';
+import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
 
 export const planRouter = router({
-  catalog: publicProcedure.query(() => getPlanCatalog()),
+  catalog: protectedProcedure.query(() => getPlanCatalog()),
 
-  suggestAddresses: publicProcedure
+  suggestAddresses: protectedProcedure
     .input(addressSuggestSchema)
     .query(({ input }) => suggestPlanAddresses(input.query)),
 
-  stream: publicProcedure
+  stream: protectedProcedure
     .input(planRequestSchema)
-    .subscription(async function* ({ input, signal }) {
+    .subscription(async function* ({ ctx, input, signal }) {
+      const release = acquirePlanStreamSlot(String(ctx.userId));
+
       const ee = new EventEmitter();
       const finished = new AbortController();
-      const iterSignal = signal
-        ? AbortSignal.any([signal, finished.signal])
-        : finished.signal;
+      const timeout = AbortSignal.timeout(PLAN_STREAM_TIMEOUT_MS);
+      const iterSignal = AbortSignal.any(
+        [signal, finished.signal, timeout].filter(Boolean) as AbortSignal[],
+      );
 
       const agentDone = (async () => {
         let evRoutePlan: EvRoutePlan | undefined;
         try {
-          evRoutePlan = await computeEvRoute(input, signal);
+          evRoutePlan = await computeEvRoute(input, iterSignal);
         } catch {
           evRoutePlan = undefined;
         }
         return runPlanAgent(
           input,
           (event: PlanStreamEvent) => ee.emit('event', event),
-          { signal, evRoutePlan },
+          { signal: iterSignal, evRoutePlan },
         );
       })()
         .catch(() => undefined)
@@ -52,13 +53,13 @@ export const planRouter = router({
         type: 'phase',
         label: 'Route preflight',
         detail: 'Grounding EV corridor and charge anchors',
-      });
+      } satisfies PlanStreamEvent);
       id += 1;
       yield tracked(String(id), {
         type: 'narration',
         message:
           'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
-      });
+      } satisfies PlanStreamEvent);
 
       try {
         for await (const [event] of on(ee, 'event', { signal: iterSignal })) {
@@ -66,10 +67,13 @@ export const planRouter = router({
           yield tracked(String(id), event as PlanStreamEvent);
         }
       } catch (err) {
-        if (finished.signal.aborted || signal?.aborted) return;
+        if (finished.signal.aborted || signal?.aborted || timeout.aborted) {
+          return;
+        }
         throw err;
       } finally {
         await agentDone;
+        release();
       }
     }),
 });

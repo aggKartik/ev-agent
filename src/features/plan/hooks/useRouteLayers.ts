@@ -7,16 +7,14 @@ import {
   PLAN_COLORS,
   toLatLngs,
 } from '#/features/plan/map/icons';
+import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import type {
   Coordinate,
   PlanRequest,
   PlanResult,
   PlanStop,
-} from '#/features/plan/types/contracts';
-import {
-  cleanPlanAddress,
-  resolvePlanCoordinate,
-} from '#/features/plan/utils/helpers';
+} from '#/shared/plan/contracts';
+import { resolvePlanCoordinate } from '#/shared/plan/helpers';
 
 type LayerState = {
   route?: Leaflet.Polyline;

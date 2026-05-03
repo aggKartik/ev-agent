@@ -1,7 +1,7 @@
 import { Box, Stack } from 'styled-system/jsx';
 import { useCurrentPhase, useNarration } from '#/features/plan/store';
-import type { PlanRequest } from '#/features/plan/types/contracts';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
+import type { PlanRequest } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
 import { panel } from '#/styled-system/recipes/panel';
 import { progress } from '#/styled-system/recipes/progress';

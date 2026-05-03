@@ -1,5 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { env } from '#/lib/env';
 
 type Deps = {
   signal?: AbortSignal;
@@ -52,8 +53,8 @@ export function makeFindChargingStationsTool({ signal }: Deps) {
       const headers: Record<string, string> = {
         Accept: 'application/json',
       };
-      if (process.env.OPENCHARGEMAP_KEY) {
-        headers['X-API-Key'] = process.env.OPENCHARGEMAP_KEY;
+      if (env.OPENCHARGEMAP_KEY) {
+        headers['X-API-Key'] = env.OPENCHARGEMAP_KEY;
       }
 
       const response = await fetch(url, { headers, signal });
