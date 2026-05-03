@@ -1,5 +1,9 @@
 import { useCallback, useState } from 'react';
-import { getNextStep, getPreviousStep, type Step } from './steps';
+import {
+  getNextStep,
+  getPreviousStep,
+  type Step,
+} from '#/features/onboarding/types/steps';
 
 export type Stepper = {
   currentStep: Step;

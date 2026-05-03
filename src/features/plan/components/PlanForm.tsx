@@ -6,13 +6,13 @@ import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
 import Input from '#/components/ui/Input';
 import { Text } from '#/components/ui/Text';
-import type { PlanCatalogResponse } from '#/features/plan/contracts';
-import { planRequestSchema } from '#/features/plan/contracts';
-import { useLastPlanningError } from '#/features/plan/store';
 import {
   CONNECTOR_OPTION_ORDER,
   type PlanForm as PlanFormApi,
-} from '#/features/plan/usePlanForm';
+} from '#/features/plan/hooks/usePlanForm';
+import { useLastPlanningError } from '#/features/plan/store';
+import type { PlanCatalogResponse } from '#/features/plan/types/contracts';
+import { planRequestSchema } from '#/features/plan/types/contracts';
 import { css, cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { sectionHeader } from '#/styled-system/recipes/section-header';

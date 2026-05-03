@@ -32,13 +32,15 @@
 
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
-- Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths).
+- Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths); `#/styled-system/*` maps to repo-root `styled-system/*` for Panda output.
 - Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
+- **Frontend features** — Product UI and logic for a vertical slice live under `src/features/<name>/` with `components/` (and optional colocated areas such as `map/` for plan), `hooks/` (effects and subscriptions), `types/` (schemas and shared TS types), and `utils/` (pure helpers and static data). Cross-cutting workflow state for a feature may stay at `src/features/<name>/store.ts` (Zustand). Route files in `src/routes/**` stay thin and compose from `features/` and `src/components/` (`ui/`, `layout/`, `branding/`).
+- **Backend** — Server code under `src/server/`: `platform/` holds shared infrastructure (DB in `platform/db/`, tRPC composition in `platform/trpc/`, request context in `platform/context.ts`); `modules/<domain>/` exposes domain routers wired into the app router; `capabilities/<area>/` holds capability code with **domain** logic (`domain/`, pure types) separated from **adapters** (`adapters/<vendor>/`) and orchestration (`orchestration/`, `tools/`, `prompts/`); `integrations/<vendor>/` is for third-party SDK-style clients; top-level `oauth/` is shared OAuth PKCE/state/cookie plumbing used by route handlers.
 
 ## Code quality & structure
 
 - **Single responsibility** — Prefer one clear reason to change per file (e.g. HTTP client vs pure parsing vs prompt strings). When a module grows multiple unrelated concerns, split along those seams.
-- **Folders express dependency direction** — Use directories to separate stable core from adapters (e.g. provider-agnostic `src/server/evRouting/` vs vendor-specific `tomtom/`). New external integrations should get their own colocated area instead of inflating an existing catch-all file.
+- **Folders express dependency direction** — Use directories to separate stable core from adapters (e.g. provider-agnostic `src/server/capabilities/evRouting/domain/` vs vendor-specific `src/server/capabilities/evRouting/adapters/tomtom/`). New external integrations should get their own colocated area instead of inflating an existing catch-all file.
 - **Orchestration vs pure logic** — Keep I/O and framework glue (routers, `streamText`, tool wiring) separate from pure helpers (formatting, parsing, prompt blocks). Pure functions are easier to test and reuse; orchestration stays thin.
 - **Small public surfaces** — Export only what callers need; keep helpers module-private so internal refactors don’t ripple across the codebase.
 - **Prefer direct imports over barrels** — Skip `index.ts` re-exports unless there is a strong reason; they obscure origins and complicate search and tree-shaking.
@@ -47,7 +49,7 @@
 
 - Form values live in TanStack Form. Don't mirror them into another store; project from the form via `useStore(form.store, selector)` when other parts of the UI need to react.
 - Workflow / cross-component UI state lives in Zustand (e.g. `src/features/plan/store.ts`). Stores hold data + synchronous transitions only — no timers, no async, no derived `useEffect`.
-- Side effects (timers, mutations, subscriptions) live in single-purpose hooks named for what they do (e.g. `usePlanPhaseTicker`, `usePlanSubmit`, `useDraftRequest`). One hook = one effect.
+- Side effects (timers, mutations, subscriptions) live in single-purpose hooks under `src/features/<name>/hooks/` named for what they do (e.g. `usePlanSubmit`, `useDraftRequest`). One hook = one effect.
 - Components read state via colocated Zustand selectors (e.g. `useStatus`, `useResult`) and dispatch actions. They don't receive a "flow blob" prop and don't own workflow state.
 - Every piece of state has exactly one writer. Don't sync two stores; project from one into the other.
 - See `.agents/skills/linear-state-management/SKILL.md` for the full pattern.

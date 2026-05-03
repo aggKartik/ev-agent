@@ -1,5 +1,5 @@
-import type { PlanRequest } from '#/features/plan/contracts';
-import { resolvePlanCoordinate } from '#/features/plan/helpers';
+import type { PlanRequest } from '#/features/plan/types/contracts';
+import { resolvePlanCoordinate } from '#/features/plan/utils/helpers';
 import type { Coordinate } from '#/lib/geoTypes';
 import { tryTomTomLongDistanceEvRoute } from '../adapters/tomtom/longDistanceEv';
 import {

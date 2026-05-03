@@ -1,7 +1,7 @@
 import { Box, Grid } from 'styled-system/jsx';
 import { Text } from '#/components/ui/Text';
 import TripCard from '#/features/dashboard/components/TripCard';
-import type { DashboardRecentTrip } from '#/features/dashboard/contracts';
+import type { DashboardRecentTrip } from '#/features/dashboard/types/contracts';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 
 type RecentTripsProps = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planRequestSchema } from '#/features/plan/contracts';
+import { planRequestSchema } from '#/features/plan/types/contracts';
 import { recoverPlanResultFromRepairedModelText } from './planAgentModelParse';
 
 const baseRequest = planRequestSchema.parse({

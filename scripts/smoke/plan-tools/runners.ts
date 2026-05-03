@@ -2,7 +2,7 @@ import type { Tool } from 'ai';
 import {
   type PlanStreamEvent,
   planRequestSchema,
-} from '#/features/plan/contracts';
+} from '#/features/plan/types/contracts';
 import { makeFindChargingStationsTool } from '#/server/ai/tools/findChargingStations';
 import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
 import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';

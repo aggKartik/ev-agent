@@ -4,7 +4,7 @@ import AppShell, { StageInner } from '#/components/layout/AppShell';
 import Header from '#/components/layout/Header';
 import Button from '#/components/ui/Button';
 import DashboardStage from '#/features/dashboard/components/DashboardStage';
-import { getDashboardFallbackSummary } from '#/features/dashboard/helpers';
+import { getDashboardFallbackSummary } from '#/features/dashboard/utils/helpers';
 import { trpc } from '#/lib/trpc';
 import { css, cx } from '#/styled-system/css';
 import { dashboard } from '#/styled-system/recipes/dashboard';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import type { DashboardRecentTrip } from '#/features/dashboard/contracts';
-import { DASHBOARD_TONE_HEX } from '#/features/dashboard/tone';
+import type { DashboardRecentTrip } from '#/features/dashboard/types/contracts';
+import { DASHBOARD_TONE_HEX } from '#/features/dashboard/utils/tone';
 
 type TripMiniMapProps = {
   trip: DashboardRecentTrip;

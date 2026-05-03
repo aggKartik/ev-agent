@@ -4,14 +4,14 @@ import type {
   DashboardSummary,
   DashboardTeslaSummary,
   DashboardUtilityTile,
-} from './contracts';
+} from '#/features/dashboard/types/contracts';
 import {
   DASHBOARD_ACTIVITY_FEED,
   DASHBOARD_FALLBACK_TESLA,
   DASHBOARD_QUICK_DESTINATIONS,
   DASHBOARD_RECENT_TRIPS,
   DASHBOARD_UTILITY_TILES,
-} from './data';
+} from '#/features/dashboard/utils/data';
 
 export function getFallbackRecentTrips(): DashboardRecentTrip[] {
   return DASHBOARD_RECENT_TRIPS;

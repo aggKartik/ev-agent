@@ -1,6 +1,6 @@
 import { Box } from 'styled-system/jsx';
-import type { DashboardUtilityTile } from '#/features/dashboard/contracts';
-import { toneStyle } from '#/features/dashboard/tone';
+import type { DashboardUtilityTile } from '#/features/dashboard/types/contracts';
+import { toneStyle } from '#/features/dashboard/utils/tone';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 
 type UtilityTilesProps = {

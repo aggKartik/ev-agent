@@ -4,8 +4,11 @@ import {
   addressSuggestSchema,
   type PlanStreamEvent,
   planRequestSchema,
-} from '#/features/plan/contracts';
-import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
+} from '#/features/plan/types/contracts';
+import {
+  getPlanCatalog,
+  suggestPlanAddresses,
+} from '#/features/plan/utils/helpers';
 import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
 import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';

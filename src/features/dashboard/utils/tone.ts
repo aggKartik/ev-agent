@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { DashboardTone } from './contracts';
+import type { DashboardTone } from '#/features/dashboard/types/contracts';
 
 export const DASHBOARD_TONE_HEX: Record<DashboardTone, string> = {
   peach: '#ff9566',

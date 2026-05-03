@@ -1,9 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Box, Flex } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
-import { emptyOnboardingSearch } from '#/features/onboarding/search';
-import type { PlanResult } from '#/features/plan/contracts';
-import { cleanPlanAddress } from '#/features/plan/helpers';
+import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
+import type { PlanResult } from '#/features/plan/types/contracts';
+import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import { css } from '#/styled-system/css';
 
 type ItineraryTopBarProps = {

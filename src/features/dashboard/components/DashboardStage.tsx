@@ -5,7 +5,7 @@ import Hero from '#/features/dashboard/components/Hero';
 import QuickDestinations from '#/features/dashboard/components/QuickDestinations';
 import RecentTrips from '#/features/dashboard/components/RecentTrips';
 import UtilityTiles from '#/features/dashboard/components/UtilityTiles';
-import type { DashboardSummary } from '#/features/dashboard/contracts';
+import type { DashboardSummary } from '#/features/dashboard/types/contracts';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 
 type DashboardStageProps = {

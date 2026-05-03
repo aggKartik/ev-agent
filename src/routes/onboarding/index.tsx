@@ -13,14 +13,11 @@ import NameStep from '#/features/onboarding/components/NameStep';
 import PrefsStep from '#/features/onboarding/components/PrefsStep';
 import SuccessStep from '#/features/onboarding/components/SuccessStep';
 import YearStep from '#/features/onboarding/components/YearStep';
-import { useKeyboardStepNavigation } from '#/features/onboarding/keyboard';
-import { useOAuthCallbackResult } from '#/features/onboarding/oauth-callback';
-import {
-  useOnboardingInitialState,
-  useOnboardingPersist,
-} from '#/features/onboarding/persistence';
-import { parseOnboardingSearch } from '#/features/onboarding/search';
-import { useOnboardingStepper } from '#/features/onboarding/stepper';
+import { useKeyboardStepNavigation } from '#/features/onboarding/hooks/useKeyboardStepNavigation';
+import { useOAuthCallbackResult } from '#/features/onboarding/hooks/useOAuthCallbackResult';
+import { useOnboardingInitialState } from '#/features/onboarding/hooks/useOnboardingInitialState';
+import { useOnboardingPersist } from '#/features/onboarding/hooks/useOnboardingPersist';
+import { useOnboardingStepper } from '#/features/onboarding/hooks/useOnboardingStepper';
 import {
   defaultFormStepNavConfig,
   type FormStep,
@@ -29,7 +26,8 @@ import {
   getProgress,
   type OnboardingFormValues,
   steps,
-} from '#/features/onboarding/steps';
+} from '#/features/onboarding/types/steps';
+import { parseOnboardingSearch } from '#/features/onboarding/utils/search';
 import { trpc } from '#/lib/trpc';
 import { css } from '#/styled-system/css';
 import { progress } from '#/styled-system/recipes';

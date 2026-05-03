@@ -1,8 +1,8 @@
 import { ArrowRight } from 'lucide-react';
 import { Box, Grid, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
-import type { PlanResult } from '#/features/plan/contracts';
-import { formatPlanMinutes } from '#/features/plan/helpers';
+import type { PlanResult } from '#/features/plan/types/contracts';
+import { formatPlanMinutes } from '#/features/plan/utils/helpers';
 import { css, cx } from '#/styled-system/css';
 import { panel } from '#/styled-system/recipes/panel';
 import StopTimeline from './StopTimeline';

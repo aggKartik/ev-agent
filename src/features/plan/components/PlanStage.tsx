@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Grid, Stack } from 'styled-system/jsx';
-import { emptyOnboardingSearch } from '#/features/onboarding/search';
+import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
 import PlanForm from '#/features/plan/components/PlanForm';
 import PlanningLog from '#/features/plan/components/PlanningLog';
 import RouteMap from '#/features/plan/components/RouteMap';
-import type { PlanCatalogResponse } from '#/features/plan/contracts';
+import { useDraftRequest } from '#/features/plan/hooks/useDraftRequest';
+import type { PlanForm as PlanFormApi } from '#/features/plan/hooks/usePlanForm';
 import {
   useActiveRequest,
   useMapMode,
@@ -14,8 +15,7 @@ import {
   useStatus,
   useStreamedStops,
 } from '#/features/plan/store';
-import { useDraftRequest } from '#/features/plan/useDraftRequest';
-import type { PlanForm as PlanFormApi } from '#/features/plan/usePlanForm';
+import type { PlanCatalogResponse } from '#/features/plan/types/contracts';
 import { css } from '#/styled-system/css';
 
 type PlanStageProps = {

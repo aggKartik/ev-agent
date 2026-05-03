@@ -1,22 +1,12 @@
 import { useSignIn, useSignUp } from '@clerk/tanstack-react-start';
 import { useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
-import { emptyOnboardingSearch } from '#/features/onboarding/search';
-
-type Mode = 'sign-in' | 'sign-up';
-type Stage = 'email' | 'code';
-
-type UseEmailCodeAuthResult = {
-  stage: Stage;
-  email: string;
-  submitting: boolean;
-  error: string | null;
-  ready: boolean;
-  start: (email: string) => Promise<void>;
-  verify: (code: string) => Promise<void>;
-  resend: () => Promise<void>;
-  reset: () => void;
-};
+import type {
+  AuthFlowMode,
+  EmailCodeStage,
+  UseEmailCodeAuthResult,
+} from '#/features/auth/types/auth-flows';
+import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
 
 /**
  * Email-code (OTP) auth flow for both `/sign-in` and `/sign-up`. Mirrors the
@@ -32,14 +22,14 @@ type UseEmailCodeAuthResult = {
  * re-start so the caller never has to care which mode the user actually needs.
  */
 export function useEmailCodeAuth(
-  initialMode: Mode = 'sign-in',
+  initialMode: AuthFlowMode = 'sign-in',
 ): UseEmailCodeAuthResult {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const router = useRouter();
 
-  const [mode, setMode] = useState<Mode>(initialMode);
-  const [stage, setStage] = useState<Stage>('email');
+  const [mode, setMode] = useState<AuthFlowMode>(initialMode);
+  const [stage, setStage] = useState<EmailCodeStage>('email');
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +79,8 @@ export function useEmailCodeAuth(
 
       // Fall back to the opposite resource if the user picked the wrong mode.
       if (result.error && isUnknownIdentifierError(result.error)) {
-        const fallback: Mode = mode === 'sign-in' ? 'sign-up' : 'sign-in';
+        const fallback: AuthFlowMode =
+          mode === 'sign-in' ? 'sign-up' : 'sign-in';
         result =
           fallback === 'sign-in'
             ? await startSignIn(trimmed)

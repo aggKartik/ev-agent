@@ -42,10 +42,10 @@ section below cites it.
 
 | Concern                                                     | Layer                                | Example                                          |
 | ----------------------------------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| Form values (inputs, selections, draft data)                | TanStack Form `useForm`              | `src/features/plan/usePlanForm.ts`               |
+| Form values (inputs, selections, draft data)                | TanStack Form `useForm`              | `src/features/plan/hooks/usePlanForm.ts`         |
 | Workflow state (status, server result, selection, indices)  | Zustand `create()` store             | `src/features/plan/store.ts`                     |
-| Side effects (intervals, subscriptions, mutation lifecycle) | Single-purpose hook                  | `src/features/plan/usePlanPhaseTicker.ts`        |
-| Derived projection (form → request, store → mode)           | `useStore` selector / store selector | `src/features/plan/useDraftRequest.ts`           |
+| Side effects (intervals, subscriptions, mutation lifecycle) | Single-purpose hook                  | `src/features/plan/hooks/usePlanSubmit.ts` (`usePlanStreamSubscription`) |
+| Derived projection (form → request, store → mode)           | `useStore` selector / store selector | `src/features/plan/hooks/useDraftRequest.ts`     |
 | Component-local UI (focus, hover, dropdown open)            | `useState` inside the component      | `AddressField` in `src/features/plan/components/PlanForm.tsx` |
 
 If a piece of state doesn't fit cleanly into one of those rows, the design is
@@ -61,8 +61,8 @@ flowchart LR
   Submit -->|"actions"| Store["Zustand store"]
   Mutation["trpc.plan.create"] --> Submit
   Store -->|"selectors"| Components["PlanStage / ItineraryStage"]
-  Store -->|"status, phasesLength"| Ticker["usePlanPhaseTicker"]
-  Ticker -->|"advancePhase / finishPlanning"| Store
+  Store -->|"status, activeRequest"| Stream["usePlanStreamSubscription"]
+  Stream -->|"dispatchStreamEvent"| Store
 ```
 
 Every arrow is one-way. Nothing writes into two places.
@@ -105,32 +105,9 @@ a render. They call a selector hook.
 
 Each is named for its single job and does nothing else.
 
-`src/features/plan/usePlanPhaseTicker.ts` — owns the planning interval:
-
-```ts
-export function usePlanPhaseTicker() {
-  const status = usePlanFlowStore((s) => s.status);
-  const phasesLength = usePlanFlowStore((s) => s.result?.phases.length ?? 0);
-
-  useEffect(() => {
-    if (status !== 'planning' || phasesLength === 0) return;
-    const id = window.setInterval(() => {
-      const { phaseIndex, advancePhase, finishPlanning } =
-        usePlanFlowStore.getState();
-      if (phaseIndex >= phasesLength - 1) {
-        window.clearInterval(id);
-        window.setTimeout(finishPlanning, 500);
-        return;
-      }
-      advancePhase();
-    }, 720);
-    return () => window.clearInterval(id);
-  }, [status, phasesLength]);
-}
-```
-
-`src/features/plan/usePlanSubmit.ts` — translates one mutation lifecycle into
-store actions:
+`src/features/plan/hooks/usePlanSubmit.ts` — wires `submit` / planning status
+and `usePlanStreamSubscription` (tRPC stream → store). Conceptually “one mutation
+lifecycle into store actions” (implementation today streams phases/stops/result):
 
 ```ts
 export function usePlanSubmit() {
@@ -150,7 +127,7 @@ export function usePlanSubmit() {
 }
 ```
 
-`src/features/plan/useDraftRequest.ts` — pure projection. No `useEffect`, no
+`src/features/plan/hooks/useDraftRequest.ts` — pure projection. No `useEffect`, no
 callback wiring. Form is the source; this hook is a one-line lens:
 
 ```ts
@@ -265,7 +242,7 @@ Use this checklist when you find a tangled hook:
   a combobox) stays in `useState`. Don't put it in Zustand.
 - **Ephemeral form fields** stay in TanStack Form, not Zustand. Even
   meta-fields like a `fromLocked` boolean go in the form (see
-  `src/features/plan/usePlanForm.ts`).
+  `src/features/plan/hooks/usePlanForm.ts`).
 - **One-shot derived values** within a single component (e.g. `useMemo` over
   props) don't need a hook of their own.
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DASHBOARD_PROMPT_SUGGESTIONS } from './data';
+import { DASHBOARD_PROMPT_SUGGESTIONS } from '#/features/dashboard/utils/data';
 
 const ROTATION_INTERVAL_MS = 3500;
 
