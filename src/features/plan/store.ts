@@ -30,6 +30,8 @@ type PlanFlowState = {
   narrationCounter: number;
   currentPhase: PlanPhase | null;
   streamedStops: PlanStop[];
+  /** Set when planning fails so the form can show a short reason. */
+  lastPlanningError: string | null;
 };
 
 type PlanFlowActions = {
@@ -38,7 +40,7 @@ type PlanFlowActions = {
   setPhase: (phase: PlanPhase) => void;
   appendStop: (stop: PlanStop) => void;
   applyResult: (result: PlanResult) => void;
-  failPlanning: () => void;
+  failPlanning: (message?: string) => void;
   finishPlanning: () => void;
   selectStop: (id: string) => void;
   editPlan: () => void;
@@ -53,6 +55,7 @@ const initialState: PlanFlowState = {
   narrationCounter: 0,
   currentPhase: null,
   streamedStops: [],
+  lastPlanningError: null,
 };
 
 export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
@@ -69,6 +72,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         narrationCounter: 0,
         currentPhase: null,
         streamedStops: [],
+        lastPlanningError: null,
       }),
 
     appendNarration: (message) => {
@@ -102,7 +106,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
       get().finishPlanning();
     },
 
-    failPlanning: () =>
+    failPlanning: (message) =>
       set({
         status: 'draft',
         result: null,
@@ -112,6 +116,8 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         narrationCounter: 0,
         currentPhase: null,
         streamedStops: [],
+        lastPlanningError:
+          message ?? 'Something went wrong while planning. Try again.',
       }),
 
     finishPlanning: () => {
@@ -137,6 +143,8 @@ export const useSelectedStopId = () =>
 export const useNarration = () => usePlanFlowStore((s) => s.narration);
 export const useCurrentPhase = () => usePlanFlowStore((s) => s.currentPhase);
 export const useStreamedStops = () => usePlanFlowStore((s) => s.streamedStops);
+export const useLastPlanningError = () =>
+  usePlanFlowStore((s) => s.lastPlanningError);
 
 export const useMapMode = (): PlanMapMode =>
   usePlanFlowStore((s) =>

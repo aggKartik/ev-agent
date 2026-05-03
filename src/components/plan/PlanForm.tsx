@@ -8,6 +8,7 @@ import Input from '#/components/Input';
 import { Text } from '#/components/Text';
 import type { PlanCatalogResponse } from '#/features/plan/contracts';
 import { planRequestSchema } from '#/features/plan/contracts';
+import { useLastPlanningError } from '#/features/plan/store';
 import {
   CONNECTOR_OPTION_ORDER,
   type PlanForm as PlanFormApi,
@@ -93,6 +94,7 @@ export default function PlanForm({
   disabled = false,
   onBack,
 }: PlanFormProps) {
+  const lastPlanningError = useLastPlanningError();
   const values = useStore(form.store, (state) => state.values);
   const canPlan = useMemo(
     () =>
@@ -123,6 +125,24 @@ export default function PlanForm({
         We'll route charging around the vibe — not the other way around. Set
         start, end, and the kinds of detours you care about.
       </Text>
+
+      {lastPlanningError ? (
+        <Box
+          role="alert"
+          marginBottom="4"
+          marginTop="2"
+          padding="3"
+          borderRadius="md"
+          borderWidth="1px"
+          borderColor="magenta.400"
+          background="alpha.cream-06"
+          maxWidth="panel-form"
+        >
+          <Text textStyle="caption" color="magenta.300">
+            {lastPlanningError}
+          </Text>
+        </Box>
+      ) : null}
 
       <Stack gap="0">
         <form.Field name="from">

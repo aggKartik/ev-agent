@@ -34,7 +34,7 @@ function dispatchStreamEvent(event: PlanStreamEvent) {
       store.applyResult(event.result);
       return;
     case 'error':
-      store.failPlanning();
+      store.failPlanning(event.message);
       return;
     default: {
       const _exhaustive: never = event;
@@ -53,8 +53,10 @@ export function usePlanStreamSubscription() {
     onData: (envelope) => {
       dispatchStreamEvent(envelope.data);
     },
-    onError: () => {
-      usePlanFlowStore.getState().failPlanning();
+    onError: (err) => {
+      const message =
+        err instanceof Error ? err.message : 'Connection error while planning.';
+      usePlanFlowStore.getState().failPlanning(message);
     },
   });
 }

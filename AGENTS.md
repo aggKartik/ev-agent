@@ -5,6 +5,7 @@
 - Dev server: `bun dev` (Vite on port `3000`).
 - Quality checks: `bun run check` (Biome lint+format), `bun run lint`, `bun run format`.
 - Tests: `bun test` (configured as `vitest run --passWithNoTests`, so empty suites still exit 0).
+- Manual smoke (plan tools + EV prefetch, no LLM): `bun run smoke:tools` (entry `scripts/smoke/plan-tools/main.ts`; use `--help` for flags).
 - Production build: `bun run build` (runs `prepare` first, then Vite build).
 
 ## Generated Files (Do Not Hand Edit)
@@ -25,13 +26,22 @@
 - Kysely DB singleton is created in `src/server/db/index.ts` and injected via tRPC context (`src/server/context.ts`).
 
 ## Trip planner APIs
-- `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch in `computeEvRoute` supplies corridor geometry + charger-hint anchors for the plan agent (`src/server/evRouting/`).
+- `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch (`computeEvRoute` → `src/server/evRouting/tomtom/longDistanceEv.ts`) supplies corridor geometry + charger-hint anchors for the plan agent.
 - `MAPBOX_TOKEN`: Mapbox Places + final `getDirections` polyline in plan agent tools (unchanged UX contract).
+- Plan LLM (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL` in `src/server/ai/helpers/getPlanModel.ts`): defaults target OpenRouter. If you see structured-output failures (*No object generated* / parse errors) after the agent’s jsonrepair + repair pass, switch `OPENAI_MODEL` to a stronger paid or hosted model; free-tier models are more likely to emit malformed or truncated JSON on long itineraries.
 
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
 - Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths).
 - Keep claims in docs aligned with executable config: this repo has no CI workflow files at `.github/workflows/`.
+
+## Code quality & structure
+
+- **Single responsibility** — Prefer one clear reason to change per file (e.g. HTTP client vs pure parsing vs prompt strings). When a module grows multiple unrelated concerns, split along those seams.
+- **Folders express dependency direction** — Use directories to separate stable core from adapters (e.g. provider-agnostic `src/server/evRouting/` vs vendor-specific `tomtom/`). New external integrations should get their own colocated area instead of inflating an existing catch-all file.
+- **Orchestration vs pure logic** — Keep I/O and framework glue (routers, `streamText`, tool wiring) separate from pure helpers (formatting, parsing, prompt blocks). Pure functions are easier to test and reuse; orchestration stays thin.
+- **Small public surfaces** — Export only what callers need; keep helpers module-private so internal refactors don’t ripple across the codebase.
+- **Prefer direct imports over barrels** — Skip `index.ts` re-exports unless there is a strong reason; they obscure origins and complicate search and tree-shaking.
 
 ## State Management & Hooks
 

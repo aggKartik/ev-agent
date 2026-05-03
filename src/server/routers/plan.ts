@@ -6,7 +6,7 @@ import {
   planRequestSchema,
 } from '#/features/plan/contracts';
 import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
-import { runPlanAgent } from '#/server/ai/agents';
+import { runPlanAgent } from '#/server/ai/agents/planAgent';
 import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
 import type { EvRoutePlan } from '#/server/evRouting/types';
 import { publicProcedure, router } from '../trpc';

@@ -140,6 +140,13 @@ export const planResultSchema = z.object({
   phases: z.array(planPhaseSchema),
 });
 
+/** Model-facing structured output: same as PlanResult but `request` is injected server-side. */
+export const planAgentModelResultSchema = planResultSchema.omit({
+  request: true,
+});
+
+export type PlanAgentModelResult = z.infer<typeof planAgentModelResultSchema>;
+
 export type Coordinate = z.infer<typeof coordinateSchema>;
 export type PlanAddress = z.infer<typeof planAddressSchema>;
 export type PlanActivitySelection = z.infer<typeof planActivitySelectionSchema>;
@@ -148,6 +155,13 @@ export type PlanStopKind = z.infer<typeof planStopKindSchema>;
 export type PlanStop = z.infer<typeof planStopSchema>;
 export type PlanPhase = z.infer<typeof planPhaseSchema>;
 export type PlanResult = z.infer<typeof planResultSchema>;
+
+export function mergePlanResultFromAgentOutput(
+  output: PlanAgentModelResult,
+  request: PlanRequest,
+): PlanResult {
+  return planResultSchema.parse({ ...output, request });
+}
 export type EvConnectorSlug = z.infer<typeof evConnectorSlugSchema>;
 
 export type PlanCatalogResponse = {
