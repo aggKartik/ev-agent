@@ -1,21 +1,25 @@
-import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
+
+const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
+const DEFAULT_MODEL = 'openai/gpt-oss-120b:free';
 
 export function getPlanModel() {
-  const raw = process.env.AI_PROVIDER?.trim();
-  const provider =
-    raw === undefined || raw === '' ? 'anthropic' : raw.toLowerCase();
-
-  if (provider === 'anthropic') {
-    return anthropic('claude-sonnet-4-5');
-  }
-
-  if (provider === 'openai') {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
     throw new Error(
-      'AI_PROVIDER=openai requires @ai-sdk/openai; not yet wired',
+      'OPENAI_API_KEY is required for the plan agent. For OpenRouter (free tiers), create a key at https://openrouter.ai/keys',
     );
   }
 
-  throw new Error(
-    `Unsupported AI_PROVIDER="${raw ?? ''}". Use "anthropic" (default). "openai" is not wired yet.`,
-  );
+  const baseURL = process.env.OPENAI_BASE_URL?.trim() || DEFAULT_BASE_URL;
+  const modelId = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
+
+  const openai = createOpenAI({
+    baseURL,
+    apiKey,
+  });
+
+  // Use `.chat()` so requests hit `/chat/completions` (OpenRouter); the default
+  // `openai(modelId)` uses the Responses API, which OpenRouter rejects here.
+  return openai.chat(modelId);
 }
