@@ -153,3 +153,15 @@ export async function resolveClerkFirstName(
     return null;
   }
 }
+
+/**
+ * Persists the **Driver**'s chosen first name to Clerk profile (email-code
+ * sign-ups arrive without OAuth-populated {@link resolveClerkFirstName}).
+ */
+export async function setClerkUserFirstName(
+  clerkUserId: string,
+  firstName: string,
+): Promise<void> {
+  const client = await clerkClient();
+  await client.users.updateUser(clerkUserId, { firstName });
+}

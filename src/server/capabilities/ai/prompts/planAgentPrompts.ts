@@ -54,7 +54,7 @@ Plan a day trip with these parameters:
 
 From: ${request.from.full}${fromCoord}
 To: ${request.to.full}${toCoord}
-When: ${request.dates}
+When: today (single-day trip)
 
 Vehicle label: ${request.vehicleLabel}
 Energy model hints: SOC ${request.startingSocPercent}% → arrival floor ${request.targetArrivalSocPercent}%; pack ${request.batteryCapacityKWh} kWh; ~${request.consumptionWhPerMile} Wh/mi connectors [${request.connectorTypes.join(', ')}]
