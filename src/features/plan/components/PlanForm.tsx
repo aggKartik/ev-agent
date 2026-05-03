@@ -6,13 +6,15 @@ import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
 import Input from '#/components/ui/Input';
 import { Text } from '#/components/ui/Text';
+import { useCurrentLocation } from '#/features/plan/hooks/useCurrentLocation';
 import {
   CONNECTOR_OPTION_ORDER,
   type PlanForm as PlanFormApi,
 } from '#/features/plan/hooks/usePlanForm';
 import { useLastPlanningError } from '#/features/plan/store';
-import type { PlanCatalogResponse } from '#/shared/plan/contracts';
+import type { PlanContextResponse } from '#/shared/plan/contracts';
 import { planRequestSchema } from '#/shared/plan/contracts';
+import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { css, cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { sectionHeader } from '#/styled-system/recipes/section-header';
@@ -25,7 +27,7 @@ import {
 } from './PlanAddressField';
 
 type PlanFormProps = {
-  catalog: PlanCatalogResponse;
+  context: PlanContextResponse<VehicleEnergyProfile | null>;
   form: PlanFormApi;
   disabled?: boolean;
   onBack?: () => void;
@@ -85,19 +87,19 @@ const vehicleSublabelClass = css({
 });
 
 export default function PlanForm({
-  catalog,
+  context,
   form,
   disabled = false,
   onBack,
 }: PlanFormProps) {
   const lastPlanningError = useLastPlanningError();
   const values = useStore(form.store, (state) => state.values);
+  const currentLocation = useCurrentLocation();
   const canPlan = useMemo(
     () =>
       planRequestSchema.safeParse({
         from: values.from,
         to: values.to,
-        dates: values.dates,
         activities: values.activities,
         vehicleLabel: values.vehicleLabel,
         usableRangeMiles: values.usableRangeMiles,
@@ -144,38 +146,56 @@ export default function PlanForm({
         <form.Field name="from">
           {(fromField) => (
             <form.Field name="fromLocked">
-              {(lockedField) => (
-                <PlanAddressField
-                  label="START"
-                  value={fromField.state.value.full}
-                  kind="start"
-                  action={
-                    lockedField.state.value ? (
-                      <Box
-                        className={cx(
-                          chip({ size: 'status', tone: 'charge' }),
-                          autoChipClass,
-                        )}
-                      >
-                        <Icon icon={Crosshair} size="xs" />
-                        AUTO · FROM CAR
-                      </Box>
-                    ) : null
-                  }
-                  onChange={(value) => {
-                    lockedField.handleChange(false);
-                    fromField.handleChange({ full: value });
-                  }}
-                  onSelect={(address) => {
-                    lockedField.handleChange(false);
-                    fromField.handleChange(address);
-                  }}
-                  onUseCar={() => {
-                    fromField.handleChange(catalog.carLocation);
-                    lockedField.handleChange(true);
-                  }}
-                />
-              )}
+              {(lockedField) => {
+                const autoLabel =
+                  currentLocation.source === 'tesla'
+                    ? 'AUTO · FROM CAR'
+                    : currentLocation.source === 'device'
+                      ? 'AUTO · THIS DEVICE'
+                      : null;
+                return (
+                  <PlanAddressField
+                    label="START"
+                    value={fromField.state.value.full}
+                    kind="start"
+                    proximity={
+                      fromField.state.value.coordinate ??
+                      currentLocation.address?.coordinate
+                    }
+                    action={
+                      lockedField.state.value && autoLabel ? (
+                        <Box
+                          className={cx(
+                            chip({ size: 'status', tone: 'charge' }),
+                            autoChipClass,
+                          )}
+                        >
+                          <Icon icon={Crosshair} size="xs" />
+                          {autoLabel}
+                        </Box>
+                      ) : null
+                    }
+                    onChange={(value) => {
+                      lockedField.handleChange(false);
+                      fromField.handleChange({ full: value });
+                    }}
+                    onSelect={(address) => {
+                      lockedField.handleChange(false);
+                      fromField.handleChange(address);
+                    }}
+                    onUseCar={
+                      currentLocation.address
+                        ? () => {
+                            const addr = currentLocation.address;
+                            if (!addr) return;
+                            fromField.handleChange(addr);
+                            lockedField.handleChange(true);
+                          }
+                        : undefined
+                    }
+                  />
+                );
+              }}
             </form.Field>
           )}
         </form.Field>
@@ -186,6 +206,9 @@ export default function PlanForm({
               label="DESTINATION"
               value={field.state.value.full}
               kind="end"
+              proximity={
+                currentLocation.address?.coordinate ?? values.from.coordinate
+              }
               onChange={(value) => field.handleChange({ full: value })}
               onSelect={(address) => field.handleChange(address)}
             />
@@ -315,32 +338,6 @@ export default function PlanForm({
           </form.Field>
         </Box>
 
-        <form.Field name="dates">
-          {(field) => (
-            <Box className={fieldClass}>
-              <Box className={heroHeaderClasses.label}>DATES</Box>
-              <Box className={chipRowClass}>
-                {catalog.dateOptions.map((option) => {
-                  const selected = field.state.value === option;
-                  return (
-                    <Button
-                      key={option}
-                      type="button"
-                      unstyled
-                      contentMode="custom"
-                      className={chip({ size: 'compact', selected })}
-                      aria-pressed={selected}
-                      onClick={() => field.handleChange(option)}
-                    >
-                      {option}
-                    </Button>
-                  );
-                })}
-              </Box>
-            </Box>
-          )}
-        </form.Field>
-
         <form.Field name="activities">
           {(field) => (
             <Box className={fieldClass}>
@@ -352,7 +349,7 @@ export default function PlanForm({
                 <span>{field.state.value.length} SELECTED</span>
               </Flex>
               <ActivitySelector
-                catalog={catalog.activities}
+                catalog={context.activities}
                 value={field.state.value}
                 onChange={field.handleChange}
               />

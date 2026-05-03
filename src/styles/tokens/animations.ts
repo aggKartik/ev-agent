@@ -37,6 +37,10 @@ export const keyframes = {
     '0%': { opacity: '0', transform: 'translateY(20px)' },
     '100%': { opacity: '1', transform: 'translateY(0)' },
   },
+  stepInBack: {
+    '0%': { opacity: '0', transform: 'translateY(-20px)' },
+    '100%': { opacity: '1', transform: 'translateY(0)' },
+  },
   wpPulse: {
     '0%, 100%': { transform: 'scale(1)', opacity: '0.8' },
     '50%': { transform: 'scale(1.1)', opacity: '1' },

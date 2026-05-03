@@ -1,8 +1,7 @@
 import type {
-  DashboardActivityEvent,
-  DashboardRecentTrip,
   DashboardSummary,
   DashboardTeslaSummary,
+  DashboardTeslaVehicle,
   DashboardUtilityTile,
 } from '#/features/dashboard/types/contracts';
 import {
@@ -12,14 +11,6 @@ import {
   DASHBOARD_RECENT_TRIPS,
   DASHBOARD_UTILITY_TILES,
 } from '#/features/dashboard/utils/data';
-
-export function getFallbackRecentTrips(): DashboardRecentTrip[] {
-  return DASHBOARD_RECENT_TRIPS;
-}
-
-export function getFallbackActivityFeed(): DashboardActivityEvent[] {
-  return DASHBOARD_ACTIVITY_FEED;
-}
 
 export function getDashboardUtilities(
   tesla: DashboardTeslaSummary,
@@ -50,8 +41,8 @@ export function buildDashboardSummary(args: {
     },
     tesla: args.tesla,
     quickDestinations: DASHBOARD_QUICK_DESTINATIONS,
-    recentTrips: getFallbackRecentTrips(),
-    activityFeed: getFallbackActivityFeed(),
+    recentTrips: DASHBOARD_RECENT_TRIPS,
+    activityFeed: DASHBOARD_ACTIVITY_FEED,
     utilities: getDashboardUtilities(args.tesla),
   };
 }
@@ -61,6 +52,56 @@ export function getDashboardFallbackSummary(): DashboardSummary {
     firstName: null,
     tesla: DASHBOARD_FALLBACK_TESLA,
   });
+}
+
+/**
+ * Map a raw `TeslaVehicleSummary` (server shape) into the dashboard's
+ * vehicle contract. Pure function so the live hook + tests can both use
+ * it.
+ */
+export function teslaVehicleSummaryToDashboard(args: {
+  id: string;
+  vin: string | null;
+  displayName: string | null;
+  state: string | null;
+  batteryLevel: number | null;
+  chargeLimitSoc: number | null;
+  batteryRangeMi: number | null;
+  odometerMi: number | null;
+  model?: string | null;
+  year?: string | null;
+}): DashboardTeslaVehicle {
+  const trimmedName = args.displayName?.trim();
+  return {
+    id: args.id,
+    vin: args.vin,
+    displayName: trimmedName ? trimmedName : 'Tesla',
+    model: args.model ?? null,
+    year: args.year ?? null,
+    state: args.state,
+    batteryLevel: args.batteryLevel,
+    rangeMi: args.batteryRangeMi,
+    odometerMi: args.odometerMi,
+    chargeLimitSoc: args.chargeLimitSoc,
+  };
+}
+
+export function buildLinkedTeslaSummary(args: {
+  vehicle: DashboardTeslaVehicle;
+  refreshedAt: string;
+}): DashboardTeslaSummary {
+  const isAsleep = args.vehicle.state?.toLowerCase() === 'asleep';
+  return {
+    status: isAsleep ? 'offline' : 'linked',
+    label: isAsleep ? 'Asleep' : 'Live',
+    detail: isAsleep
+      ? 'Vehicle asleep — last known telemetry shown.'
+      : 'Telemetry refreshed from Tesla.',
+    linked: true,
+    scopes: [],
+    vehicle: args.vehicle,
+    refreshedAt: args.refreshedAt,
+  };
 }
 
 export function formatDashboardDate(value: string): string {

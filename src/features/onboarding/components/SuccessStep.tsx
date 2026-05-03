@@ -8,15 +8,17 @@ import { css } from '#/styled-system/css';
 import { step } from '#/styled-system/recipes/step';
 
 type SuccessStepProps = {
-  makeState?: string;
-  modelState?: string;
+  carSummary?: string;
   onNext: () => void;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
 };
 
 export default function SuccessStep({
-  makeState,
-  modelState,
+  carSummary,
   onNext,
+  isSubmitting,
+  errorMessage,
 }: SuccessStepProps) {
   const stepClasses = step();
   const actionsClass = css({
@@ -27,6 +29,8 @@ export default function SuccessStep({
     flexWrap: 'wrap',
   });
 
+  const carLabel = (carSummary ?? '').trim() || undefined;
+
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
@@ -35,13 +39,21 @@ export default function SuccessStep({
           All set. Let's hit the <Box as="em">road</Box>.
         </Text>
         <Text className={stepClasses.desc}>
-          We've compiled your vehicle data, range profile, and stop preferences.
-          Generating your first smart itinerary...
+          We've synced your Tesla vehicle data with our range profiles and trip
+          tools. Saving your dashboard…
         </Text>
+
+        {errorMessage ? (
+          <Text marginTop="3" color="magenta.300" role="alert">
+            {errorMessage}
+          </Text>
+        ) : null}
 
         <Stack direction="row" className={actionsClass}>
           <Button
             onClick={onNext}
+            loading={isSubmitting}
+            loadingText="Saving"
             trailingIcon={<Icon icon={ArrowRight} size="sm" tone="default" />}
           >
             Launch dashboard
@@ -50,7 +62,7 @@ export default function SuccessStep({
       </Stack>
       <VisualPanel
         kind="success"
-        data={{ car: `${makeState} ${modelState}` }}
+        data={carLabel ? { car: carLabel } : undefined}
       />
     </Box>
   );

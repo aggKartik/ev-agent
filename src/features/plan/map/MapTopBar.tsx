@@ -22,9 +22,12 @@ type MapTopBarProps = {
 };
 
 export default function MapTopBar({ result, classes, onEdit }: MapTopBarProps) {
-  const summary = `${result.request.dates} · ${formatPlanMinutes(
+  const stops = result.totals.chargeStops;
+  const chargeStopLabel =
+    stops === 1 ? '1 charge stop' : `${stops} charge stops`;
+  const summary = `Today · ${formatPlanMinutes(
     result.totals.driveMinutes + result.totals.dwellMinutes,
-  )} · ${result.totals.miles} mi · ${result.totals.chargeStops} charge stops`;
+  )} · ${result.totals.miles} mi · ${chargeStopLabel}`;
 
   return (
     <Box className={classes.topbar}>

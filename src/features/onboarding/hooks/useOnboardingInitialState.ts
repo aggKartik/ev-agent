@@ -14,7 +14,7 @@ export function useOnboardingInitialState(): PersistedState {
   const [initial] = useState<PersistedState>(
     () =>
       readPersisted() ?? {
-        step: 'INTRO_CAR',
+        step: 'NAME',
         values: defaultFormValues(),
       },
   );

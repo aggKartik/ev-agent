@@ -7,9 +7,8 @@ import type {
 import { usePlanFlowStore } from './store';
 
 const baseRequest = {
-  from: { full: 'Origin' },
-  to: { full: 'Destination' },
-  dates: 'Sat',
+  from: { full: 'Origin', coordinate: { lat: 37.77, lng: -122.42 } },
+  to: { full: 'Destination', coordinate: { lat: 37.8, lng: -122.27 } },
   activities: [{ id: 'coffee', dwellMinutes: 30 }],
   vehicleLabel: 'Test Car',
   usableRangeMiles: 250,

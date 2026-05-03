@@ -16,7 +16,7 @@ type ConnectStepProps = {
   errorReason?: string;
   /**
    * Map from provider slug to a short detail string to display on the tile
-   * once it's connected (e.g. the linked vehicle's display name).
+   * once it's connected (e.g. the linked vehicle summary).
    */
   connectedDetails?: Partial<Record<string, string | null>>;
 };
@@ -30,42 +30,13 @@ type ProviderTile = {
   icon: string;
 };
 
-/**
- * Presentational overrides keyed by provider slug. Every OAuth-enabled
- * integration registered in `src/server/integrations/*` flows through
- * `trpc.oauth.list` and picks up its icon glyph here; anything not yet
- * wired server-side falls back to the static placeholder tiles below.
- */
 const providerIcons: Record<string, string> = {
   tesla: 'T',
 };
 
-const placeholderTiles: ProviderTile[] = [
-  {
-    slug: 'rivian',
-    label: 'Rivian',
-    description:
-      'State of charge, camp mode preferences, Adventure Network stalls.',
-    oauth: false,
-    icon: 'R',
-  },
-  {
-    slug: 'smartcar',
-    label: 'Smartcar',
-    description: 'One link that covers Ford, Hyundai, Kia, Chevrolet and more.',
-    oauth: false,
-    icon: 'S',
-  },
-];
-
 /**
- * Reflects "this provider is already linked server-side" into the parent
- * form state so the CONNECT step's primary action can flip from "Skip for
- * now" to "Continue" without any manual user interaction.
- *
- * Only populates the field when it is empty so that multiple linked
- * providers don't fight each other in a render loop — the first linked
- * provider wins, subsequent ones no-op unless the user clears the field.
+ * Mirrors "this OAuth provider is already linked server-side" into the parent
+ * form state so CONNECT step navigation stays in sync without extra clicks.
  */
 function useReflectLinkedProvider(args: {
   enabled: boolean;
@@ -137,10 +108,6 @@ function ProviderOption({
       return;
     }
     if (isConnected) {
-      // Already linked server-side — a second click must NOT kick off a
-      // fresh OAuth redirect (the user would bounce through Tesla's
-      // login again for no benefit). Re-asserting the form value keeps
-      // the step's primary action on "Continue".
       onChange(tile.label);
       return;
     }
@@ -199,7 +166,7 @@ function formatConnectError(reason: string): string {
     user_mismatch: 'Account mismatch during linking. Try again.',
     missing: 'Link session expired. Try again.',
     signature: 'Invalid link session. Try again.',
-    provider_mismatch: 'Provider mismatch. Try again.',
+    provider_mismatch: 'Provider mismatch during linking. Try again.',
     ttl: 'Link session timed out. Try again.',
   };
   return map[reason] ?? reason.replaceAll('_', ' ');
@@ -223,8 +190,6 @@ export default function ConnectStep({
     icon: providerIcons[p.slug] ?? p.label.charAt(0).toUpperCase(),
   }));
 
-  const tiles: ProviderTile[] = [...oauthTiles, ...placeholderTiles];
-
   const handleOAuthTileSelect = useCallback(
     (tile: ProviderTile) => {
       onChange(tile.label);
@@ -238,13 +203,13 @@ export default function ConnectStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>01 · TELEMETRY</Box>
+        <Box className={stepClasses.kicker}>02 · TELEMETRY</Box>
         <Text as="h1" className={stepClasses.title}>
-          Link your car for <Box as="em">live data</Box>.
+          Link Tesla for <Box as="em">live data</Box>.
         </Text>
         <Text className={stepClasses.desc}>
-          Optional. With a live link we know your exact battery % and can send
-          routes straight to the in-car nav.
+          Required. Fleet telemetry lets us infer your vehicle, range profile,
+          and charging context — routes stay calibrated to how you drive.
         </Text>
 
         {errorReason ? (
@@ -265,8 +230,8 @@ export default function ConnectStep({
         ) : null}
 
         <Box className={stepClasses.field} maxWidth="520px">
-          <Stack>
-            {tiles.map((tile) => (
+          <Stack gap="4">
+            {oauthTiles.map((tile) => (
               <ProviderOption
                 key={tile.slug}
                 tile={tile}
@@ -277,6 +242,12 @@ export default function ConnectStep({
                 connectedDetail={connectedDetails?.[tile.slug] ?? null}
               />
             ))}
+            {oauthTiles.length === 0 ? (
+              <Text textStyle="caption" color="cream.600">
+                No vehicle integrations are wired up yet — check Tesla OAuth
+                config.
+              </Text>
+            ) : null}
           </Stack>
         </Box>
       </Stack>

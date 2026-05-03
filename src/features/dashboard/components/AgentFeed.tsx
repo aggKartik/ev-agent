@@ -24,26 +24,33 @@ export default function AgentFeed({ events }: AgentFeedProps) {
             Watching
           </Box>
         </Box>
-        <Box as="ul" className={slots.feedList}>
-          {events.map((event) => (
-            <Box
-              as="li"
-              key={event.id}
-              className={slots.feedRow}
-              style={toneStyle(event.tone)}
-            >
-              <Box as="span" className={slots.feedTime}>
-                {event.time}
+        {events.length === 0 ? (
+          <Box padding="3" textStyle="caption" color="cream.600">
+            Your agent activity will appear here once you&apos;ve planned a
+            trip.
+          </Box>
+        ) : (
+          <Box as="ul" className={slots.feedList}>
+            {events.map((event) => (
+              <Box
+                as="li"
+                key={event.id}
+                className={slots.feedRow}
+                style={toneStyle(event.tone)}
+              >
+                <Box as="span" className={slots.feedTime}>
+                  {event.time}
+                </Box>
+                <Box as="span" className={slots.feedBullet} aria-hidden="true">
+                  ▸
+                </Box>
+                <Box as="span" className={slots.feedMessage}>
+                  {event.message}
+                </Box>
               </Box>
-              <Box as="span" className={slots.feedBullet} aria-hidden="true">
-                ▸
-              </Box>
-              <Box as="span" className={slots.feedMessage}>
-                {event.message}
-              </Box>
-            </Box>
-          ))}
-        </Box>
+            ))}
+          </Box>
+        )}
       </Box>
     </Box>
   );

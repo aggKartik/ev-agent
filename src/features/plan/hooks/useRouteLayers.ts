@@ -14,7 +14,7 @@ import type {
   PlanResult,
   PlanStop,
 } from '#/shared/plan/contracts';
-import { resolvePlanCoordinate } from '#/shared/plan/helpers';
+import { tryResolvePlanCoordinate } from '#/shared/plan/helpers';
 
 type LayerState = {
   route?: Leaflet.Polyline;
@@ -167,7 +167,8 @@ function addPreviewMarkers(
   request: PlanRequest,
   layers: LayerState,
 ) {
-  const from = resolvePlanCoordinate(request.from);
+  const from = tryResolvePlanCoordinate(request.from);
+  if (!from) return;
   const previewMarkers: Array<
     Pick<PlanStop, 'color' | 'iconKey' | 'kind' | 'name'> & {
       coordinate: Coordinate;
@@ -181,9 +182,10 @@ function addPreviewMarkers(
       kind: 'start',
     },
   ];
-  if (request.to.full.trim().length > 0) {
+  const to = tryResolvePlanCoordinate(request.to);
+  if (request.to.full.trim().length > 0 && to) {
     previewMarkers.push({
-      coordinate: resolvePlanCoordinate(request.to),
+      coordinate: to,
       color: PLAN_COLORS.end,
       iconKey: 'flag',
       name: cleanPlanAddress(request.to.full),

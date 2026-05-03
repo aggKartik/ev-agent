@@ -18,16 +18,30 @@ export interface UserTable {
   createdAt: ColumnType<Date, string | undefined, never>;
 }
 
-export interface CarTable {
+/**
+ * The persisted **Vehicle** row, 1:1 with `users`. Identity columns are
+ * Tesla-authoritative when linked, manual otherwise. Catalog-derivable
+ * energy facts are not stored here — see
+ * `src/server/capabilities/vehicles/domain/resolveEnergyProfile.ts` for the
+ * read-time merger over `(override -> catalog -> default)`.
+ */
+export interface VehicleTable {
   id: Generated<number>;
-  name: string;
-  createdAt: ColumnType<Date, string | undefined, never>;
-}
-
-export interface UserCarTable {
   userId: number;
-  carId: number;
+  make: string;
+  model: string;
+  year: string;
+  vin: string | null;
+  teslaVehicleId: string | null;
+  targetArrivalSocPercent: number;
+  postChargeSocPercent: number;
+  overrideUsableRangeMiles: number | null;
+  overrideBatteryCapacityKwh: number | null;
+  overrideConsumptionWhPerMile: number | null;
+  /** Stored as JSONB; always read as `EvConnectorSlug[]` after parsing. */
+  overrideConnectorTypes: string[] | null;
   createdAt: ColumnType<Date, string | undefined, never>;
+  updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 /**
@@ -55,8 +69,7 @@ export interface OAuthAccountTable {
 
 export interface Database {
   users: UserTable;
-  cars: CarTable;
-  userCars: UserCarTable;
+  vehicles: VehicleTable;
   oauthAccounts: OAuthAccountTable;
 }
 
@@ -64,13 +77,9 @@ export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UserUpdate = Updateable<UserTable>;
 
-export type Car = Selectable<CarTable>;
-export type NewCar = Insertable<CarTable>;
-export type CarUpdate = Updateable<CarTable>;
-
-export type UserCar = Selectable<UserCarTable>;
-export type NewUserCar = Insertable<UserCarTable>;
-export type UserCarUpdate = Updateable<UserCarTable>;
+export type Vehicle = Selectable<VehicleTable>;
+export type NewVehicle = Insertable<VehicleTable>;
+export type VehicleUpdate = Updateable<VehicleTable>;
 
 export type OAuthAccount = Selectable<OAuthAccountTable>;
 export type NewOAuthAccount = Insertable<OAuthAccountTable>;

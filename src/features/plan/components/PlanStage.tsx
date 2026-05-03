@@ -15,11 +15,12 @@ import {
   useStatus,
   useStreamedStops,
 } from '#/features/plan/store';
-import type { PlanCatalogResponse } from '#/shared/plan/contracts';
+import type { PlanContextResponse } from '#/shared/plan/contracts';
+import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { css } from '#/styled-system/css';
 
 type PlanStageProps = {
-  catalog: PlanCatalogResponse;
+  context: PlanContextResponse<VehicleEnergyProfile | null>;
   form: PlanFormApi;
   isSubmitting: boolean;
 };
@@ -49,7 +50,7 @@ const mapColumnClass = css({
 });
 
 export default function PlanStage({
-  catalog,
+  context,
   form,
   isSubmitting,
 }: PlanStageProps) {
@@ -72,13 +73,13 @@ export default function PlanStage({
         <PlanningLog request={activeRequest} />
       ) : (
         <PlanForm
-          catalog={catalog}
+          context={context}
           form={form}
           disabled={isSubmitting}
           onBack={() => {
             void navigate({
               to: '/onboarding',
-              search: emptyOnboardingSearch,
+              search: { ...emptyOnboardingSearch, force: true },
             });
           }}
         />

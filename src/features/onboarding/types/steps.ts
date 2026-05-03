@@ -4,40 +4,22 @@
  * and tests alike.
  */
 
-export const steps = [
-  'INTRO_CAR',
-  'CONNECT',
-  'NAME',
-  'MAKE',
-  'MODEL',
-  'YEAR',
-  'PREFS',
-  'SUCCESS',
-] as const;
+export const steps = ['NAME', 'CONNECT', 'SUCCESS'] as const;
 
 export type Step = (typeof steps)[number];
 
 export type OnboardingFormValues = {
   name: string;
-  make: string;
-  model: string;
-  year: string;
+  /** Reflects Tesla connection state — used only for CONNECT step UX. */
   connect: string;
-  prefs: string[];
 };
 
 export const defaultFormValues = (): OnboardingFormValues => ({
   name: '',
-  make: '',
-  model: '',
-  year: '',
   connect: '',
-  prefs: [],
 });
 
-export const formSteps = steps.filter(
-  (step) => step !== 'INTRO_CAR' && step !== 'SUCCESS',
-);
+export const formSteps = steps.filter((step) => step !== 'SUCCESS');
 
 export type FormStep = (typeof formSteps)[number];
 
@@ -50,23 +32,9 @@ export const formStepNavConfig: Partial<Record<FormStep, FormStepNavConfig>> = {
   NAME: {
     canAdvance: (values) => values.name.trim().length > 0,
   },
-  MAKE: {
-    canAdvance: (values) => Boolean(values.make),
-  },
-  MODEL: {
-    canAdvance: (values) => Boolean(values.model),
-  },
-  YEAR: {
-    canAdvance: (values) => values.year.length === 4,
-  },
   CONNECT: {
-    canAdvance: () => true,
-    getPrimaryActionLabel: (values) =>
-      values.connect ? 'Continue' : 'Skip for now',
-  },
-  PREFS: {
-    canAdvance: () => true,
-    getPrimaryActionLabel: () => 'Review Route',
+    canAdvance: () => false,
+    getPrimaryActionLabel: () => 'Continue',
   },
 };
 
@@ -85,7 +53,6 @@ export function getPreviousStep(step: Step): Step {
 }
 
 export function getProgress(step: Step): number {
-  if (step === 'INTRO_CAR') return 0;
   if (step === 'SUCCESS') return 100;
   const formIndex = formSteps.indexOf(step);
   if (formIndex < 0) return 0;

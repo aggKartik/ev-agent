@@ -1,16 +1,28 @@
+import { z } from 'zod';
 import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
-import { resolveClerkFirstName } from '#/server/users';
+import { resolveClerkFirstName, setClerkUserFirstName } from '#/server/users';
+
+const setFirstNameInputSchema = z.object({
+  firstName: z.string().trim().min(1).max(64),
+});
 
 /**
  * Current-user procedures. Today this exposes a thin `profile` query so the
  * onboarding flow can prefill the NAME step with Clerk's first name when
  * the user signed in via an OAuth provider that populated it (Google). Email-
  * code sign-ins return `firstName: null` and the UI falls back to an empty
- * input.
+ * input. Onboarding persists the driver's chosen first name via setFirstName.
  */
 export const userRouter = router({
   profile: protectedProcedure.query(async ({ ctx }) => {
     const firstName = await resolveClerkFirstName(ctx.clerkUserId);
     return { firstName };
   }),
+
+  setFirstName: protectedProcedure
+    .input(setFirstNameInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      await setClerkUserFirstName(ctx.clerkUserId, input.firstName);
+      return { ok: true as const };
+    }),
 });

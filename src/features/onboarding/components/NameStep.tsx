@@ -17,7 +17,7 @@ export default function NameStep({ value, onChange, onNext }: NameStepProps) {
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>02 · WHO'S DRIVING</Box>
+        <Box className={stepClasses.kicker}>01 · WHO'S DRIVING</Box>
         <Text as="h1" className={stepClasses.title}>
           What should we <Box as="em">call you</Box>?
         </Text>

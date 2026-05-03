@@ -1,20 +1,31 @@
 import { useForm } from '@tanstack/react-form';
+import {
+  PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+  PLAN_DEFAULT_CONNECTOR_TYPES,
+  PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
+  PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
+  PLAN_DEFAULT_STARTING_SOC_PERCENT,
+  PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
+  PLAN_DEFAULT_USABLE_RANGE_MILES,
+  PLAN_DEFAULT_VEHICLE_LABEL,
+} from '#/shared/plan/constants';
 import type {
   EvConnectorSlug,
-  PlanCatalogResponse,
+  PlanAddressDraft,
+  PlanContextResponse,
   PlanRequest,
 } from '#/shared/plan/contracts';
 import { planRequestSchema } from '#/shared/plan/contracts';
+import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 
 type UsePlanFormArgs = {
-  catalog: PlanCatalogResponse;
+  context: PlanContextResponse<VehicleEnergyProfile | null>;
   onSubmit: (request: PlanRequest) => void;
 };
 
 export type PlanFormValues = {
-  from: PlanRequest['from'];
-  to: PlanRequest['to'];
-  dates: PlanRequest['dates'];
+  from: PlanAddressDraft;
+  to: PlanAddressDraft;
   activities: PlanRequest['activities'];
   vehicleLabel: PlanRequest['vehicleLabel'];
   usableRangeMiles: PlanRequest['usableRangeMiles'];
@@ -36,21 +47,37 @@ export const CONNECTOR_OPTION_ORDER: EvConnectorSlug[] = [
   'CHADEMO',
 ];
 
-export function usePlanForm({ catalog, onSubmit }: UsePlanFormArgs) {
+/**
+ * Plan form factory. Defaults derive from the resolved
+ * **Vehicle Energy Profile** the server passed in `plan.context` so the
+ * Driver never re-enters their car. When no profile is present (the
+ * `/plan` route normally redirects to onboarding before that happens) the
+ * platform `PLAN_DEFAULT_*` constants carry.
+ */
+export function usePlanForm({ context, onSubmit }: UsePlanFormArgs) {
+  const profile = context.vehicleProfile;
   return useForm({
     defaultValues: {
-      from: catalog.carLocation,
-      to: { full: '' } as PlanRequest['to'],
-      dates: catalog.dateOptions[0] ?? 'Flexible',
+      from: { full: '' } as PlanAddressDraft,
+      to: { full: '' } as PlanAddressDraft,
       activities: [] as PlanRequest['activities'],
-      vehicleLabel: catalog.defaultVehicleLabel,
-      usableRangeMiles: catalog.defaultUsableRangeMiles,
-      startingSocPercent: catalog.defaultStartingSocPercent,
-      targetArrivalSocPercent: catalog.defaultTargetArrivalSocPercent,
-      batteryCapacityKWh: catalog.defaultBatteryCapacityKWh,
-      consumptionWhPerMile: catalog.defaultConsumptionWhPerMile,
-      connectorTypes: [...catalog.defaultConnectorTypes],
-      postChargeSocPercent: catalog.defaultPostChargeSocPercent,
+      vehicleLabel: profile?.vehicleLabel ?? PLAN_DEFAULT_VEHICLE_LABEL,
+      usableRangeMiles:
+        profile?.usableRangeMiles ?? PLAN_DEFAULT_USABLE_RANGE_MILES,
+      startingSocPercent: PLAN_DEFAULT_STARTING_SOC_PERCENT,
+      targetArrivalSocPercent:
+        profile?.preferences.targetArrivalSocPercent ??
+        PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
+      batteryCapacityKWh:
+        profile?.batteryCapacityKWh ?? PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+      consumptionWhPerMile:
+        profile?.consumptionWhPerMile ?? PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
+      connectorTypes: profile?.connectorTypes ?? [
+        ...PLAN_DEFAULT_CONNECTOR_TYPES,
+      ],
+      postChargeSocPercent:
+        profile?.preferences.postChargeSocPercent ??
+        PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
       fromLocked: true as boolean,
     } satisfies PlanFormValues,
     onSubmit: ({ value }) => {

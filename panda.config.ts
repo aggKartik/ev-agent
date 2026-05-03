@@ -34,6 +34,7 @@ import {
   panelRecipe,
   progressRecipe,
   mapChromeRecipe,
+  onboardingRecipe,
   sectionHeaderRecipe,
   selectableCardRecipe,
   selectableRowRecipe,
@@ -90,6 +91,7 @@ export default defineConfig({
       slotRecipes: {
         progress: progressRecipe,
         mapChrome: mapChromeRecipe,
+        onboarding: onboardingRecipe,
         sectionHeader: sectionHeaderRecipe,
         selectableCard: selectableCardRecipe,
         selectableRow: selectableRowRecipe,

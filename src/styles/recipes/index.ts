@@ -6,6 +6,7 @@ export { dashboardRecipe } from './dashboard';
 export { iconRecipe } from './icon';
 export { inputRecipe } from './input';
 export { mapChromeRecipe } from './mapChrome';
+export { onboardingRecipe } from './onboarding';
 export { optionRecipe } from './option';
 export { panelRecipe } from './panel';
 export { progressRecipe } from './progress';

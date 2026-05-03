@@ -14,6 +14,7 @@ type DashboardStageProps = {
   onPlan: () => void;
   onConnectTesla: () => void;
   onRefresh: () => void;
+  onRerunSetup: () => void;
 };
 
 const NAV_ITEMS = ['Home', 'Trips', 'Charge', 'Saved'] as const;
@@ -24,6 +25,7 @@ export default function DashboardStage({
   onPlan,
   onConnectTesla,
   onRefresh,
+  onRerunSetup,
 }: DashboardStageProps) {
   const slots = dashboard();
   const driverFirstName =
@@ -66,6 +68,7 @@ export default function DashboardStage({
             isRefreshing={isRefreshing}
             onRefresh={onRefresh}
             onConnect={onConnectTesla}
+            onRerunSetup={onRerunSetup}
           />
         </Box>
 

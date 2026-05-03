@@ -3,9 +3,8 @@ import { planRequestSchema } from '#/shared/plan/contracts';
 import { recoverPlanResultFromRepairedModelText } from './planAgentModelParse';
 
 const baseRequest = planRequestSchema.parse({
-  from: { full: 'Origin St' },
-  to: { full: 'Dest Blvd' },
-  dates: 'Sat',
+  from: { full: 'Origin St', coordinate: { lat: 37.77, lng: -122.42 } },
+  to: { full: 'Dest Blvd', coordinate: { lat: 37.8, lng: -122.27 } },
   activities: [{ id: 'coffee', dwellMinutes: 30 }],
 });
 

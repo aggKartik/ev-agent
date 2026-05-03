@@ -3,10 +3,13 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/server/platform/db/types';
 
 /**
- * User directory. The `users` table is our internal source of truth;
- * everything else (OAuth accounts, cars, etc.) joins into `users.id`.
- * External identity providers (Clerk today, anything else tomorrow) are resolved
- * into a user row via helpers in this module.
+ * User directory — **intentional barrel** (see AGENTS.md: prefer direct imports
+ * unless a façade reduces churn). Re-exported helpers for Clerk linking and
+ * profile fields; route guards may import `#/server/users/requireVehicle` alone.
+ *
+ * The `users` table is our internal source of truth; everything else (OAuth
+ * accounts, vehicles, etc.) joins into `users.id`. External identity providers
+ * (Clerk today, anything else tomorrow) resolve into a user row via helpers here.
  */
 
 /**
@@ -152,4 +155,16 @@ export async function resolveClerkFirstName(
   } catch {
     return null;
   }
+}
+
+/**
+ * Persists the **Driver**'s chosen first name to Clerk profile (email-code
+ * sign-ups arrive without OAuth-populated {@link resolveClerkFirstName}).
+ */
+export async function setClerkUserFirstName(
+  clerkUserId: string,
+  firstName: string,
+): Promise<void> {
+  const client = await clerkClient();
+  await client.users.updateUser(clerkUserId, { firstName });
 }
