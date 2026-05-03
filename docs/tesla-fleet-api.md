@@ -107,22 +107,32 @@ on the authorize URL.
 
 ## 3. Partner domain registration + public key
 
-The user has already provisioned a partner-level Tesla developer app
-(client_id + client_secret issued at developer.tesla.com) and completed the
-partner registration via `POST /api/1/partner_accounts`. Tesla requires:
+Every **deployment host** that serves OAuth (`OAUTH_BASE_URL`) must complete
+Tesla’s partner flow or Fleet calls return **HTTP 412** (see §6). Do this in
+order:
 
-- A partner access token minted from `POST /oauth2/v3/token` with
-  `grant_type=client_credentials` and `audience=<fleet-api base URL>`.
-- Registration body: `{ "domain": "app-host.example.com" }` (must match an
-  `allowed_origin` root on developer.tesla.com).
-- A PEM-encoded EC public key (secp256r1 / prime256v1) hosted at
-  `https://<domain>/.well-known/appspecific/com.tesla.3p.public-key.pem`.
-  Mandatory even for read-only integrations; Tesla validates the URL
-  returns the PEM with no redirect.
+1. **Host the public key.** Set `TESLA_FLEET_PUBLIC_KEY_PEM` to the PEM-encoded
+   EC public key (secp256r1 / prime256v1) that matches your Tesla developer
+   application. The app serves it at
+   `/.well-known/appspecific/com.tesla.3p.public-key.pem` (no redirect). Verify
+   with:
+   `curl -fsS "https://<your-host>/.well-known/appspecific/com.tesla.3p.public-key.pem" | head`
+2. **Developer portal.** Ensure an `allowed_origin` on developer.tesla.com
+   matches that same host (scheme + domain as Tesla documents for your app).
+3. **Register the partner domain** (once per environment). From a machine with
+   credentials in `.env`:
+   `bun run tesla:register-partner`  
+   (optional: `bun run tesla:register-partner -- app.example.com` if the
+   hostname differs from `OAUTH_BASE_URL`). The script mints a partner token
+   (`grant_type=client_credentials`, `audience=<fleet-api base URL>`) and calls
+   `POST /api/1/partner_accounts` with `{ "domain": "<hostname>" }`. Tesla
+   fetches the PEM over HTTPS to validate; localhost and `.local` hosts are
+   rejected by the script because Tesla cannot validate them.
+4. **User OAuth** can proceed after the above succeeds.
 
-Because this is already done, the scaffold does **not** include tooling for
-partner registration. When we ship a second environment (e.g. preview
-deploys), we will need to register that domain and host a matching PEM.
+Implementation references: `src/server/integrations/tesla/fleet/partner.ts`,
+`scripts/tesla/register-partner.ts`, and the route file
+`src/routes/[.]well-known.appspecific.com[.]tesla[.]3p[.]public-key[.]pem.ts`.
 
 ## 4. Rate limits + caching strategy
 
@@ -177,6 +187,8 @@ Our implementation (see `src/server/tesla/client.ts`):
 | Refresh token rejected (`401`)       | tRPC `BAD_GATEWAY` + UI prompts user to reconnect             |
 | Vehicle offline for `vehicle_data`   | Row falls back to null odometer / SoC (no wake command)      |
 | User revokes in Tesla account        | Next refresh returns `invalid_grant` → we delete the row      |
+| Fleet API **412** ([precondition](https://developer.tesla.com/docs/fleet-api/getting-started/conventions): unregistered partner / PEM URL) | tRPC `PRECONDITION_REQUIRED` + message to fix PEM + run `bun run tesla:register-partner` |
+| Fleet API **421** (wrong region vs account) | Per Tesla: user/account not in this region — set `TESLA_REGION` to `na` or `eu` to match the account and token `audience`. |
 | Fleet API 5xx                        | tRPC `BAD_GATEWAY`; React Query retries with backoff         |
 
 ## 7. Security considerations for token storage

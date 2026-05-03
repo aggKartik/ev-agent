@@ -142,7 +142,6 @@ export async function runPrefetchEvRoute(
   const request = planRequestSchema.parse({
     from: { full: 'San Francisco, CA', coordinate: SF },
     to: { full: 'Oakland, CA', coordinate: OAKLAND },
-    dates: 'Today',
     activities: [{ id: 'coffee', dwellMinutes: 30 }],
     startingSocPercent: 55,
     targetArrivalSocPercent: 20,
