@@ -27,6 +27,8 @@ export const envSchema = z.object({
   TESLA_CLIENT_ID: z.string().optional(),
   TESLA_CLIENT_SECRET: z.string().optional(),
   TESLA_REGION: z.enum(['na', 'eu']).default('na'),
+  /** EC public key PEM served at `/.well-known/appspecific/com.tesla.3p.public-key.pem` for Fleet partner registration. */
+  TESLA_FLEET_PUBLIC_KEY_PEM: z.string().optional(),
 
   // Plan agent LLM. OpenAI-compatible HTTP API; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.

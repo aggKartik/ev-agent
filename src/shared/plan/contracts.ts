@@ -24,11 +24,31 @@ export const evConnectorSlugSchema = z.enum([
 
 export const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);
 
+/**
+ * Loose draft shape used by the plan form while the **Driver** is still
+ * typing. The autocomplete supplies the `coordinate` only when a real
+ * suggestion is selected; submission is gated by `planAddressSchema`
+ * below, which requires it.
+ */
+export const planAddressDraftSchema = z.object({
+  full: z.string(),
+  primary: z.string().optional(),
+  secondary: z.string().optional(),
+  coordinate: coordinateSchema.optional(),
+});
+
+/**
+ * Strict shape required at plan submit time — the **Driver** must pick
+ * from autocomplete (or paste a coordinate) so EV routing has a real
+ * start/destination to ground against. Free-text addresses with no
+ * resolved coordinate are blocked by `planRequestSchema.safeParse` in
+ * the form's `canPlan` check.
+ */
 export const planAddressSchema = z.object({
   full: z.string().min(1),
   primary: z.string().min(1).optional(),
   secondary: z.string().optional(),
-  coordinate: coordinateSchema.optional(),
+  coordinate: coordinateSchema,
 });
 
 export const planActivitySelectionSchema = z.object({
@@ -43,7 +63,6 @@ export const planArrivalTimeSchema = z
 export const planRequestSchema = z.object({
   from: planAddressSchema,
   to: planAddressSchema,
-  dates: z.string().min(1),
   activities: z.array(planActivitySelectionSchema).min(1),
   vehicleLabel: z.string().min(1).default(PLAN_DEFAULT_VEHICLE_LABEL),
   usableRangeMiles: z
@@ -89,7 +108,18 @@ export const planRequestSchema = z.object({
 });
 
 export const addressSuggestSchema = z.object({
-  query: z.string().optional(),
+  query: z.string(),
+  sessionToken: z.string().min(1),
+  proximity: coordinateSchema.optional(),
+});
+
+export const addressRetrieveSchema = z.object({
+  providerId: z.string().min(1),
+  sessionToken: z.string().min(1),
+});
+
+export const addressReverseGeocodeSchema = z.object({
+  coordinate: coordinateSchema,
 });
 
 export const planStopKindSchema = z.enum([
@@ -147,6 +177,7 @@ export const planAgentModelResultSchema = planResultSchema.omit({
 export type PlanAgentModelResult = z.infer<typeof planAgentModelResultSchema>;
 
 export type PlanAddress = z.infer<typeof planAddressSchema>;
+export type PlanAddressDraft = z.infer<typeof planAddressDraftSchema>;
 export type PlanActivitySelection = z.infer<typeof planActivitySelectionSchema>;
 export type PlanRequest = z.infer<typeof planRequestSchema>;
 export type PlanStopKind = z.infer<typeof planStopKindSchema>;
@@ -162,23 +193,26 @@ export function mergePlanResultFromAgentOutput(
 }
 export type EvConnectorSlug = z.infer<typeof evConnectorSlugSchema>;
 
-export type PlanCatalogResponse = {
-  activities: {
-    id: PlanActivitySelection['id'];
-    label: string;
-    color: string;
-    description: string;
-  }[];
-  dateOptions: string[];
-  carLocation: PlanAddress;
-  defaultVehicleLabel: string;
-  defaultUsableRangeMiles: number;
-  defaultStartingSocPercent: number;
-  defaultTargetArrivalSocPercent: number;
-  defaultBatteryCapacityKWh: number;
-  defaultConsumptionWhPerMile: number;
-  defaultConnectorTypes: EvConnectorSlug[];
-  defaultPostChargeSocPercent: number;
+export type PlanActivityCatalog = {
+  id: PlanActivitySelection['id'];
+  label: string;
+  color: string;
+  description: string;
+}[];
+
+/**
+ * The `plan.context` payload. Resolves the persistent **Vehicle Energy
+ * Profile** server-side (catalog + overrides + driver preferences) so the
+ * client form always boots from the **Driver**'s saved car. `currentLocation`
+ * is `null` here — the client `useCurrentLocation` hook fills it from
+ * Tesla GPS or `navigator.geolocation`.
+ *
+ * The full profile shape is re-exported from `#/shared/vehicles/contracts`
+ * to avoid pulling vehicles into every plan-feature import.
+ */
+export type PlanContextResponse<TProfile> = {
+  activities: PlanActivityCatalog;
+  vehicleProfile: TProfile;
 };
 
 export type PlanStreamEvent =
