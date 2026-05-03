@@ -5,9 +5,10 @@ import {
   type Step,
 } from '#/features/onboarding/types/steps';
 
-const STORAGE_KEY = 'ev-agent:onboarding:v3';
+const STORAGE_KEY = 'ev-agent:onboarding:v4';
+const STORAGE_KEY_V3 = 'ev-agent:onboarding:v3';
 const LEGACY_STORAGE_KEY = 'ev-agent:onboarding:v2';
-const PERSISTED_VERSION = 3;
+const PERSISTED_VERSION = 4;
 
 /** Map removed funnel steps onto the Tesla-only onboarding flow. */
 const LEGACY_STEP_MAP: Record<string, Step> = {
@@ -35,7 +36,7 @@ export function readPersisted(): PersistedState | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    const keys = [STORAGE_KEY, LEGACY_STORAGE_KEY];
+    const keys = [STORAGE_KEY, STORAGE_KEY_V3, LEGACY_STORAGE_KEY];
     for (const storageKey of keys) {
       const raw = window.sessionStorage.getItem(storageKey);
       if (!raw) continue;
@@ -58,6 +59,10 @@ export function readPersisted(): PersistedState | null {
           name: typeof valuesRaw.name === 'string' ? valuesRaw.name : '',
           connect:
             typeof valuesRaw.connect === 'string' ? valuesRaw.connect : '',
+          teslaVehicleId:
+            typeof valuesRaw.teslaVehicleId === 'string'
+              ? valuesRaw.teslaVehicleId
+              : '',
         },
       };
     }
@@ -87,6 +92,7 @@ export function clearPersisted(): void {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(STORAGE_KEY_V3);
     window.sessionStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch {
     // ignore

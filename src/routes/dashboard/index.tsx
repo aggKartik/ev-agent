@@ -37,7 +37,8 @@ function DashboardRoute() {
       header={
         <Header
           sessionLabel={
-            summary.tesla.status === 'linked'
+            summary.tesla.status === 'linked' ||
+            summary.tesla.status === 'offline'
               ? 'DASHBOARD · LIVE'
               : 'DASHBOARD · READY'
           }

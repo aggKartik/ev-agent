@@ -2,11 +2,29 @@ import { useCallback, useMemo } from 'react';
 import { onboardingVehicleSummary } from '#/features/onboarding/utils/vehicleSummary';
 import { trpc } from '#/lib/trpc';
 
+function isCatalogIdentityReady(args: {
+  model: string | null;
+  year: string | null;
+}): boolean {
+  const model = args.model?.trim();
+  const year = args.year;
+  return (
+    typeof model === 'string' &&
+    model.length > 0 &&
+    typeof year === 'string' &&
+    /^\d{4}$/.test(year)
+  );
+}
+
 /**
  * Tesla + OAuth provider list reads for onboarding CONNECT. No form or stepper;
  * pure tRPC subscription + derived readiness flags.
  */
-export function useOnboardingFleetContext() {
+export function useOnboardingFleetContext(args: {
+  selectedTeslaVehicleId: string;
+}) {
+  const { selectedTeslaVehicleId } = args;
+
   const oauthList = trpc.oauth.list.useQuery(undefined, { staleTime: 60_000 });
 
   const teslaStatus = trpc.oauth.status.useQuery(
@@ -16,31 +34,46 @@ export function useOnboardingFleetContext() {
 
   const teslaLinked = teslaStatus.data?.linked === true;
 
-  const teslaPrefill = trpc.tesla.vehiclePrefill.useQuery(undefined, {
+  const fleetQuery = trpc.tesla.vehicles.useQuery(undefined, {
     enabled: teslaLinked,
     staleTime: 60_000,
   });
 
-  const teslaVehicle = teslaPrefill.data?.linked
-    ? (teslaPrefill.data.vehicle ?? null)
-    : null;
+  const fleetVehicles = fleetQuery.data ?? null;
+  const fleetFetchSucceeded = fleetQuery.isSuccess;
+
+  const selectedRow = useMemo(() => {
+    if (!fleetVehicles || !selectedTeslaVehicleId.trim()) return null;
+    return (
+      fleetVehicles.find((v) => v.id === selectedTeslaVehicleId.trim()) ?? null
+    );
+  }, [fleetVehicles, selectedTeslaVehicleId]);
+
+  const selectedPrefill = selectedRow?.onboardingIdentity ?? null;
 
   const identityReady =
     teslaLinked &&
-    teslaPrefill.data?.linked === true &&
-    teslaVehicle != null &&
-    typeof teslaVehicle.model === 'string' &&
-    teslaVehicle.model.trim().length > 0 &&
-    typeof teslaVehicle.year === 'string' &&
-    /^\d{4}$/.test(teslaVehicle.year);
+    fleetFetchSucceeded &&
+    selectedRow != null &&
+    isCatalogIdentityReady({
+      model: selectedPrefill?.model ?? null,
+      year: selectedPrefill?.year ?? null,
+    });
 
-  const prefillSuccess =
-    teslaLinked && teslaPrefill.isSuccess && teslaPrefill.data?.linked === true;
+  const prefillSuccess = teslaLinked && fleetFetchSucceeded;
 
   const linkedButNoVinIdentity =
-    prefillSuccess && teslaVehicle != null && !identityReady;
+    prefillSuccess &&
+    fleetVehicles != null &&
+    fleetVehicles.length > 0 &&
+    selectedRow != null &&
+    !isCatalogIdentityReady({
+      model: selectedPrefill?.model ?? null,
+      year: selectedPrefill?.year ?? null,
+    });
 
-  const linkedWithoutVehicleSlot = prefillSuccess && teslaVehicle === null;
+  const linkedWithoutVehicleSlot =
+    prefillSuccess && fleetVehicles != null && fleetVehicles.length === 0;
 
   const resolveProviderLabel = useCallback(
     (slug: string) =>
@@ -50,8 +83,8 @@ export function useOnboardingFleetContext() {
   );
 
   const trimmedTeslaSummary = useMemo(
-    () => onboardingVehicleSummary(teslaVehicle).trim(),
-    [teslaVehicle],
+    () => onboardingVehicleSummary(selectedPrefill).trim(),
+    [selectedPrefill],
   );
 
   const teslaConnectedDetail = useMemo(() => {
@@ -61,11 +94,15 @@ export function useOnboardingFleetContext() {
   }, [trimmedTeslaSummary, teslaLinked]);
 
   return {
+    teslaLinked,
     identityReady,
     linkedButNoVinIdentity,
     linkedWithoutVehicleSlot,
     trimmedTeslaSummary,
     teslaConnectedDetail,
     resolveProviderLabel,
+    fleetVehicles,
+    fleetLoading: fleetQuery.isLoading,
+    fleetFetchSucceeded,
   };
 }

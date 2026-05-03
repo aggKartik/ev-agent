@@ -14,6 +14,18 @@ const BATTERY_SEGMENTS = Array.from(
   (_, index) => `segment-${index}`,
 );
 
+function teslaTelemetryGapHint(tesla: DashboardTeslaSummary): string | null {
+  if (tesla.status !== 'linked' && tesla.status !== 'offline') return null;
+  if (!tesla.vehicle) return null;
+  const hasCharge =
+    tesla.vehicle.batteryLevel != null || tesla.vehicle.rangeMi != null;
+  if (hasCharge) return null;
+  if (tesla.vehicle.state?.toLowerCase() === 'asleep') {
+    return 'Battery % and estimated range need the car to wake and report to Tesla.';
+  }
+  return 'Battery % and range stay blank until Tesla returns charge data for this vehicle.';
+}
+
 type CarStatusPanelProps = {
   tesla: DashboardTeslaSummary;
   isRefreshing: boolean;
@@ -30,12 +42,20 @@ export default function CarStatusPanel({
   onRerunSetup,
 }: CarStatusPanelProps) {
   const slots = dashboard();
-  const battery = tesla.vehicle?.batteryLevel ?? 0;
   const displayBattery = tesla.vehicle?.batteryLevel;
+  const batteryFillPct =
+    displayBattery == null ? 0 : Math.max(6, displayBattery);
   const range = tesla.vehicle?.rangeMi;
   const odometer = tesla.vehicle?.odometerMi;
   const carName = tesla.vehicle?.displayName ?? 'Tesla integration';
   const shouldConnect = tesla.status === 'unlinked';
+  const telemetryHint = teslaTelemetryGapHint(tesla);
+  const showRefresh =
+    tesla.linked &&
+    (tesla.status === 'linked' ||
+      tesla.status === 'offline' ||
+      tesla.status === 'error' ||
+      tesla.status === 'pending');
 
   return (
     <Box className={cx(panel({ variant: 'glass-feature' }), slots.carPanel)}>
@@ -56,13 +76,13 @@ export default function CarStatusPanel({
           className={slots.battery}
           aria-label={
             displayBattery == null
-              ? 'Battery unavailable'
+              ? 'Battery level not available'
               : `Battery ${displayBattery}%`
           }
         >
           <Box
             className={slots.batteryFill}
-            style={{ '--battery': `${Math.max(6, battery)}%` } as CSSProperties}
+            style={{ '--battery': `${batteryFillPct}%` } as CSSProperties}
           />
           <Box className={slots.batterySegments} aria-hidden="true">
             {BATTERY_SEGMENTS.map((segment) => (
@@ -71,7 +91,7 @@ export default function CarStatusPanel({
           </Box>
         </Box>
         <Box className={slots.batteryPct}>
-          {displayBattery ?? '--'}
+          {displayBattery == null ? '--' : displayBattery}
           <small>%</small>
         </Box>
       </Box>
@@ -97,6 +117,18 @@ export default function CarStatusPanel({
         />
       </Box>
 
+      {telemetryHint ? (
+        <Box
+          mt="2"
+          fontSize="xs"
+          lineHeight="1.45"
+          color="cream.600"
+          fontWeight="medium"
+        >
+          {telemetryHint}
+        </Box>
+      ) : null}
+
       <Box className={slots.disabledActionRow}>
         <button className={slots.disabledAction} type="button" disabled>
           Precondition soon
@@ -111,7 +143,7 @@ export default function CarStatusPanel({
           <Button variant="primary" size="sm" onClick={onConnect}>
             Connect Tesla
           </Button>
-        ) : (
+        ) : showRefresh ? (
           <Button
             variant="primary"
             size="sm"
@@ -121,6 +153,10 @@ export default function CarStatusPanel({
           >
             Refresh
           </Button>
+        ) : (
+          <Button variant="primary" size="sm" disabled>
+            Checking…
+          </Button>
         )}
         <Button variant="ghost" size="sm" onClick={onRerunSetup}>
           Re-run setup
@@ -128,7 +164,7 @@ export default function CarStatusPanel({
       </Box>
 
       <Box className={slots.carSvgWrap}>
-        <CarSilhouette battery={battery} />
+        <CarSilhouette battery={displayBattery ?? 0} />
       </Box>
     </Box>
   );

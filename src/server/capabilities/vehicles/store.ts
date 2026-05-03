@@ -17,8 +17,9 @@ import type { VehicleRow } from './domain/types';
  * helper) hit named functions, not raw queries.
  *
  * Reads return a normalized `VehicleRow` (no Kysely types leak out).
- * Writes are idempotent — `completeOnboarding` will not clobber an existing
- * row, and `upsertOverrides` only mutates the columns the caller asked for.
+ * Writes: `completeOnboarding` inserts a row or **refreshes Fleet identity**
+ * on conflict (re-onboarding) while preserving SOC prefs and overrides.
+ * `upsertOverrides` only mutates the columns the caller asked for.
  */
 
 const VEHICLE_COLUMNS = [
@@ -62,10 +63,10 @@ export async function hasVehicle(
 }
 
 /**
- * Insert the **Driver**'s vehicle row at the end of onboarding. Idempotent
- * via `ON CONFLICT (user_id) DO NOTHING` so a double-submit can't create a
- * second row or wipe driver-tunable preferences. Returns the row currently
- * persisted for the user, even if a concurrent request beat us to it.
+ * Insert the **Driver**'s vehicle row at the end of onboarding, or update
+ * make/model/year/vin/`tesla_vehicle_id` when a row already exists (dashboard
+ * **Re-run setup** keeps the row so the user is still "onboarded"). SOC targets
+ * and overrides are not reset on conflict.
  */
 export async function completeOnboarding(
   db: Kysely<Database>,
@@ -88,7 +89,16 @@ export async function completeOnboarding(
       overrideConsumptionWhPerMile: null,
       overrideConnectorTypes: null,
     })
-    .onConflict((oc) => oc.column('userId').doNothing())
+    .onConflict((oc) =>
+      oc.column('userId').doUpdateSet({
+        make: input.make,
+        model: input.model,
+        year: input.year,
+        vin: input.vin ?? null,
+        teslaVehicleId: input.teslaVehicleId ?? null,
+        updatedAt: sql`now()`,
+      }),
+    )
     .execute();
 
   const row = await getVehicle(db, userId);

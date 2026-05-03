@@ -86,17 +86,63 @@ export function teslaVehicleSummaryToDashboard(args: {
   };
 }
 
+export function buildPendingTeslaSummary(args: {
+  detail: string;
+  label?: string;
+  linked: boolean;
+}): DashboardTeslaSummary {
+  return {
+    status: 'pending',
+    label: args.label ?? 'Loading',
+    detail: args.detail,
+    linked: args.linked,
+    scopes: [],
+    vehicle: null,
+    refreshedAt: null,
+  };
+}
+
+export function buildErroredTeslaSummary(args: {
+  detail: string;
+  label?: string;
+  linked?: boolean;
+}): DashboardTeslaSummary {
+  return {
+    status: 'error',
+    label: args.label ?? 'Unavailable',
+    detail: args.detail,
+    linked: args.linked ?? true,
+    scopes: [],
+    vehicle: null,
+    refreshedAt: null,
+  };
+}
+
 export function buildLinkedTeslaSummary(args: {
   vehicle: DashboardTeslaVehicle;
   refreshedAt: string;
 }): DashboardTeslaSummary {
   const isAsleep = args.vehicle.state?.toLowerCase() === 'asleep';
+  const hasChargeTelemetry =
+    args.vehicle.batteryLevel != null || args.vehicle.rangeMi != null;
+  const detail = (() => {
+    if (isAsleep) {
+      return hasChargeTelemetry
+        ? 'Vehicle asleep — last known telemetry shown.'
+        : 'Vehicle asleep — wake it in the Tesla app (or tap Refresh) for live charge and range.';
+    }
+    if (!hasChargeTelemetry && args.vehicle.odometerMi == null) {
+      return 'Tesla didn’t return live stats for this vehicle yet. Try Refresh, or open the Tesla app briefly.';
+    }
+    if (!hasChargeTelemetry) {
+      return 'Odometer available; charge level and range will appear once the vehicle reports them.';
+    }
+    return 'Telemetry refreshed from Tesla.';
+  })();
   return {
     status: isAsleep ? 'offline' : 'linked',
     label: isAsleep ? 'Asleep' : 'Live',
-    detail: isAsleep
-      ? 'Vehicle asleep — last known telemetry shown.'
-      : 'Telemetry refreshed from Tesla.',
+    detail,
     linked: true,
     scopes: [],
     vehicle: args.vehicle,

@@ -213,6 +213,11 @@ export type PlanActivityCatalog = {
 export type PlanContextResponse<TProfile> = {
   activities: PlanActivityCatalog;
   vehicleProfile: TProfile;
+  /**
+   * Pack SOC % from Tesla Fleet for the Driver's vehicle when linked and
+   * reporting; `null` when unlinked, asleep, or not yet available.
+   */
+  liveBatteryPercent: number | null;
 };
 
 export type PlanStreamEvent =

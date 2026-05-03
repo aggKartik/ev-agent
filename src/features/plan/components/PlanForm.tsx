@@ -4,13 +4,10 @@ import { useMemo } from 'react';
 import { Box, Flex, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
-import Input from '#/components/ui/Input';
 import { Text } from '#/components/ui/Text';
 import { useCurrentLocation } from '#/features/plan/hooks/useCurrentLocation';
-import {
-  CONNECTOR_OPTION_ORDER,
-  type PlanForm as PlanFormApi,
-} from '#/features/plan/hooks/usePlanForm';
+import type { PlanForm as PlanFormApi } from '#/features/plan/hooks/usePlanForm';
+import { useSyncPlanVehicleFieldsFromContext } from '#/features/plan/hooks/useSyncPlanVehicleFieldsFromContext';
 import { useLastPlanningError } from '#/features/plan/store';
 import type { PlanContextResponse } from '#/shared/plan/contracts';
 import { planRequestSchema } from '#/shared/plan/contracts';
@@ -19,12 +16,7 @@ import { css, cx } from '#/styled-system/css';
 import { chip } from '#/styled-system/recipes/chip';
 import { sectionHeader } from '#/styled-system/recipes/section-header';
 import ActivitySelector from './ActivitySelector';
-import NumericFormField from './NumericFormField';
-import {
-  PlanAddressField,
-  planFormInputWrapClass,
-  planFormTextInputClass,
-} from './PlanAddressField';
+import { PlanAddressField } from './PlanAddressField';
 
 type PlanFormProps = {
   context: PlanContextResponse<VehicleEnergyProfile | null>;
@@ -63,12 +55,6 @@ const autoChipClass = css({
   marginLeft: 'auto',
 });
 
-const chipRowClass = css({
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '2',
-});
-
 const actionsClass = css({
   mt: '8',
   display: 'flex',
@@ -78,12 +64,15 @@ const actionsClass = css({
   flexWrap: 'wrap',
 });
 
-const vehicleSublabelClass = css({
-  fontSize: '2xs',
-  color: 'cream.600',
-  mb: '1',
-  textStyle: 'mono-meta',
-  letterSpacing: '0.12em',
+const vehicleInfoPanelClass = css({
+  marginBottom: '5',
+  padding: '3',
+  borderRadius: 'md',
+  borderWidth: '1px',
+  borderColor: 'alpha.cream-28',
+  background:
+    'linear-gradient(160deg, rgba(245, 234, 208, 0.05), rgba(123, 75, 209, 0.06))',
+  maxWidth: 'panel-form',
 });
 
 export default function PlanForm({
@@ -95,6 +84,9 @@ export default function PlanForm({
   const lastPlanningError = useLastPlanningError();
   const values = useStore(form.store, (state) => state.values);
   const currentLocation = useCurrentLocation();
+
+  useSyncPlanVehicleFieldsFromContext(context, form);
+
   const canPlan = useMemo(
     () =>
       planRequestSchema.safeParse({
@@ -215,127 +207,44 @@ export default function PlanForm({
           )}
         </form.Field>
 
-        <Box className={fieldClass}>
-          <Box className={heroHeaderClasses.label}>VEHICLE</Box>
-          <Flex gap="4" flexWrap="wrap" alignItems="flex-end">
-            <form.Field name="vehicleLabel">
-              {(field) => (
-                <Box flex="1" minWidth="200px" width="full">
-                  <Box className={vehicleSublabelClass}>MODEL</Box>
-                  <Box className={planFormInputWrapClass} data-focused={false}>
-                    <Input
-                      value={field.state.value}
-                      className={planFormTextInputClass}
-                      placeholder="e.g. Tesla Model 3 Long Range"
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                    />
-                  </Box>
-                </Box>
-              )}
-            </form.Field>
-            <form.Field name="usableRangeMiles">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="RANGE (MI)"
-                  min={1}
-                  max={500}
-                />
-              )}
-            </form.Field>
-          </Flex>
-          <Flex gap="4" flexWrap="wrap" alignItems="flex-end" mt="4">
-            <form.Field name="startingSocPercent">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="START SOC %"
-                  min={0}
-                  max={100}
-                />
-              )}
-            </form.Field>
-            <form.Field name="targetArrivalSocPercent">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="ARRIVE % MIN"
-                  min={0}
-                  max={100}
-                />
-              )}
-            </form.Field>
-            <form.Field name="batteryCapacityKWh">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="PACK (KW·H)"
-                  min={10}
-                  max={250}
-                  inputMode="decimal"
-                />
-              )}
-            </form.Field>
-            <form.Field name="consumptionWhPerMile">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="WH/MI"
-                  min={100}
-                  max={800}
-                  step={5}
-                  inputMode="decimal"
-                />
-              )}
-            </form.Field>
-            <form.Field name="postChargeSocPercent">
-              {(field) => (
-                <NumericFormField
-                  field={field}
-                  label="AFTER DCFC %"
-                  min={50}
-                  max={100}
-                />
-              )}
-            </form.Field>
-          </Flex>
-          <form.Field name="connectorTypes">
-            {(field) => (
-              <Box mt="4">
-                <Box className={vehicleSublabelClass}>CONNECTORS</Box>
-                <Box className={chipRowClass}>
-                  {CONNECTOR_OPTION_ORDER.map((slug) => {
-                    const selected = field.state.value.includes(slug);
-                    return (
-                      <Button
-                        key={slug}
-                        type="button"
-                        unstyled
-                        contentMode="custom"
-                        className={chip({ size: 'compact', selected })}
-                        aria-pressed={selected}
-                        onClick={() => {
-                          const current = field.state.value;
-                          if (selected && current.length <= 1) return;
-                          if (selected) {
-                            field.handleChange(
-                              current.filter((x) => x !== slug),
-                            );
-                          } else {
-                            field.handleChange([...current, slug]);
-                          }
-                        }}
-                      >
-                        {slug}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              </Box>
-            )}
-          </form.Field>
+        <Box className={vehicleInfoPanelClass}>
+          <Text
+            as="p"
+            textStyle="mono-meta"
+            fontSize="2xs"
+            color="cream.600"
+            letterSpacing="0.14em"
+            marginBottom="2"
+          >
+            YOUR CAR · USED FOR ROUTING
+          </Text>
+          <Text as="p" textStyle="caption" color="cream.500" lineHeight="1.6">
+            <Text as="span" fontWeight="semibold" color="cream.200">
+              {values.vehicleLabel}
+            </Text>
+            {' — '}
+            {Math.round(values.usableRangeMiles)} mi usable range,{' '}
+            {values.batteryCapacityKWh} kWh pack,{' '}
+            {Math.round(values.consumptionWhPerMile)} Wh/mi. Connectors:{' '}
+            {[...values.connectorTypes].sort().join(', ')}. The planner assumes{' '}
+            <Text as="span" fontWeight="semibold" color="cream.300">
+              {values.startingSocPercent}%
+            </Text>{' '}
+            starting charge
+            {context.liveBatteryPercent != null
+              ? ' (live from Tesla)'
+              : ' (profile default until your car reports charge)'}
+            , arriving with at least{' '}
+            <Text as="span" fontWeight="semibold" color="cream.300">
+              {values.targetArrivalSocPercent}%
+            </Text>{' '}
+            remaining, and targeting{' '}
+            <Text as="span" fontWeight="semibold" color="cream.300">
+              {values.postChargeSocPercent}%
+            </Text>{' '}
+            after each DC fast-charge stop. Nothing here is editable — it all
+            comes from your linked vehicle.
+          </Text>
         </Box>
 
         <form.Field name="activities">

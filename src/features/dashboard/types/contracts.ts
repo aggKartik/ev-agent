@@ -1,6 +1,11 @@
 export type DashboardTone = 'peach' | 'lime' | 'magenta' | 'violet' | 'muted';
 
-export type DashboardTeslaState = 'unlinked' | 'linked' | 'offline' | 'error';
+export type DashboardTeslaState =
+  | 'pending'
+  | 'unlinked'
+  | 'linked'
+  | 'offline'
+  | 'error';
 
 export type DashboardTeslaVehicle = {
   id: string;

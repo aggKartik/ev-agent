@@ -3,7 +3,9 @@ import type { DashboardSummary } from '#/features/dashboard/types/contracts';
 import { DASHBOARD_FALLBACK_TESLA } from '#/features/dashboard/utils/data';
 import {
   buildDashboardSummary,
+  buildErroredTeslaSummary,
   buildLinkedTeslaSummary,
+  buildPendingTeslaSummary,
   teslaVehicleSummaryToDashboard,
 } from '#/features/dashboard/utils/helpers';
 import { trpc } from '#/lib/trpc';
@@ -41,8 +43,6 @@ export function useDashboardSummary(): {
     staleTime: 60_000,
   });
 
-  // Pull the persisted Vehicle row so the car panel can show make/model/year
-  // even when Tesla is asleep / unlinked. The route gate guarantees a row.
   const vehicleQuery = trpc.vehicle.get.useQuery(undefined, {
     staleTime: 5 * 60_000,
   });
@@ -50,14 +50,78 @@ export function useDashboardSummary(): {
   const summary = useMemo<DashboardSummary>(() => {
     const firstName = profileQuery.data?.firstName ?? null;
     const profileVehicle = vehicleQuery.data?.profile?.identity ?? null;
-    const list = teslaVehicles.data ?? [];
-    const first =
-      pickTeslaVehicleForIdentity(list, profileVehicle) ?? list[0] ?? null;
 
-    if (!teslaLinked || !first) {
+    if (teslaStatus.isPending) {
+      return buildDashboardSummary({
+        firstName,
+        tesla: buildPendingTeslaSummary({
+          linked: false,
+          label: 'Checking',
+          detail: 'Checking whether Tesla is connected…',
+        }),
+      });
+    }
+
+    if (teslaStatus.isError) {
+      return buildDashboardSummary({
+        firstName,
+        tesla: buildErroredTeslaSummary({
+          label: 'Status unavailable',
+          detail:
+            teslaStatus.error.message ??
+            'Could not verify Tesla link. Refresh the page or try again.',
+          linked: false,
+        }),
+      });
+    }
+
+    if (!teslaLinked) {
       return buildDashboardSummary({
         firstName,
         tesla: DASHBOARD_FALLBACK_TESLA,
+      });
+    }
+
+    const vehicleData = teslaVehicles.data;
+    const vehiclesStillLoading =
+      vehicleData === undefined &&
+      (teslaVehicles.isLoading || teslaVehicles.isFetching);
+
+    if (vehiclesStillLoading) {
+      return buildDashboardSummary({
+        firstName,
+        tesla: buildPendingTeslaSummary({
+          linked: true,
+          label: 'Loading',
+          detail: 'Fetching live vehicle data from Tesla…',
+        }),
+      });
+    }
+
+    if (teslaVehicles.isError && vehicleData === undefined) {
+      return buildDashboardSummary({
+        firstName,
+        tesla: buildErroredTeslaSummary({
+          label: 'Can’t load vehicle',
+          detail:
+            teslaVehicles.error?.message ??
+            'We could not reach Tesla right now. Try again in a moment.',
+        }),
+      });
+    }
+
+    const list = vehicleData ?? [];
+    const first =
+      pickTeslaVehicleForIdentity(list, profileVehicle) ?? list[0] ?? null;
+
+    if (!first) {
+      return buildDashboardSummary({
+        firstName,
+        tesla: buildErroredTeslaSummary({
+          label: 'No vehicle',
+          detail:
+            'No Tesla vehicle was returned for this account. Add a vehicle in the Tesla app, then tap Refresh.',
+        }),
       });
     }
 
@@ -78,10 +142,16 @@ export function useDashboardSummary(): {
   }, [
     profileQuery.data?.firstName,
     teslaLinked,
+    teslaStatus.isPending,
+    teslaStatus.isError,
+    teslaStatus.error,
     teslaVehicles.data,
     teslaVehicles.dataUpdatedAt,
+    teslaVehicles.isError,
+    teslaVehicles.error,
+    teslaVehicles.isLoading,
+    teslaVehicles.isFetching,
     vehicleQuery.data?.profile?.identity,
-    vehicleQuery.data,
   ]);
 
   const refresh = async () => {

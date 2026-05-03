@@ -2,7 +2,10 @@ import { TRPCError } from '@trpc/server';
 import { getVehicle } from '#/server/capabilities/vehicles/store';
 import { invalidate } from '#/server/integrations/tesla/fleet/cache';
 import type { TeslaVehicleSummary } from '#/server/integrations/tesla/fleet/fleet-api';
-import { teslaPrefillVehicleFromFleetSummary } from '#/server/integrations/tesla/onboardingIdentity';
+import {
+  fleetVehicleWithOnboardingIdentity,
+  teslaPrefillVehicleFromFleetSummary,
+} from '#/server/integrations/tesla/onboardingIdentity';
 import { loadTeslaFleetVehiclesProtected } from '#/server/modules/tesla/loadFleetTrpc';
 import type { Context } from '#/server/platform/context';
 import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
@@ -29,12 +32,18 @@ async function loadVehicles(ctx: AuthedCtx): Promise<TeslaVehicleSummary[]> {
 }
 
 export const teslaRouter = router({
-  vehicles: protectedProcedure.query(({ ctx }) => loadVehicles(ctx)),
+  vehicles: protectedProcedure.query(async ({ ctx }) => {
+    const list = await loadVehicles(ctx);
+    return list.map(fleetVehicleWithOnboardingIdentity);
+  }),
 
   refresh: protectedProcedure.mutation(async ({ ctx }) => {
     invalidate(ctx.userId);
     const vehicles = await loadVehicles(ctx);
-    return { vehicles, refreshedAt: new Date().toISOString() };
+    return {
+      vehicles: vehicles.map(fleetVehicleWithOnboardingIdentity),
+      refreshedAt: new Date().toISOString(),
+    };
   }),
 
   /**
