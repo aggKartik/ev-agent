@@ -9,7 +9,6 @@ import {
   PLAN_DEFAULT_VEHICLE_LABEL,
 } from '#/shared/plan/constants';
 import type {
-  EvConnectorSlug,
   PlanAddressDraft,
   PlanContextResponse,
   PlanRequest,
@@ -37,15 +36,6 @@ export type PlanFormValues = {
   postChargeSocPercent: PlanRequest['postChargeSocPercent'];
   fromLocked: boolean;
 };
-
-/** UI chip order matches common US EV configs first. */
-export const CONNECTOR_OPTION_ORDER: EvConnectorSlug[] = [
-  'NACS',
-  'CCS1',
-  'J1772',
-  'TYPE_2',
-  'CHADEMO',
-];
 
 /**
  * Plan form factory. Defaults derive from the resolved

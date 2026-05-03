@@ -24,13 +24,13 @@ export function useOnboardingSubmit() {
         const firstName = firstNameRaw.trim();
         if (!firstName) return;
 
-        await setFirstName.mutateAsync({ firstName });
         const tid = formValues.teslaVehicleId.trim();
         if (!tid) {
           setSubmitError('Pick a Tesla vehicle to continue.');
           return;
         }
 
+        await setFirstName.mutateAsync({ firstName });
         await completeTeslaOnboarding.mutateAsync({
           teslaVehicleId: tid,
         });
