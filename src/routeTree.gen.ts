@@ -20,6 +20,7 @@ import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as ApiTrpcTrpcRouteImport } from './routes/api.trpc.$trpc'
+import { Route as DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRouteImport } from './routes/[.]well-known.appspecific.com[.]tesla[.]3p[.]public-key[.]pem'
 import { Route as ApiOauthProviderConnectRouteImport } from './routes/api.oauth.$provider.connect'
 import { Route as ApiOauthProviderCallbackRouteImport } from './routes/api.oauth.$provider.callback'
 
@@ -78,6 +79,12 @@ const ApiTrpcTrpcRoute = ApiTrpcTrpcRouteImport.update({
   path: '/api/trpc/$trpc',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute =
+  DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRouteImport.update({
+    id: '/.well-known/appspecific/com.tesla.3p.public-key.pem',
+    path: '/.well-known/appspecific/com.tesla.3p.public-key.pem',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiOauthProviderConnectRoute = ApiOauthProviderConnectRouteImport.update({
   id: '/api/oauth/$provider/connect',
   path: '/api/oauth/$provider/connect',
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
+  '/.well-known/appspecific/com.tesla.3p.public-key.pem': typeof DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute
   '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
   '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
   '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
@@ -113,6 +121,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInIndexRoute
   '/sign-up': typeof SignUpIndexRoute
   '/sso-callback': typeof SsoCallbackIndexRoute
+  '/.well-known/appspecific/com.tesla.3p.public-key.pem': typeof DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute
   '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
   '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
   '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
@@ -129,6 +138,7 @@ export interface FileRoutesById {
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/sso-callback/': typeof SsoCallbackIndexRoute
+  '/.well-known/appspecific/com.tesla.3p.public-key.pem': typeof DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute
   '/api/trpc/$trpc': typeof ApiTrpcTrpcRoute
   '/api/oauth/$provider/callback': typeof ApiOauthProviderCallbackRoute
   '/api/oauth/$provider/connect': typeof ApiOauthProviderConnectRoute
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
+    | '/.well-known/appspecific/com.tesla.3p.public-key.pem'
     | '/api/trpc/$trpc'
     | '/api/oauth/$provider/callback'
     | '/api/oauth/$provider/connect'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/sso-callback'
+    | '/.well-known/appspecific/com.tesla.3p.public-key.pem'
     | '/api/trpc/$trpc'
     | '/api/oauth/$provider/callback'
     | '/api/oauth/$provider/connect'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/sign-up/'
     | '/sso-callback/'
+    | '/.well-known/appspecific/com.tesla.3p.public-key.pem'
     | '/api/trpc/$trpc'
     | '/api/oauth/$provider/callback'
     | '/api/oauth/$provider/connect'
@@ -186,6 +199,7 @@ export interface RootRouteChildren {
   SignInIndexRoute: typeof SignInIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
   SsoCallbackIndexRoute: typeof SsoCallbackIndexRoute
+  DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute: typeof DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute
   ApiTrpcTrpcRoute: typeof ApiTrpcTrpcRoute
   ApiOauthProviderCallbackRoute: typeof ApiOauthProviderCallbackRoute
   ApiOauthProviderConnectRoute: typeof ApiOauthProviderConnectRoute
@@ -270,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcTrpcRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/appspecific/com.tesla.3p.public-key.pem': {
+      id: '/.well-known/appspecific/com.tesla.3p.public-key.pem'
+      path: '/.well-known/appspecific/com.tesla.3p.public-key.pem'
+      fullPath: '/.well-known/appspecific/com.tesla.3p.public-key.pem'
+      preLoaderRoute: typeof DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/oauth/$provider/connect': {
       id: '/api/oauth/$provider/connect'
       path: '/api/oauth/$provider/connect'
@@ -331,6 +352,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignInIndexRoute: SignInIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
   SsoCallbackIndexRoute: SsoCallbackIndexRoute,
+  DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute:
+    DotwellKnownAppspecificComDotteslaDot3pDotpublicKeyDotpemRoute,
   ApiTrpcTrpcRoute: ApiTrpcTrpcRoute,
   ApiOauthProviderCallbackRoute: ApiOauthProviderCallbackRoute,
   ApiOauthProviderConnectRoute: ApiOauthProviderConnectRoute,

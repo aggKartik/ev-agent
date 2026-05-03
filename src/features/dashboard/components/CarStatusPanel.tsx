@@ -19,6 +19,7 @@ type CarStatusPanelProps = {
   isRefreshing: boolean;
   onRefresh: () => void;
   onConnect: () => void;
+  onRerunSetup: () => void;
 };
 
 export default function CarStatusPanel({
@@ -26,6 +27,7 @@ export default function CarStatusPanel({
   isRefreshing,
   onRefresh,
   onConnect,
+  onRerunSetup,
 }: CarStatusPanelProps) {
   const slots = dashboard();
   const battery = tesla.vehicle?.batteryLevel ?? 0;
@@ -120,8 +122,8 @@ export default function CarStatusPanel({
             Refresh
           </Button>
         )}
-        <Button variant="ghost" size="sm" disabled>
-          Read-only
+        <Button variant="ghost" size="sm" onClick={onRerunSetup}>
+          Re-run setup
         </Button>
       </Box>
 

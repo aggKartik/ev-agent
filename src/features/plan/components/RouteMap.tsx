@@ -8,7 +8,7 @@ import { useRouteLayers } from '#/features/plan/hooks/useRouteLayers';
 import { type PlanMapMode, usePlanFlowStore } from '#/features/plan/store';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import type { PlanRequest, PlanResult } from '#/shared/plan/contracts';
-import { resolvePlanCoordinate } from '#/shared/plan/helpers';
+import { tryResolvePlanCoordinate } from '#/shared/plan/helpers';
 import { cx } from '#/styled-system/css';
 import { mapChrome } from '#/styled-system/recipes/map-chrome';
 import { panel } from '#/styled-system/recipes/panel';
@@ -45,9 +45,12 @@ export default function RouteMap({
 
   const previewGeometry = useMemo(() => {
     if (!request) return [];
-    const points = [resolvePlanCoordinate(request.from)];
-    if (request.to.full.trim().length > 0) {
-      points.push(resolvePlanCoordinate(request.to));
+    const fromCoord = tryResolvePlanCoordinate(request.from);
+    if (!fromCoord) return [];
+    const points = [fromCoord];
+    const toCoord = tryResolvePlanCoordinate(request.to);
+    if (request.to.full.trim().length > 0 && toCoord) {
+      points.push(toCoord);
     }
     return points;
   }, [request]);

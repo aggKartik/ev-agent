@@ -20,28 +20,40 @@ export default function QuickDestinations({
       <Box as="span" className={slots.quickLabel}>
         Quick start ▸
       </Box>
-      {summary.quickDestinations.map((destination) => (
-        <button
-          key={destination.id}
-          type="button"
-          className={chip({ tone: 'tonal' })}
-          onClick={onPlan}
-          style={toneStyle(destination.tone)}
+      {summary.quickDestinations.length === 0 ? (
+        <Box
+          as="span"
+          fontFamily="mono"
+          fontSize="2xs"
+          letterSpacing="wide"
+          color="cream.600"
         >
-          <Box as="span" fontSize="sm" fontWeight="semibold">
-            {destination.label}
-          </Box>
-          <Box
-            as="span"
-            fontFamily="mono"
-            fontSize="2xs"
-            letterSpacing="wide"
-            color="cream.600"
+          Saved destinations land here.
+        </Box>
+      ) : (
+        summary.quickDestinations.map((destination) => (
+          <button
+            key={destination.id}
+            type="button"
+            className={chip({ tone: 'tonal' })}
+            onClick={onPlan}
+            style={toneStyle(destination.tone)}
           >
-            {destination.sub}
-          </Box>
-        </button>
-      ))}
+            <Box as="span" fontSize="sm" fontWeight="semibold">
+              {destination.label}
+            </Box>
+            <Box
+              as="span"
+              fontFamily="mono"
+              fontSize="2xs"
+              letterSpacing="wide"
+              color="cream.600"
+            >
+              {destination.sub}
+            </Box>
+          </button>
+        ))
+      )}
     </Box>
   );
 }

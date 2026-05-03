@@ -101,7 +101,11 @@ export default function ItineraryTopBar({
   const m = totalMin % 60;
   const durationLabel = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
 
-  const subtitle = `${request.dates} · ${durationLabel} · ${totals.miles} mi · ${totals.chargeStops} charge stops`;
+  const chargeStopLabel =
+    totals.chargeStops === 1
+      ? '1 charge stop'
+      : `${totals.chargeStops} charge stops`;
+  const subtitle = `Today · ${durationLabel} · ${totals.miles} mi · ${chargeStopLabel}`;
 
   return (
     <Flex className={barClass}>

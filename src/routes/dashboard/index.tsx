@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
 import Header from '#/components/layout/Header';
 import DashboardStage from '#/features/dashboard/components/DashboardStage';
-import { getDashboardFallbackSummary } from '#/features/dashboard/utils/helpers';
+import { useDashboardSummary } from '#/features/dashboard/hooks/useDashboardSummary';
+import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 
 export const Route = createFileRoute('/dashboard/')({
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/dashboard/')({
 
 function DashboardRoute() {
   const navigate = useNavigate();
-  const summary = getDashboardFallbackSummary();
+  const { summary, isRefreshing, refresh } = useDashboardSummary();
   const slots = dashboard();
 
   const goPlan = () => {
@@ -22,6 +23,13 @@ function DashboardRoute() {
     if (typeof window !== 'undefined') {
       window.location.assign('/api/oauth/tesla/connect');
     }
+  };
+
+  const goRerunSetup = () => {
+    void navigate({
+      to: '/onboarding',
+      search: { ...emptyOnboardingSearch, force: true },
+    });
   };
 
   return (
@@ -43,10 +51,13 @@ function DashboardRoute() {
       <StageInner className={slots.stage}>
         <DashboardStage
           summary={summary}
-          isRefreshing={false}
+          isRefreshing={isRefreshing}
           onPlan={goPlan}
           onConnectTesla={connectTesla}
-          onRefresh={() => undefined}
+          onRefresh={() => {
+            void refresh();
+          }}
+          onRerunSetup={goRerunSetup}
         />
       </StageInner>
     </AppShell>
