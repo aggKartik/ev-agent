@@ -4,7 +4,6 @@ import {
   PLAN_DEFAULT_CONNECTOR_TYPES,
   PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
   PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
-  PLAN_DEFAULT_STARTING_SOC_PERCENT,
   PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
   PLAN_DEFAULT_USABLE_RANGE_MILES,
   PLAN_DEFAULT_VEHICLE_LABEL,
@@ -16,6 +15,7 @@ import type {
   PlanRequest,
 } from '#/shared/plan/contracts';
 import { planRequestSchema } from '#/shared/plan/contracts';
+import { startingSocPercentFromLiveBattery } from '#/shared/plan/vehicleStartingSoc';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 
 type UsePlanFormArgs = {
@@ -52,10 +52,14 @@ export const CONNECTOR_OPTION_ORDER: EvConnectorSlug[] = [
  * **Vehicle Energy Profile** the server passed in `plan.context` so the
  * Driver never re-enters their car. When no profile is present (the
  * `/plan` route normally redirects to onboarding before that happens) the
- * platform `PLAN_DEFAULT_*` constants carry.
+ * platform `PLAN_DEFAULT_*` constants carry. Starting SOC prefers live Tesla
+ * Fleet `liveBatteryPercent` when `plan.context` includes it.
  */
 export function usePlanForm({ context, onSubmit }: UsePlanFormArgs) {
   const profile = context.vehicleProfile;
+  const startingSocPercent = startingSocPercentFromLiveBattery(
+    context.liveBatteryPercent,
+  );
   return useForm({
     defaultValues: {
       from: { full: '' } as PlanAddressDraft,
@@ -64,7 +68,7 @@ export function usePlanForm({ context, onSubmit }: UsePlanFormArgs) {
       vehicleLabel: profile?.vehicleLabel ?? PLAN_DEFAULT_VEHICLE_LABEL,
       usableRangeMiles:
         profile?.usableRangeMiles ?? PLAN_DEFAULT_USABLE_RANGE_MILES,
-      startingSocPercent: PLAN_DEFAULT_STARTING_SOC_PERCENT,
+      startingSocPercent,
       targetArrivalSocPercent:
         profile?.preferences.targetArrivalSocPercent ??
         PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
