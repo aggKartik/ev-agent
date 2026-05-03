@@ -1,6 +1,6 @@
-import { PLAN_ACTIVITY_CATALOG } from '#/features/plan/utils/data';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import type { PlanRequest } from '#/shared/plan/contracts';
+import { PLAN_ACTIVITY_CATALOG } from '#/shared/plan/data';
 import {
   evPreplanPolicyBlock,
   formatEvGroundingBlock,

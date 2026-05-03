@@ -13,11 +13,9 @@ import {
 import { Box, Grid } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
-import type {
-  PlanActivityCatalogItem,
-  PlanActivityId,
-} from '#/features/plan/utils/data';
+import type { PlanActivityId } from '#/shared/plan/constants';
 import type { PlanActivitySelection } from '#/shared/plan/contracts';
+import type { PlanActivityCatalogItem } from '#/shared/plan/data';
 import { selectableCard } from '#/styled-system/recipes/selectable-card';
 import ActivityDwellSlider from './ActivityDwellSlider';
 

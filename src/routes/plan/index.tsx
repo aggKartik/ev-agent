@@ -10,8 +10,8 @@ import {
   usePlanSubmit,
 } from '#/features/plan/hooks/usePlanSubmit';
 import { useStatus } from '#/features/plan/store';
-import { getPlanCatalog } from '#/features/plan/utils/helpers';
 import { trpc } from '#/lib/trpc';
+import { getPlanCatalog } from '#/shared/plan/helpers';
 import { css, cx } from '#/styled-system/css';
 
 export const Route = createFileRoute('/plan/')({

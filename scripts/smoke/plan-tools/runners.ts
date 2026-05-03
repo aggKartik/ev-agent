@@ -1,11 +1,14 @@
 import type { Tool } from 'ai';
-import { makeFindChargingStationsTool } from '#/server/ai/tools/findChargingStations';
-import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
-import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
-import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
-import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
-import type { TomTomLdevPrefetchResult } from '#/server/evRouting/tomtom/longDistanceEv';
-import { tryTomTomLongDistanceEvRouteDetailed } from '#/server/evRouting/tomtom/longDistanceEv';
+import { makeFindChargingStationsTool } from '#/server/capabilities/ai/tools/findChargingStations';
+import { makeGetDirectionsTool } from '#/server/capabilities/ai/tools/getDirections';
+import { makeNarrateProgressTool } from '#/server/capabilities/ai/tools/narrateProgress';
+import { makeSearchPlacesTool } from '#/server/capabilities/ai/tools/searchPlaces';
+import {
+  type TomTomLdevPrefetchResult,
+  tryTomTomLongDistanceEvRouteDetailed,
+} from '#/server/capabilities/evRouting/adapters/tomtom/longDistanceEv';
+import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
+import type { EvChargeStopCandidate } from '#/server/capabilities/evRouting/domain/types';
 import {
   type PlanStreamEvent,
   planRequestSchema,
@@ -43,7 +46,7 @@ function summarizeTomTomDiag(
 export async function runNarrate(): Promise<void> {
   const events: PlanStreamEvent[] = [];
   const t = makeNarrateProgressTool({
-    emit: (e) => {
+    emit: (e: PlanStreamEvent) => {
       events.push(e);
     },
   }) as Tool & {
@@ -174,7 +177,7 @@ export async function runPrefetchEvRoute(
           plan.corridorGeometry.at(-1),
         ].filter(Boolean),
         chargeAnchorsCount: anchors.length,
-        anchorSample: anchors.slice(0, 3).map((a) => ({
+        anchorSample: anchors.slice(0, 3).map((a: EvChargeStopCandidate) => ({
           ordinal: a.ordinal,
           near: { lat: a.coordinate.lat, lng: a.coordinate.lng },
           dwellMin: a.suggestedDwellMinutes,

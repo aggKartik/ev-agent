@@ -73,4 +73,15 @@ describe('envSchema', () => {
     expect(parsed.OPENAI_MODEL).toBeUndefined();
     expect(parsed.OPENCHARGEMAP_KEY).toBeUndefined();
   });
+
+  it('rejects empty / whitespace-only required secrets', () => {
+    for (const key of [
+      'OPENAI_API_KEY',
+      'MAPBOX_TOKEN',
+      'TOMTOM_API_KEY',
+    ] as const) {
+      expect(() => envSchema.parse({ ...baseEnv, [key]: '' })).toThrow();
+      expect(() => envSchema.parse({ ...baseEnv, [key]: '   ' })).toThrow();
+    }
+  });
 });

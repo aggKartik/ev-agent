@@ -1,9 +1,5 @@
 import EventEmitter, { on } from 'node:events';
 import { tracked } from '@trpc/server';
-import {
-  getPlanCatalog,
-  suggestPlanAddresses,
-} from '#/features/plan/utils/helpers';
 import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
 import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
@@ -13,6 +9,7 @@ import {
   type PlanStreamEvent,
   planRequestSchema,
 } from '#/shared/plan/contracts';
+import { getPlanCatalog, suggestPlanAddresses } from '#/shared/plan/helpers';
 import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
 
 export const planRouter = router({
@@ -56,13 +53,13 @@ export const planRouter = router({
         type: 'phase',
         label: 'Route preflight',
         detail: 'Grounding EV corridor and charge anchors',
-      });
+      } satisfies PlanStreamEvent);
       id += 1;
       yield tracked(String(id), {
         type: 'narration',
         message:
           'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
-      });
+      } satisfies PlanStreamEvent);
 
       try {
         for await (const [event] of on(ee, 'event', { signal: iterSignal })) {

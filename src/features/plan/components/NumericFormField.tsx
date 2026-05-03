@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Box } from 'styled-system/jsx';
 import Input from '#/components/ui/Input';
 import { css } from '#/styled-system/css';
@@ -46,10 +47,12 @@ export default function NumericFormField({
   step = 1,
   inputMode = 'numeric',
 }: NumericFormFieldProps) {
+  const [focused, setFocused] = useState(false);
+
   return (
     <Box className={wrapClass}>
       <Box className={sublabelClass}>{label}</Box>
-      <Box className={planFormInputWrapClass} data-focused={false}>
+      <Box className={planFormInputWrapClass} data-focused={focused}>
         <Input
           type="number"
           inputMode={inputMode}
@@ -58,6 +61,8 @@ export default function NumericFormField({
           step={step}
           value={field.state.value}
           className={planFormTextInputClass}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onChange={(event) => {
             const n = event.target.valueAsNumber;
             if (Number.isFinite(n)) field.handleChange(n);

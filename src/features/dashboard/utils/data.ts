@@ -4,7 +4,7 @@ import type {
   DashboardRecentTrip,
   DashboardTeslaSummary,
   DashboardUtilityTile,
-} from './contracts';
+} from '#/features/dashboard/types/contracts';
 
 export const DASHBOARD_PROMPT_SUGGESTIONS = [
   'Coffee crawl up the PCH this Saturday',

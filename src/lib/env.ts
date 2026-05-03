@@ -30,15 +30,15 @@ export const envSchema = z.object({
 
   // Plan agent LLM. OpenAI-compatible HTTP API; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.
-  OPENAI_API_KEY: z.string(),
+  OPENAI_API_KEY: z.string().trim().min(1),
   OPENAI_BASE_URL: z.string().url().optional(),
   OPENAI_MODEL: z.string().optional(),
 
   // Mapbox token for places + directions tools.
-  MAPBOX_TOKEN: z.string(),
+  MAPBOX_TOKEN: z.string().trim().min(1),
 
   // TomTom Long Distance EV Routing prefetch.
-  TOMTOM_API_KEY: z.string(),
+  TOMTOM_API_KEY: z.string().trim().min(1),
 
   // OpenChargeMap API key (optional but recommended for higher quotas).
   OPENCHARGEMAP_KEY: z.string().optional(),

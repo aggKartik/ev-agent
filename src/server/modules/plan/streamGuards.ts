@@ -35,7 +35,11 @@ function pruneRecentStarts(userId: string, now: number): number[] {
   const cutoff = now - PLAN_STREAM_RATE_WINDOW_MS;
   const existing = recentStartsByUser.get(userId) ?? [];
   const fresh = existing.filter((ts) => ts > cutoff);
-  recentStartsByUser.set(userId, fresh);
+  if (fresh.length === 0) {
+    recentStartsByUser.delete(userId);
+  } else {
+    recentStartsByUser.set(userId, fresh);
+  }
   return fresh;
 }
 
