@@ -1,18 +1,18 @@
 import type { PlanRequest } from '#/features/plan/contracts';
 import { resolvePlanCoordinate } from '#/features/plan/helpers';
 import type { Coordinate } from '#/lib/geoTypes';
+import { tryTomTomLongDistanceEvRoute } from '../adapters/tomtom/longDistanceEv';
 import {
   interpolateStraightLine,
   metersToRouteMiles,
   subsampleCorridor,
   totalPolylineMiles,
-} from '#/server/evRouting/geo';
-import { tryTomTomLongDistanceEvRoute } from '#/server/evRouting/tomtom/longDistanceEv';
+} from './geo';
 import type {
   EvChargeStopCandidate,
   EvRoutePlan,
   EvRoutePlanSource,
-} from '#/server/evRouting/types';
+} from './types';
 
 /**
  * EV corridor prefetch: TomTom Long Distance EV Routing only; fallback straight polyline without anchors.

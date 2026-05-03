@@ -12,7 +12,7 @@ import {
   TESLA_DEFAULT_SCOPES,
   TESLA_TOKEN_URL,
   teslaAudience,
-} from './config';
+} from '../config';
 
 /**
  * Tesla Fleet API OAuth provider.

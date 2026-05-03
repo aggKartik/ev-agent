@@ -5,11 +5,11 @@ import {
   planAgentModelResultSchema,
   planResultSchema,
 } from '#/features/plan/contracts';
-import { getPlanModel } from '#/server/ai/helpers';
+import { getPlanModel } from '../orchestration/getPlanModel';
 import {
   PLAN_AGENT_REPAIR_MAX_OUTPUT_TOKENS,
   PLAN_AGENT_REPAIR_SNIPPET_MAX_CHARS,
-} from './planAgentConstants';
+} from '../orchestration/planAgentConstants';
 import { recoverPlanResultFromRepairedModelText } from './planAgentModelParse';
 
 function logNoObjectError(error: NoObjectGeneratedError): void {

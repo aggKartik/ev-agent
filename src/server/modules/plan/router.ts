@@ -6,10 +6,10 @@ import {
   planRequestSchema,
 } from '#/features/plan/contracts';
 import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
-import { runPlanAgent } from '#/server/ai/agents/planAgent';
-import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
-import type { EvRoutePlan } from '#/server/evRouting/types';
-import { publicProcedure, router } from '../trpc';
+import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
+import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
+import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
+import { publicProcedure, router } from '#/server/platform/trpc/procedures';
 
 export const planRouter = router({
   catalog: publicProcedure.query(() => getPlanCatalog()),

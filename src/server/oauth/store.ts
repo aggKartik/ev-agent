@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
 import { sql } from 'kysely';
-import type { Database, OAuthAccount } from '#/server/db/types';
+import type { Database, OAuthAccount } from '#/server/platform/db/types';
 import { decryptToken, encryptToken } from './crypto';
 import { NotLinkedError } from './errors';
 import type { OAuthProvider, TokenSet } from './types';

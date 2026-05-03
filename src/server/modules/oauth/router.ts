@@ -2,7 +2,11 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { listProviders, tryGetProviderBySlug } from '#/server/oauth/registry';
 import { deleteLinkedAccount, getLinkedStatus } from '#/server/oauth/store';
-import { protectedProcedure, publicProcedure, router } from '../trpc';
+import {
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from '#/server/platform/trpc/procedures';
 
 /**
  * Generic cross-provider OAuth lifecycle procedures. Provider-specific data

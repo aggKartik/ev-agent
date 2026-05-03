@@ -1,5 +1,5 @@
 import { registerProvider } from '#/server/oauth/registry';
-import { teslaProvider } from './provider';
+import { teslaProvider } from './auth/provider';
 
 // Side-effect registration: importing this module registers the provider
 // with the global OAuth registry. `src/server/routers/index.ts` imports it
@@ -13,5 +13,5 @@ export {
   teslaFleetBaseUrl,
   teslaRegion,
 } from './config';
-export * from './fleet-api';
-export * from './vin';
+export * from './fleet/fleet-api';
+export * from './vehicle/vin';

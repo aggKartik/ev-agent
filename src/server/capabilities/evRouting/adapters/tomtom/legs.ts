@@ -1,6 +1,6 @@
 import type { Coordinate } from '#/lib/geoTypes';
-import { decodeGoogleEncodedPolyline } from '#/server/evRouting/decodePolyline';
-import type { EvChargeStopCandidate } from '#/server/evRouting/types';
+import { decodeGoogleEncodedPolyline } from '../../domain/decodePolyline';
+import type { EvChargeStopCandidate } from '../../domain/types';
 
 type TomTomPoint = { latitude?: number; longitude?: number };
 

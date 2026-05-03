@@ -1,4 +1,4 @@
-import type { EvRoutePlan } from '#/server/evRouting/types';
+import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 
 export function formatEvGroundingBlock(plan?: EvRoutePlan): string {
   if (!plan) {

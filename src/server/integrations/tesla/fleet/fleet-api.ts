@@ -1,5 +1,5 @@
 import { OAuthError } from '#/server/oauth/errors';
-import { type TeslaRegion, teslaFleetBaseUrl } from './config';
+import { type TeslaRegion, teslaFleetBaseUrl } from '../config';
 
 /**
  * Tesla Fleet API typed client. Pure function: takes an access token +

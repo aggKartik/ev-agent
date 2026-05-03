@@ -7,7 +7,7 @@ import {
 } from '#/server/integrations/tesla';
 import { NotLinkedError, OAuthError } from '#/server/oauth/errors';
 import { getFreshAccessToken } from '#/server/oauth/store';
-import { protectedProcedure, router } from '../trpc';
+import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
 
 /**
  * Tesla-specific data procedures. Lifecycle (connect / status / disconnect)

@@ -1,15 +1,15 @@
 import type { PlanRequest } from '#/features/plan/contracts';
 import type { Coordinate } from '#/lib/geoTypes';
+import type { EvChargeStopCandidate } from '../../domain/types';
 import {
   buildTomTomChargingConnectorBlocks,
   consumptionWhPerMileToInkWhPerHundredKm,
-} from '#/server/evRouting/tomtom/chargingParams';
+} from './chargingParams';
 import {
   corridorCoordsFromTomTomLegs,
   extractChargeAnchorsFromTomTomLegs,
   type TomTomLeg,
-} from '#/server/evRouting/tomtom/legs';
-import type { EvChargeStopCandidate } from '#/server/evRouting/types';
+} from './legs';
 
 /** Optional extra timeout when caller signal has no bounded deadline */
 const FALLBACK_ROUTE_MS = 18_000;

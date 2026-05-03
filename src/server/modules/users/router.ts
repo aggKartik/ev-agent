@@ -1,5 +1,5 @@
+import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
 import { resolveClerkFirstName } from '#/server/users';
-import { protectedProcedure, router } from '../trpc';
 
 /**
  * Current-user procedures. Today this exposes a thin `profile` query so the

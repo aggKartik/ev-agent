@@ -3,17 +3,13 @@
 // is populated before any tRPC request arrives.
 import '#/server/integrations/tesla';
 
-import { router } from '../trpc';
-import { dashboardRouter } from './dashboard';
-import { exampleRouter } from './example';
-import { oauthRouter } from './oauth';
-import { planRouter } from './plan';
-import { teslaRouter } from './tesla';
-import { userRouter } from './user';
+import { oauthRouter } from '#/server/modules/oauth/router';
+import { planRouter } from '#/server/modules/plan/router';
+import { teslaRouter } from '#/server/modules/tesla/router';
+import { userRouter } from '#/server/modules/users/router';
+import { router } from './procedures';
 
 export const appRouter = router({
-  dashboard: dashboardRouter,
-  example: exampleRouter,
   oauth: oauthRouter,
   plan: planRouter,
   tesla: teslaRouter,

@@ -1,7 +1,10 @@
 import { auth } from '@clerk/tanstack-react-start/server';
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import {
+  getOrLinkUserByClerkId,
+  resolveClerkPrimaryEmail,
+} from '#/server/users';
 import { db } from './db';
-import { getOrLinkUserByClerkId, resolveClerkPrimaryEmail } from './users';
 
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
   const { userId: clerkUserId, isAuthenticated } = await auth();

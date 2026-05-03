@@ -7,18 +7,21 @@ import {
   type PlanStreamEvent,
   planAgentModelResultSchema,
 } from '#/features/plan/contracts';
-import { getPlanModel } from '#/server/ai/helpers';
-import { makeFindChargingStationsTool } from '#/server/ai/tools/findChargingStations';
-import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
-import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
-import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
-import type { EvRoutePlan } from '#/server/evRouting/types';
+import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
+import { recoverPlanResultAfterNoObjectError } from '../parsing/planAgentRecovery';
+import {
+  buildSystemPrompt,
+  buildUserPrompt,
+} from '../prompts/planAgentPrompts';
+import { makeFindChargingStationsTool } from '../tools/findChargingStations';
+import { makeGetDirectionsTool } from '../tools/getDirections';
+import { makeNarrateProgressTool } from '../tools/narrateProgress';
+import { makeSearchPlacesTool } from '../tools/searchPlaces';
+import { getPlanModel } from './getPlanModel';
 import {
   PLAN_AGENT_MAX_OUTPUT_TOKENS,
   PLAN_AGENT_MAX_STEPS,
 } from './planAgentConstants';
-import { buildSystemPrompt, buildUserPrompt } from './planAgentPrompts';
-import { recoverPlanResultAfterNoObjectError } from './planAgentRecovery';
 
 type RunOpts = {
   signal?: AbortSignal;

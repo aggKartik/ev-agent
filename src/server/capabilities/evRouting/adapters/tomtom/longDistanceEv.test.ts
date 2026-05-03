@@ -4,12 +4,12 @@ import {
   buildTomTomChargingConnectorBlocks,
   connectorSlugsToTomTomDcPlugTypes,
   consumptionWhPerMileToInkWhPerHundredKm,
-} from '#/server/evRouting/tomtom/chargingParams';
+} from './chargingParams';
 import {
   corridorCoordsFromTomTomLegs,
   extractChargeAnchorsFromTomTomLegs,
   type TomTomLeg,
-} from '#/server/evRouting/tomtom/legs';
+} from './legs';
 
 describe('consumptionWhPerMileToInkWhPerHundredKm', () => {
   it('converts traction Wh/mi to LDEV pairs scale', () => {
