@@ -6,6 +6,7 @@
     "module": "ESNext",
     "baseUrl": ".",
     "paths": {
+      "#/styled-system/*": ["./styled-system/*"],
       "#/*": ["./src/*"],
       "@/*": ["./src/*"]
     },

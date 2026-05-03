@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
-import WelcomeStep from '#/components/onboarding/WelcomeStep';
+import Header from '#/components/layout/Header';
+import WelcomeStep from '#/features/onboarding/components/WelcomeStep';
 import { emptyOnboardingSearch } from '#/features/onboarding/search';
 
 export const Route = createFileRoute('/')({ component: WelcomeRoute });

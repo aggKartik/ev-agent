@@ -2,17 +2,17 @@ import { useForm, useStore } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect } from 'react';
 import { Box } from 'styled-system/jsx';
-import Button from '#/components/Button';
-import Header from '#/components/Header';
 import AppShell, { StageInner } from '#/components/layout/AppShell';
-import ConnectStep from '#/components/onboarding/ConnectStep';
-import IntroCarStep from '#/components/onboarding/IntroCarStep';
-import MakeStep from '#/components/onboarding/MakeStep';
-import ModelStep from '#/components/onboarding/ModelStep';
-import NameStep from '#/components/onboarding/NameStep';
-import PrefsStep from '#/components/onboarding/PrefsStep';
-import SuccessStep from '#/components/onboarding/SuccessStep';
-import YearStep from '#/components/onboarding/YearStep';
+import Header from '#/components/layout/Header';
+import Button from '#/components/ui/Button';
+import ConnectStep from '#/features/onboarding/components/ConnectStep';
+import IntroCarStep from '#/features/onboarding/components/IntroCarStep';
+import MakeStep from '#/features/onboarding/components/MakeStep';
+import ModelStep from '#/features/onboarding/components/ModelStep';
+import NameStep from '#/features/onboarding/components/NameStep';
+import PrefsStep from '#/features/onboarding/components/PrefsStep';
+import SuccessStep from '#/features/onboarding/components/SuccessStep';
+import YearStep from '#/features/onboarding/components/YearStep';
 import { useKeyboardStepNavigation } from '#/features/onboarding/keyboard';
 import { useOAuthCallbackResult } from '#/features/onboarding/oauth-callback';
 import {
@@ -31,8 +31,8 @@ import {
   steps,
 } from '#/features/onboarding/steps';
 import { trpc } from '#/lib/trpc';
-import { css } from '../../../styled-system/css';
-import { progress } from '../../../styled-system/recipes';
+import { css } from '#/styled-system/css';
+import { progress } from '#/styled-system/recipes';
 
 export const Route = createFileRoute('/onboarding/')({
   validateSearch: parseOnboardingSearch,
