@@ -8,12 +8,13 @@ import {
 } from '#/server/capabilities/vehicles/store';
 import { completeOnboardingInputFromFleetSummary } from '#/server/integrations/tesla/onboardingIdentity';
 import { loadTeslaFleetVehiclesProtected } from '#/server/modules/tesla/loadFleetTrpc';
+import { selectFleetVehicleForOnboarding } from '#/server/modules/vehicles/selectFleetVehicleForOnboarding';
 import { protectedProcedure, router } from '#/server/platform/trpc/procedures';
 import {
+  completeOnboardingFromTeslaInputSchema,
   upsertOverridesInputSchema,
   type VehicleEnergyProfile,
 } from '#/shared/vehicles/contracts';
-import { pickTeslaVehicleForIdentity } from '#/shared/vehicles/teslaPick';
 
 /**
  * The **Vehicle** persistence surface. Read returns the resolved
@@ -29,35 +30,46 @@ export const vehicleRouter = router({
     return { vehicle, profile };
   }),
 
-  completeOnboardingFromTesla: protectedProcedure.mutation(async ({ ctx }) => {
-    const vehicles = await loadTeslaFleetVehiclesProtected(ctx);
+  completeOnboardingFromTesla: protectedProcedure
+    .input(completeOnboardingFromTeslaInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const vehicles = await loadTeslaFleetVehiclesProtected(ctx);
 
-    const row = await getVehicle(ctx.db, ctx.userId);
-    const target =
-      pickTeslaVehicleForIdentity(vehicles, row) ?? vehicles[0] ?? null;
-    if (!target) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message:
-          'No Tesla vehicle found on your account. Add a vehicle in the Tesla app, then try again.',
-      });
-    }
+      if (vehicles.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'No Tesla vehicle found on your account. Add a vehicle in the Tesla app, then try again.',
+        });
+      }
 
-    const input = completeOnboardingInputFromFleetSummary(target);
-    if (!input) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message:
-          'Could not resolve your Tesla model and year from its VIN. Contact support if this persists.',
-      });
-    }
+      const target = selectFleetVehicleForOnboarding(
+        vehicles,
+        input.teslaVehicleId,
+      );
+      if (!target) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'That vehicle was not found on your Tesla account. Refresh the list and pick a vehicle from your account.',
+        });
+      }
 
-    const vehicle = await completeOnboarding(ctx.db, ctx.userId, input);
-    return {
-      vehicle,
-      profile: resolveEnergyProfile(vehicle),
-    };
-  }),
+      const inputRow = completeOnboardingInputFromFleetSummary(target);
+      if (!inputRow) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Could not resolve your Tesla model and year from its VIN. Contact support if this persists.',
+        });
+      }
+
+      const vehicle = await completeOnboarding(ctx.db, ctx.userId, inputRow);
+      return {
+        vehicle,
+        profile: resolveEnergyProfile(vehicle),
+      };
+    }),
 
   upsertOverrides: protectedProcedure
     .input(upsertOverridesInputSchema)
