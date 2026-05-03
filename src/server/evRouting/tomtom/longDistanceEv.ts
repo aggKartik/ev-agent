@@ -1,149 +1,17 @@
 import type { Coordinate, PlanRequest } from '#/features/plan/contracts';
-import { decodeGoogleEncodedPolyline } from '#/server/evRouting/decodePolyline';
+import {
+  buildTomTomChargingConnectorBlocks,
+  consumptionWhPerMileToInkWhPerHundredKm,
+} from '#/server/evRouting/tomtom/chargingParams';
+import {
+  corridorCoordsFromTomTomLegs,
+  extractChargeAnchorsFromTomTomLegs,
+  type TomTomLeg,
+} from '#/server/evRouting/tomtom/legs';
 import type { EvChargeStopCandidate } from '#/server/evRouting/types';
-
-/** kWh consumed per 100 km from average traction Wh/mile (steady-state approximation). */
-export function consumptionWhPerMileToInkWhPerHundredKm(
-  whPerMile: number,
-): number {
-  return (whPerMile * 100) / (1.609_344 * 1000);
-}
-
-type ConnectorSlug = PlanRequest['connectorTypes'][number];
-
-type TomTomPlugType = string;
-
-/** Map planner connector slug → TomTom `plugTypes` literals (subset of official docs). */
-export function connectorSlugsToTomTomDcPlugTypes(
-  slugs: ConnectorSlug[],
-): TomTomPlugType[] {
-  const set = new Set<TomTomPlugType>();
-
-  const addMaybe = (
-    slug: ConnectorSlug,
-    plugs: readonly TomTomPlugType[],
-  ): void => {
-    if (!slugs.includes(slug)) return;
-    for (const p of plugs) set.add(p);
-  };
-
-  addMaybe('NACS', [
-    'Tesla_Connector',
-    'IEC_62196_Type_2_Connector_Cable_Attached',
-  ]);
-  addMaybe('CCS1', [
-    'Combo_to_IEC_62196_Type_1_Base',
-    'IEC_62196_Type_1_Connector_Cable_Attached',
-  ]);
-  addMaybe('J1772', ['SAE_J1772']);
-  addMaybe('TYPE_2', [
-    'IEC_62196_Type_2_Outlet',
-    'IEC_62196_Type_2_Connector_Cable_Attached',
-    'Combo_to_IEC_62196_Type_2_Base',
-  ]);
-  addMaybe('CHADEMO', ['CHAdeMO']);
-
-  /* Default if unknown mapping edge case */
-  if (set.size === 0) {
-    set.add('Combo_to_IEC_62196_Type_1_Base').add('Tesla_Connector');
-  }
-
-  return [...set];
-}
-
-/**
- * Charging connector model for POST `chargingParameters` (DC-focused; adds Type-1/J1772 AC when selected).
- */
-export function buildTomTomChargingConnectorBlocks(
-  slugs: ConnectorSlug[],
-): object[] {
-  const dcPlugTypes = connectorSlugsToTomTomDcPlugTypes(slugs);
-  const connectors: object[] = [];
-
-  const wantsAc = slugs.includes('J1772') || slugs.includes('TYPE_2');
-
-  if (wantsAc) {
-    const acPlugs: TomTomPlugType[] = [];
-    if (slugs.includes('TYPE_2')) {
-      acPlugs.push(
-        'IEC_62196_Type_2_Outlet',
-        'IEC_62196_Type_2_Connector_Cable_Attached',
-        'Combo_to_IEC_62196_Type_2_Base',
-      );
-    }
-    if (slugs.includes('J1772') || slugs.includes('CCS1')) {
-      acPlugs.push('SAE_J1772');
-    }
-    if (acPlugs.length === 0) {
-      acPlugs.push(
-        'IEC_62196_Type_2_Outlet',
-        'IEC_62196_Type_2_Connector_Cable_Attached',
-      );
-    }
-
-    connectors.push({
-      currentType: 'AC3',
-      plugTypes: [...new Set(acPlugs)],
-      efficiency: 0.92,
-      maxPowerInkW: 11,
-    });
-  }
-
-  connectors.push({
-    currentType: 'DC',
-    plugTypes: [...new Set(dcPlugTypes)],
-    voltageRange: { minVoltageInV: 0, maxVoltageInV: 500 },
-    efficiency: 0.92,
-    maxPowerInkW: 250,
-  });
-  connectors.push({
-    currentType: 'DC',
-    plugTypes: [...new Set(dcPlugTypes)],
-    voltageRange: { minVoltageInV: 500, maxVoltageInV: 2000 },
-    efficiency: 0.92,
-    baseLoadInkW: 0.3,
-    maxPowerInkW: 0,
-  });
-
-  return connectors;
-}
 
 /** Optional extra timeout when caller signal has no bounded deadline */
 const FALLBACK_ROUTE_MS = 18_000;
-
-type TomTomPoint = { latitude?: number; longitude?: number };
-
-function isPoint(o: unknown): o is TomTomPoint {
-  if (!o || typeof o !== 'object') return false;
-  const p = o as TomTomPoint;
-  return typeof p.latitude === 'number' && typeof p.longitude === 'number';
-}
-
-function pointToCoord(p: TomTomPoint): Coordinate {
-  return { lat: p.latitude ?? 0, lng: p.longitude ?? 0 };
-}
-
-type ChargingInfoLeg = {
-  chargingTimeInSeconds?: number;
-  chargingParkUuid?: string;
-  chargingParkName?: string;
-  chargingParkLocation?: {
-    coordinate?: TomTomPoint;
-  };
-};
-
-export type TomTomLeg = {
-  summary?: {
-    chargingInformationAtEndOfLeg?: ChargingInfoLeg;
-    lengthInMeters?: number;
-    encodedPolyline?: string;
-    encodedPolylinePrecision?: number;
-  };
-  /** TomTom LDEV commonly places polyline here (same as Routing API), not always under `summary`. */
-  encodedPolyline?: string;
-  encodedPolylinePrecision?: number;
-  points?: TomTomPoint[];
-};
 
 type TomTomRoute = {
   summary?: {
@@ -158,92 +26,6 @@ type TomTomLdevResponse =
       detailedError?: { code?: string; message?: string };
     }
   | undefined;
-
-/** Concatenate decoded coordinates from LDEV routing legs into one corridor. */
-export function corridorCoordsFromTomTomLegs(legs: TomTomLeg[]): Coordinate[] {
-  const geom: Coordinate[] = [];
-  for (const leg of legs) appendTomTomLegGeometry(geom, leg);
-  return geom;
-}
-
-/** Decode leg geometry: encoded polyline (summary or leg root), else point list. */
-function appendTomTomLegGeometry(points: Coordinate[], leg: TomTomLeg): void {
-  const enc = leg.summary?.encodedPolyline ?? leg.encodedPolyline;
-  const precRaw =
-    leg.summary?.encodedPolylinePrecision ?? leg.encodedPolylinePrecision;
-  if (typeof enc === 'string' && enc.length >= 2) {
-    /** TomTom Routing/LDEV: omission means `coordinatePrecision=default` → polyline divisor 10^5. */
-    const prec =
-      typeof precRaw === 'number' && precRaw >= 4 && precRaw <= 10
-        ? precRaw
-        : 5;
-    const decoded = decodeGoogleEncodedPolyline(enc, prec);
-    for (const pt of decoded) appendPoint(points, pt);
-    return;
-  }
-  const raw = leg.points;
-  if (Array.isArray(raw)) {
-    for (const p of raw) {
-      if (isPoint(p)) appendPoint(points, pointToCoord(p));
-    }
-  }
-}
-
-function appendPoint(points: Coordinate[], p: Coordinate): void {
-  const prev = points[points.length - 1];
-  if (
-    prev &&
-    Math.abs(prev.lat - p.lat) < 1e-8 &&
-    Math.abs(prev.lng - p.lng) < 1e-8
-  )
-    return;
-  points.push(p);
-}
-
-/** Extract chargers from LDEV legs (one per leg ending with charging summary). */
-export function extractChargeAnchorsFromTomTomLegs(
-  legs: TomTomLeg[],
-): EvChargeStopCandidate[] {
-  const out: EvChargeStopCandidate[] = [];
-  let ordinal = 0;
-  const seen = new Set<string>();
-
-  for (const leg of legs) {
-    const info = leg.summary?.chargingInformationAtEndOfLeg;
-    const coordRaw = info?.chargingParkLocation?.coordinate;
-    if (!info || !isPoint(coordRaw)) continue;
-    ordinal += 1;
-    const key = `${coordRaw.latitude?.toFixed(5)},${coordRaw.longitude?.toFixed(5)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const minutes =
-      typeof info.chargingTimeInSeconds === 'number'
-        ? Math.min(240, Math.max(5, Math.ceil(info.chargingTimeInSeconds / 60)))
-        : 28;
-
-    const name = info.chargingParkName?.slice(0, 80);
-
-    const candidate: EvChargeStopCandidate = {
-      ordinal,
-      coordinate: pointToCoord(coordRaw),
-      rationale: [
-        'TomTom LDEV charging waypoint',
-        name ? ` — ${name}` : '',
-      ].join(''),
-      suggestedDwellMinutes: minutes,
-    };
-    if (
-      typeof info.chargingParkUuid === 'string' &&
-      info.chargingParkUuid.length > 0
-    ) {
-      candidate.vendor = {
-        tomTomChargingParkUuid: info.chargingParkUuid,
-      };
-    }
-    out.push(candidate);
-  }
-  return out;
-}
 
 export type TomTomLdevAttempt = {
   geometry: Coordinate[];
@@ -362,9 +144,8 @@ export async function tryTomTomLongDistanceEvRouteDetailed(opts: {
     return { ok: false, reason: 'fetch_aborted_or_network', fetchError: msg };
   }
 
-  let bodyTextForDiag = '';
   const text = await res.text();
-  bodyTextForDiag = truncatePreview(text);
+  const bodyTextForDiag = truncatePreview(text);
 
   if (!res.ok) {
     return {

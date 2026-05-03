@@ -1,19 +1,3 @@
-#!/usr/bin/env bun
-/**
- * Manual smoke test: call each plan agent tool's execute() outside the LLM loop.
- *
- * Usage:
- *   bun run smoke:tools
- *   bun --env-file=.env run scripts/smoke-plan-tools.ts
- *   bun run scripts/smoke-plan-tools.ts --tools=narrate,ocm
- *
- * Simulate plan-stream EV prefetch (`computeEvRoute` → TomTom LDEV):
- *   bun run scripts/smoke-plan-tools.ts --tools=tomtom
- * Verbose LDEV diagnostics (second billed LDEV round-trip when key is set; respects --timeout):
- *   bun --env-file=.env run scripts/smoke-plan-tools.ts --tools=tomtom --verbose
- *   SMOKE_VERBOSE_TOMTOM=1 bun run scripts/smoke-plan-tools.ts --tools=tomtom
- */
-
 import type { Tool } from 'ai';
 import {
   type PlanStreamEvent,
@@ -24,98 +8,9 @@ import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
 import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
 import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
 import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
-import type { TomTomLdevPrefetchResult } from '#/server/evRouting/tomtomLongDistanceEv';
-import { tryTomTomLongDistanceEvRouteDetailed } from '#/server/evRouting/tomtomLongDistanceEv';
-
-const DEFAULT_TIMEOUT_MS = 25_000;
-
-const SF = { lat: 37.7749, lng: -122.4194 };
-const OAKLAND = { lat: 37.8044, lng: -122.2712 };
-
-type ToolGroup = 'narrate' | 'ocm' | 'mapbox' | 'tomtom';
-
-function parseArgs(argv: string[]): {
-  groups: ReadonlySet<ToolGroup>;
-  timeoutMs: number;
-  verboseTomTom: boolean;
-} {
-  let timeoutMs = DEFAULT_TIMEOUT_MS;
-  let verboseTomTomFlag = false;
-  const groups = new Set<ToolGroup>();
-
-  for (let i = 2; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === '--help' || arg === '-h') {
-      console.log(`smoke-plan-tools — exercise plan-agent tool execute() handlers
-
-Usage:
-  bun run smoke:tools
-  bun run scripts/smoke-plan-tools.ts [options]
-
-Options:
-  --tools=a,b,c   Comma list: narrate | ocm | mapbox | tomtom (default: all four)
-                  mapbox covers searchPlaces + getDirections;
-                  tomtom runs computeEvRoute (server prefetch → TomTom LDEV or straight-line fallback)
-  --timeout=ms    Per-request abort for networked tools (${DEFAULT_TIMEOUT_MS})
-  --verbose,-v    With --tools=tomtom: print LDEV diagnostics (requires a second billed
-                  TomTom HTTP call when TOMTOM_API_KEY is set; first line is probe, then computeEvRoute).
-                  Equivalent: env SMOKE_VERBOSE_TOMTOM=1
-  -h, --help      This message
-
-Mapbox tools skip with hint when MAPBOX_TOKEN is unset.
-TomTom prefetch still runs without TOMTOM_API_KEY (expect straight_line_fallback + empty anchors).
-`);
-      process.exit(0);
-    }
-    if (arg.startsWith('--tools=')) {
-      const list = arg.slice('--tools='.length).split(',');
-      for (const key of list) {
-        const k = key.trim().toLowerCase();
-        if (k === 'narrate') groups.add('narrate');
-        else if (k === 'ocm') groups.add('ocm');
-        else if (k === 'mapbox') groups.add('mapbox');
-        else if (k === 'tomtom' || k === 'prefetch') groups.add('tomtom');
-        else if (k.length > 0) {
-          console.error(
-            `Unknown --tools segment: "${key}". Use narrate | ocm | mapbox | tomtom`,
-          );
-          process.exit(2);
-        }
-      }
-      continue;
-    }
-    if (arg.startsWith('--timeout=')) {
-      const n = Number(arg.slice('--timeout='.length));
-      if (!Number.isFinite(n) || n <= 0) {
-        console.error('--timeout must be a positive number (ms)');
-        process.exit(2);
-      }
-      timeoutMs = n;
-      continue;
-    }
-    if (arg === '--verbose' || arg === '-v') {
-      verboseTomTomFlag = true;
-      continue;
-    }
-    console.error(`Unexpected argument: ${arg}`);
-    process.exit(2);
-  }
-
-  if (groups.size === 0) {
-    groups.add('narrate');
-    groups.add('ocm');
-    groups.add('mapbox');
-    groups.add('tomtom');
-  }
-
-  const verboseTomTom =
-    verboseTomTomFlag ||
-    ['1', 'true', 'yes'].includes(
-      process.env.SMOKE_VERBOSE_TOMTOM?.trim().toLowerCase() ?? '',
-    );
-
-  return { groups, timeoutMs, verboseTomTom };
-}
+import type { TomTomLdevPrefetchResult } from '#/server/evRouting/tomtom/longDistanceEv';
+import { tryTomTomLongDistanceEvRouteDetailed } from '#/server/evRouting/tomtom/longDistanceEv';
+import { OAKLAND, SF } from './fixtures';
 
 function summarizeTomTomDiag(
   r: TomTomLdevPrefetchResult,
@@ -145,7 +40,7 @@ function summarizeTomTomDiag(
   return out;
 }
 
-async function runNarrate(): Promise<void> {
+export async function runNarrate(): Promise<void> {
   const events: PlanStreamEvent[] = [];
   const t = makeNarrateProgressTool({
     emit: (e) => {
@@ -165,7 +60,7 @@ async function runNarrate(): Promise<void> {
   );
 }
 
-async function runOcm(signal: AbortSignal): Promise<void> {
+export async function runOcm(signal: AbortSignal): Promise<void> {
   const t = makeFindChargingStationsTool({ signal }) as Tool & {
     execute: (input: unknown, options?: unknown) => Promise<unknown>;
   };
@@ -190,7 +85,7 @@ async function runOcm(signal: AbortSignal): Promise<void> {
   );
 }
 
-async function runSearch(signal: AbortSignal): Promise<void> {
+export async function runSearch(signal: AbortSignal): Promise<void> {
   const token = process.env.MAPBOX_TOKEN?.trim();
   if (!token) {
     console.log(
@@ -226,7 +121,7 @@ async function runSearch(signal: AbortSignal): Promise<void> {
 /**
  * Mirrors plan.stream prefetch: hits TomTom when TOMTOM_API_KEY is set, else fallback corridor.
  */
-async function runPrefetchEvRoute(
+export async function runPrefetchEvRoute(
   signal: AbortSignal,
   verboseTomTom: boolean,
 ): Promise<void> {
@@ -292,7 +187,7 @@ async function runPrefetchEvRoute(
   );
 }
 
-async function runDirections(signal: AbortSignal): Promise<void> {
+export async function runDirections(signal: AbortSignal): Promise<void> {
   const token = process.env.MAPBOX_TOKEN?.trim();
   if (!token) {
     console.log(
@@ -331,46 +226,3 @@ async function runDirections(signal: AbortSignal): Promise<void> {
     ),
   );
 }
-
-async function main() {
-  const { groups, timeoutMs, verboseTomTom } = parseArgs(process.argv);
-  const signal = AbortSignal.timeout(timeoutMs);
-  let hadError = false;
-
-  console.log(
-    `smoke-plan-tools (${[...groups].sort().join(', ')}) timeout=${timeoutMs}ms\n`,
-  );
-
-  const tryRun = async (label: string, fn: () => Promise<void>) => {
-    try {
-      await fn();
-    } catch (e) {
-      hadError = true;
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error(`✗ ${label} FAILED: ${msg}`);
-    }
-  };
-
-  if (groups.has('narrate')) {
-    await tryRun('narrateProgress', runNarrate);
-  }
-  if (groups.has('ocm')) {
-    await tryRun('findChargingStations', () => runOcm(signal));
-  }
-  if (groups.has('mapbox')) {
-    await tryRun('searchPlaces', () => runSearch(signal));
-    await tryRun('getDirections', () => runDirections(signal));
-  }
-  if (groups.has('tomtom')) {
-    await tryRun('computeEvRoute (TomTom prefetch)', () =>
-      runPrefetchEvRoute(signal, verboseTomTom),
-    );
-  }
-
-  if (hadError) {
-    process.exit(1);
-  }
-  console.log('\nDone.');
-}
-
-await main();

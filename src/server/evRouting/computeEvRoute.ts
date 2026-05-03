@@ -6,7 +6,7 @@ import {
   subsampleCorridor,
   totalPolylineMiles,
 } from '#/server/evRouting/geo';
-import { tryTomTomLongDistanceEvRoute } from '#/server/evRouting/tomtomLongDistanceEv';
+import { tryTomTomLongDistanceEvRoute } from '#/server/evRouting/tomtom/longDistanceEv';
 import type {
   EvChargeStopCandidate,
   EvRoutePlan,
