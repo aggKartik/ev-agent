@@ -5,7 +5,7 @@ const ROTATION_INTERVAL_MS = 3500;
 
 export function useRotatingSuggestion() {
   const [index, setIndex] = useState(0);
-  const count = DASHBOARD_PROMPT_SUGGESTIONS.length;
+  const count = DASHBOARD_PROMPT_SUGGESTIONS.length as number;
 
   useEffect(() => {
     if (count < 2) return;
@@ -16,6 +16,6 @@ export function useRotatingSuggestion() {
     return () => window.clearInterval(id);
   }, []);
 
-  if (count === 0) return '';
+  if (count < 1) return '';
   return DASHBOARD_PROMPT_SUGGESTIONS[index % count];
 }

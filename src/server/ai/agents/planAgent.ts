@@ -11,38 +11,95 @@ import { makeFindChargingStationsTool } from '#/server/ai/tools/findChargingStat
 import { makeGetDirectionsTool } from '#/server/ai/tools/getDirections';
 import { makeNarrateProgressTool } from '#/server/ai/tools/narrateProgress';
 import { makeSearchPlacesTool } from '#/server/ai/tools/searchPlaces';
+import type { EvRoutePlan } from '#/server/evRouting/types';
 
-function buildSystemPrompt(request: PlanRequest): string {
-  const chargeHintMiles = Math.max(
-    60,
-    Math.round(request.usableRangeMiles * 0.625),
-  );
-  return `You are EV-AGENT, an electric-vehicle road-trip planner. You design a single day-trip route from a start address to a destination address. The driver is in ${request.vehicleLabel} with roughly ${request.usableRangeMiles} miles of usable range from a full charge.
+function formatEvGroundingBlock(plan?: EvRoutePlan): string {
+  if (!plan) {
+    return `EV_PREPLAN_JSON: {}
+Note: TomTom prefetch did not produce a grounding block (missing TOMTOM_API_KEY or request error); rely on usableRangeMiles + corridor hints + aggressive findChargingStations/searchPlaces pairing.`;
+  }
 
-Your job is to:
-1. Use the narrateProgress tool between phases so the user sees a live "thought process". Recommended phases (call narrateProgress with phase + detail for each):
-   - "Scanning route options" — look at the corridor between origin and destination.
-   - "Cross-referencing chargers" — find DC fast chargers along the way.
-   - "Matching vibe profile" — pick activity venues that match the user's selected activities.
-   - "Optimizing for stops" — order stops in driving direction and tune dwell times.
-   - "Finalizing itinerary" — call getDirections, then return the final result.
-2. Call searchPlaces once per requested activity, near a coordinate that lies on the corridor between origin and destination. Pick the best candidate and use it as an activity stop.
-3. Call findChargingStations whenever the cumulative miles since the last charge approaches ~${chargeHintMiles} miles (about 60–65% of usable range). Pick a station with the highest power (kW). Insert a charging stop with kind: "charge" and a sensible dwellMinutes (20-35).
-4. Call getDirections EXACTLY ONCE near the end with the full ordered list of waypoints (start, every activity/charge stop in driving order, end). Use its totalMiles, totalMinutes, per-leg miles+driveMinutes, and full geometry in your final answer.
-5. Return the final structured PlanResult. Stops must be in driving order, starting with kind:"start" and ending with kind:"end". For each stop set:
-   - id (unique short string),
-   - shortName (uppercase 1-3 word label, e.g. "MORRO BAY"),
-   - driveMinutes + miles (from getDirections leg, rounded),
-   - dwellMinutes (use the user's requested dwell for activities, ~25 for charging stops, 0 for start/end),
-   - arrivalTime as HH:MM 24-hour, starting at 08:42 and incrementing by driveMinutes + (previous dwellMinutes).
-6. Compute totals: sum miles, driveMinutes, dwellMinutes; count chargeStops and activityStops; arrivalTime is the final stop's arrivalTime.
-7. The "phases" field of the result should mirror the phases you narrated, in order (label + detail).
-8. The "geometry" field MUST be the geometry array returned by getDirections, not just the stop coordinates.
+  const corridor = plan.corridorGeometry.map((p) => ({
+    lat: Math.round(p.lat * 10000) / 10000,
+    lng: Math.round(p.lng * 10000) / 10000,
+  }));
 
-Be efficient: do not call any tool more than necessary. Pick reasonable defaults rather than asking the user.`;
+  const anchors = plan.chargeStopCandidates.map((c) => ({
+    ordinal: c.ordinal,
+    near: {
+      lat: Math.round(c.coordinate.lat * 10000) / 10000,
+      lng: Math.round(c.coordinate.lng * 10000) / 10000,
+    },
+    rationale: c.rationale.slice(0, 220),
+    suggestedDwellMinutes: c.suggestedDwellMinutes ?? 28,
+    arrivingSocApprox: c.arrivingSocApprox,
+    departingSocApprox: c.departingSocApprox,
+    ...(c.vendor?.tomTomChargingParkUuid
+      ? { tomTomChargingParkUuid: c.vendor.tomTomChargingParkUuid }
+      : {}),
+  }));
+
+  return `EV_PREPLAN_JSON:
+${JSON.stringify(
+  {
+    source: plan.source,
+    totalDistanceMiles: Math.round(plan.totalDistanceMiles * 10) / 10,
+    summaryText: plan.summaryText,
+    corridorLatLngSample: corridor,
+    chargeRegions: anchors,
+  },
+  null,
+  2,
+)}`;
 }
 
-function buildUserPrompt(request: PlanRequest): string {
+/** EV preplan behavioural differences: TomTom LDEV anchors vs weak straight-line prefetch. */
+function evPreplanPolicyBlock(plan?: EvRoutePlan): string {
+  if (
+    plan &&
+    plan.source === 'tomtom_ld_ev' &&
+    plan.chargeStopCandidates.length > 0
+  ) {
+    return `EV PREPLAN POLICY — TomTom LDEV
+- chargeRegions[].near coordinates are LONG-DISTANCE EV ROUTING grounding (energy feasibility + suggested charging locality). Treat each as REQUIRED when picking DCFC-linked activity stops unless tools expose a contradiction in that vicinity (explain briefly and reconcile nearby).
+`;
+  }
+
+  return `EV PREPLAN POLICY — WEAK CORRIDOR (no prefetch data)
+- chargeRegions may be EMPTY or absent: do NOT pretend specific charging miles exist beyond user's usableRangeMiles × SoC sanity.
+- You MUST proactively place chargers using findChargingStations(minPowerKw≥120 when corridors allow) keyed off corridorLatLngSample and origin/destination, then anchor searchPlaces for each catalog activity adjacent to whichever DCFC hops you validated.
+`;
+}
+
+function buildSystemPrompt(
+  request: PlanRequest,
+  evRoutePlan?: EvRoutePlan,
+): string {
+  return `${evPreplanPolicyBlock(evRoutePlan)}You are EV-AGENT, an electric-vehicle road-trip planner. You produce a single day-trip route from origin to destination with charging + activity stops the driver will enjoy.
+
+VEHICLE / ENERGY INPUTS (truth for reasoning):
+- Usable-ish range sanity check: ~${request.usableRangeMiles} mi headline range (EPA-style; may differ from SoC math).
+- Pack ≈ ${request.batteryCapacityKWh} kWh usable, starting SOC ${request.startingSocPercent}%, arrival floor ${request.targetArrivalSocPercent}%, modeled consumption ~${request.consumptionWhPerMile} Wh/mi (after charging assume ~${request.postChargeSocPercent}% unless tools say otherwise).
+- Connectors accepted: ${request.connectorTypes.join(', ')} — prefer compatible DC fast chargers when calling findChargingStations.
+
+TOOLS + STRATEGY
+1. narrateProgress — call across phases ("EV route grounded", "Pairing stops at chargers", "Activity search fallback", "Finalizing itinerary").
+2. HONOUR EV_PREPLAN_JSON: The user message begins with corridorLatLngSample and chargeRegions. Use them whenever present; NEVER skip pairing user-requested activities with realistic charging hops.
+   - TomTom-strong preplan with chargeRegions: Before each inserted activity tied to charging, searchPlaces with near≈chargeRegions[i].near (minor offset along driving direction OK) plus radii ~3–12 mi depending on density; pick POIs aligning with user's selected activities while keeping detours sane.
+   - Weak / empty anchors: widen searchPlaces along corridorLatLngSample between origin/destination and pair findChargingStations hits with activities.
+   - Always cross-check nearby DCFC using findChargingStations (minPowerKw≥120 when plausible).
+3. Charging stops themselves: final coordinates must come from findChargingStations (or corroborated from search if incidental). Choose highest practical kW; dwellMinutes typically 22–38.
+4. Activities: honour each catalog activity id exactly once unless impossible—then narrate omission.
+5. getDirections MUST be called EXACTLY ONCE at the very end using the FINAL ordered waypoint list (start→ordered stops→end). You MUST populate PlanResult.geometry with the geometry returned by getDirections Mapbox tool (Road-following geometry is mandatory for UX).
+6. Compose PlanResult totals, stops (kind start/end/activity/charge), arrival sequencing starting 08:42, totals, mirrored phases narrative.
+
+EFFICIENCY: minimize redundant tool usage; consolidate searches when feasible.`;
+}
+
+function buildUserPrompt(
+  request: PlanRequest,
+  evRoutePlan?: EvRoutePlan,
+): string {
   const fromCoord = request.from.coordinate
     ? ` (${request.from.coordinate.lat.toFixed(4)}, ${request.from.coordinate.lng.toFixed(4)})`
     : '';
@@ -55,15 +112,19 @@ function buildUserPrompt(request: PlanRequest): string {
       return `- ${selection.id} (${catalog?.label ?? selection.id}) · dwell ${selection.dwellMinutes} min`;
     })
     .join('\n');
-  return `Plan a day trip with these parameters:
+
+  return `${formatEvGroundingBlock(evRoutePlan)}
+
+Plan a day trip with these parameters:
 
 From: ${request.from.full}${fromCoord}
 To: ${request.to.full}${toCoord}
 When: ${request.dates}
 
-Vehicle: ${request.vehicleLabel} · ~${request.usableRangeMiles} mi usable range
+Vehicle label: ${request.vehicleLabel}
+Energy model hints: SOC ${request.startingSocPercent}% → arrival floor ${request.targetArrivalSocPercent}%; pack ${request.batteryCapacityKWh} kWh; ~${request.consumptionWhPerMile} Wh/mi connectors [${request.connectorTypes.join(', ')}]
 
-Activities the driver wants (one stop each, in any order that flows with the route):
+Activities the driver wants (one curated stop each, ordered along the driven route):
 ${activities}
 
 Return a complete PlanResult.`;
@@ -71,6 +132,7 @@ Return a complete PlanResult.`;
 
 type RunOpts = {
   signal?: AbortSignal;
+  evRoutePlan?: EvRoutePlan;
 };
 
 export async function runPlanAgent(
@@ -78,7 +140,7 @@ export async function runPlanAgent(
   emit: (event: PlanStreamEvent) => void,
   opts: RunOpts = {},
 ): Promise<PlanResult> {
-  const { signal } = opts;
+  const { signal, evRoutePlan } = opts;
   const seenStopIds = new Set<string>();
   const tools = {
     narrateProgress: makeNarrateProgressTool({ emit }),
@@ -90,11 +152,11 @@ export async function runPlanAgent(
   try {
     const result = streamText({
       model: getPlanModel(),
-      system: buildSystemPrompt(request),
-      prompt: buildUserPrompt(request),
+      system: buildSystemPrompt(request, evRoutePlan),
+      prompt: buildUserPrompt(request, evRoutePlan),
       tools,
       output: Output.object({ schema: planResultSchema }),
-      stopWhen: stepCountIs(12),
+      stopWhen: stepCountIs(14),
       abortSignal: signal,
     });
 

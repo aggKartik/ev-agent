@@ -60,13 +60,24 @@ export function useRouteLayers({
     if (!mapReady || !leaflet || !map) return;
 
     clearLayers(map, layersRef.current);
-    const points = result
-      ? visibleStops.map((stop) => stop.coordinate)
+
+    const geometryReady = Boolean(result && result.geometry.length >= 2);
+    /** Road polyline; falls back to stop-to-stop chords when geometry is missing. */
+    const routePolyline: Coordinate[] = result
+      ? geometryReady
+        ? result.geometry
+        : visibleStops.map((stop) => stop.coordinate)
       : previewGeometry;
 
-    if (points.length >= 2) {
+    /** Bounding set: ride along road plus markers so endpoints stay in view. */
+    const viewportFitPoints =
+      geometryReady && result
+        ? [...result.geometry, ...visibleStops.map((s) => s.coordinate)]
+        : routePolyline;
+
+    if (routePolyline.length >= 2) {
       layersRef.current.halo = leaflet
-        .polyline(toLatLngs(points), {
+        .polyline(toLatLngs(routePolyline), {
           color: PLAN_COLORS.end,
           weight: 14,
           opacity: 0.18,
@@ -76,7 +87,7 @@ export function useRouteLayers({
         })
         .addTo(map);
       layersRef.current.route = leaflet
-        .polyline(toLatLngs(points), {
+        .polyline(toLatLngs(routePolyline), {
           color: PLAN_COLORS.start,
           weight: 4,
           opacity: 1,
@@ -105,9 +116,11 @@ export function useRouteLayers({
       addPreviewMarkers(leaflet, map, request, layersRef.current);
     }
 
-    const pointsKey = points.map((p) => `${p.lat},${p.lng}`).join('|');
+    const pointsKey = viewportFitPoints
+      .map((p) => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`)
+      .join('|');
     if (pointsKey !== lastPointsKeyRef.current) {
-      fitViewport(leaflet, map, points);
+      fitViewport(leaflet, map, viewportFitPoints);
       lastPointsKeyRef.current = pointsKey;
     }
   }, [

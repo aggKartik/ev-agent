@@ -9,8 +9,20 @@ import type { PlanForm } from '#/features/plan/usePlanForm';
  */
 export function useDraftRequest(form: PlanForm): PlanRequest | null {
   return useStore(form.store, (state) => {
-    const { from, to, dates, activities, vehicleLabel, usableRangeMiles } =
-      state.values;
+    const {
+      from,
+      to,
+      dates,
+      activities,
+      vehicleLabel,
+      usableRangeMiles,
+      startingSocPercent,
+      targetArrivalSocPercent,
+      batteryCapacityKWh,
+      consumptionWhPerMile,
+      connectorTypes,
+      postChargeSocPercent,
+    } = state.values;
     if (from.full.trim().length === 0) return null;
     return {
       from,
@@ -19,6 +31,12 @@ export function useDraftRequest(form: PlanForm): PlanRequest | null {
       activities,
       vehicleLabel,
       usableRangeMiles,
+      startingSocPercent,
+      targetArrivalSocPercent,
+      batteryCapacityKWh,
+      consumptionWhPerMile,
+      connectorTypes,
+      postChargeSocPercent,
     };
   });
 }

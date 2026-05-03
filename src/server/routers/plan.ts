@@ -7,6 +7,8 @@ import {
 } from '#/features/plan/contracts';
 import { getPlanCatalog, suggestPlanAddresses } from '#/features/plan/helpers';
 import { runPlanAgent } from '#/server/ai/agents';
+import { computeEvRoute } from '#/server/evRouting/computeEvRoute';
+import type { EvRoutePlan } from '#/server/evRouting/types';
 import { publicProcedure, router } from '../trpc';
 
 export const planRouter = router({
@@ -25,11 +27,19 @@ export const planRouter = router({
         ? AbortSignal.any([signal, finished.signal])
         : finished.signal;
 
-      const agentDone = runPlanAgent(
-        input,
-        (event: PlanStreamEvent) => ee.emit('event', event),
-        { signal },
-      )
+      const agentDone = (async () => {
+        let evRoutePlan: EvRoutePlan | undefined;
+        try {
+          evRoutePlan = await computeEvRoute(input, signal);
+        } catch {
+          evRoutePlan = undefined;
+        }
+        return runPlanAgent(
+          input,
+          (event: PlanStreamEvent) => ee.emit('event', event),
+          { signal, evRoutePlan },
+        );
+      })()
         .catch(() => undefined)
         .finally(() => finished.abort());
 

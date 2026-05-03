@@ -12,7 +12,10 @@ import type {
 } from '#/features/plan/contracts';
 import { planRequestSchema } from '#/features/plan/contracts';
 import { suggestPlanAddresses } from '#/features/plan/helpers';
-import type { PlanForm as PlanFormApi } from '#/features/plan/usePlanForm';
+import {
+  CONNECTOR_OPTION_ORDER,
+  type PlanForm as PlanFormApi,
+} from '#/features/plan/usePlanForm';
 import { css, cx } from '../../../styled-system/css';
 import { chip } from '../../../styled-system/recipes/chip';
 import { panel } from '../../../styled-system/recipes/panel';
@@ -149,6 +152,12 @@ export default function PlanForm({
         activities: values.activities,
         vehicleLabel: values.vehicleLabel,
         usableRangeMiles: values.usableRangeMiles,
+        startingSocPercent: values.startingSocPercent,
+        targetArrivalSocPercent: values.targetArrivalSocPercent,
+        batteryCapacityKWh: values.batteryCapacityKWh,
+        consumptionWhPerMile: values.consumptionWhPerMile,
+        connectorTypes: values.connectorTypes,
+        postChargeSocPercent: values.postChargeSocPercent,
       }).success,
     [values],
   );
@@ -259,6 +268,153 @@ export default function PlanForm({
               )}
             </form.Field>
           </Flex>
+          <Flex gap="4" flexWrap="wrap" alignItems="flex-end" mt="4">
+            <form.Field name="startingSocPercent">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>START SOC %</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+            <form.Field name="targetArrivalSocPercent">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>ARRIVE % MIN</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+            <form.Field name="batteryCapacityKWh">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>PACK (KW·H)</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min={10}
+                      max={250}
+                      step={1}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+            <form.Field name="consumptionWhPerMile">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>WH/MI</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min={100}
+                      max={800}
+                      step={5}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+            <form.Field name="postChargeSocPercent">
+              {(field) => (
+                <Box className={vehicleRangeInputClass}>
+                  <Box className={vehicleSublabelClass}>AFTER DCFC %</Box>
+                  <Box className={inputWrapClass} data-focused={false}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={50}
+                      max={100}
+                      step={1}
+                      value={field.state.value}
+                      className={addressInputClass}
+                      onChange={(event) => {
+                        const n = event.target.valueAsNumber;
+                        if (Number.isFinite(n)) field.handleChange(n);
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </form.Field>
+          </Flex>
+          <form.Field name="connectorTypes">
+            {(field) => (
+              <Box mt="4">
+                <Box className={vehicleSublabelClass}>CONNECTORS</Box>
+                <Box className={chipRowClass}>
+                  {CONNECTOR_OPTION_ORDER.map((slug) => {
+                    const selected = field.state.value.includes(slug);
+                    return (
+                      <Button
+                        key={slug}
+                        type="button"
+                        unstyled
+                        contentMode="custom"
+                        className={chip({ size: 'compact', selected })}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          const current = field.state.value;
+                          if (selected && current.length <= 1) return;
+                          if (selected) {
+                            field.handleChange(
+                              current.filter((x) => x !== slug),
+                            );
+                          } else {
+                            field.handleChange([...current, slug]);
+                          }
+                        }}
+                      >
+                        {slug}
+                      </Button>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
+          </form.Field>
         </Box>
 
         <form.Field name="dates">

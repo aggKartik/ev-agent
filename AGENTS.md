@@ -24,6 +24,10 @@
 - Run migrations with `bun run db:migrate`; full rollback helper: `bun run db:migrate:reset`.
 - Kysely DB singleton is created in `src/server/db/index.ts` and injected via tRPC context (`src/server/context.ts`).
 
+## Trip planner APIs
+- `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch in `computeEvRoute` supplies corridor geometry + charger-hint anchors for the plan agent (`src/server/evRouting/`).
+- `MAPBOX_TOKEN`: Mapbox Places + final `getDirections` polyline in plan agent tools (unchanged UX contract).
+
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
 - Path alias `#/` points to `src/*` (defined in `package.json` imports + `tsconfig.json` paths).

@@ -1,9 +1,22 @@
 import { z } from 'zod';
 import {
   PLAN_ACTIVITY_IDS,
+  PLAN_DEFAULT_BATTERY_CAPACITY_KWH,
+  PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE,
+  PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT,
+  PLAN_DEFAULT_STARTING_SOC_PERCENT,
+  PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT,
   PLAN_DEFAULT_USABLE_RANGE_MILES,
   PLAN_DEFAULT_VEHICLE_LABEL,
 } from './data';
+
+export const evConnectorSlugSchema = z.enum([
+  'NACS',
+  'CCS1',
+  'J1772',
+  'TYPE_2',
+  'CHADEMO',
+]);
 
 export const coordinateSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -39,6 +52,41 @@ export const planRequestSchema = z.object({
     .positive()
     .max(500)
     .default(PLAN_DEFAULT_USABLE_RANGE_MILES),
+  /** Current pack state-of-charge (0–100) when the trip begins. */
+  startingSocPercent: z
+    .number()
+    .min(0)
+    .max(100)
+    .default(PLAN_DEFAULT_STARTING_SOC_PERCENT),
+  /** Minimum desired SOC % when arriving at the destination. */
+  targetArrivalSocPercent: z
+    .number()
+    .min(0)
+    .max(100)
+    .default(PLAN_DEFAULT_TARGET_ARRIVAL_SOC_PERCENT),
+  /** Approximate usable battery capacity (kWh). */
+  batteryCapacityKWh: z
+    .number()
+    .positive()
+    .max(250)
+    .default(PLAN_DEFAULT_BATTERY_CAPACITY_KWH),
+  /** Average traction energy use (Wh per mile); used when grounding charge spacing. */
+  consumptionWhPerMile: z
+    .number()
+    .positive()
+    .max(800)
+    .default(PLAN_DEFAULT_CONSUMPTION_WH_PER_MILE),
+  /** Connectors the vehicle accepts; forwarded to routing providers when supported. */
+  connectorTypes: z
+    .array(evConnectorSlugSchema)
+    .min(1)
+    .default(['NACS', 'CCS1']),
+  /** Rough SOC target after each DC fast charge (for spacing subsequent legs). */
+  postChargeSocPercent: z
+    .number()
+    .min(50)
+    .max(100)
+    .default(PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT),
 });
 
 export const addressSuggestSchema = z.object({
@@ -100,6 +148,7 @@ export type PlanStopKind = z.infer<typeof planStopKindSchema>;
 export type PlanStop = z.infer<typeof planStopSchema>;
 export type PlanPhase = z.infer<typeof planPhaseSchema>;
 export type PlanResult = z.infer<typeof planResultSchema>;
+export type EvConnectorSlug = z.infer<typeof evConnectorSlugSchema>;
 
 export type PlanCatalogResponse = {
   activities: {
@@ -112,6 +161,12 @@ export type PlanCatalogResponse = {
   carLocation: PlanAddress;
   defaultVehicleLabel: string;
   defaultUsableRangeMiles: number;
+  defaultStartingSocPercent: number;
+  defaultTargetArrivalSocPercent: number;
+  defaultBatteryCapacityKWh: number;
+  defaultConsumptionWhPerMile: number;
+  defaultConnectorTypes: EvConnectorSlug[];
+  defaultPostChargeSocPercent: number;
 };
 
 export type PlanStreamEvent =
