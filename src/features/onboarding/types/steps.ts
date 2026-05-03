@@ -12,11 +12,14 @@ export type OnboardingFormValues = {
   name: string;
   /** Reflects Tesla connection state — used only for CONNECT step UX. */
   connect: string;
+  /** Fleet API vehicle id (`TeslaVehicleSummary.id`) chosen on CONNECT. */
+  teslaVehicleId: string;
 };
 
 export const defaultFormValues = (): OnboardingFormValues => ({
   name: '',
   connect: '',
+  teslaVehicleId: '',
 });
 
 export const formSteps = steps.filter((step) => step !== 'SUCCESS');
