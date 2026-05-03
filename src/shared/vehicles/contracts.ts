@@ -82,6 +82,13 @@ export type CompleteOnboardingInput = z.infer<
   typeof completeOnboardingInputSchema
 >;
 
+export const completeOnboardingFromTeslaInputSchema = z.object({
+  teslaVehicleId: z.string().min(1).max(64),
+});
+export type CompleteOnboardingFromTeslaInput = z.infer<
+  typeof completeOnboardingFromTeslaInputSchema
+>;
+
 export const upsertOverridesInputSchema = z.object({
   overrides: vehicleOverridesSchema.optional(),
   preferences: vehiclePreferencesSchema.partial().optional(),
