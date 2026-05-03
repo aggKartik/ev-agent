@@ -27,6 +27,12 @@ type VehicleDataEntry = {
     charge_limit_soc?: number;
     battery_range?: number;
   };
+  drive_state?: {
+    latitude?: number;
+    longitude?: number;
+    /** Tesla returns seconds since epoch. */
+    gps_as_of?: number;
+  };
 };
 
 type FleetApiResponse<T> = {
@@ -45,6 +51,11 @@ export type TeslaVehicleSummary = {
   usableBatteryLevel: number | null;
   chargeLimitSoc: number | null;
   batteryRangeMi: number | null;
+  /** Last known GPS coordinate; null when the vehicle is asleep or has not reported. */
+  latitude: number | null;
+  longitude: number | null;
+  /** ISO timestamp the GPS fix was reported. */
+  gpsAsOf: string | null;
 };
 
 async function fleetFetch<T>(
@@ -90,10 +101,49 @@ async function fleetFetch<T>(
   return body.response;
 }
 
+/**
+ * `vehicle_data` returns 408 / "vehicle unavailable" when the car is asleep or
+ * otherwise not reachable. Only those cases should fall back to the list-row
+ * summary — auth and server errors must propagate.
+ */
+export function isPerVehicleUnavailableFleetError(err: unknown): boolean {
+  if (!(err instanceof OAuthError)) return false;
+  const code = err.code.toLowerCase();
+  const msg = err.message.toLowerCase();
+  if (code === 'http_408') return true;
+  if (
+    code.includes('vehicle_unavailable') ||
+    code.includes('vehicle unavailable') ||
+    code.includes('device_communication_timeout')
+  ) {
+    return true;
+  }
+  if (
+    msg.includes('vehicle unavailable') ||
+    msg.includes('device not available') ||
+    msg.includes('vehicle is offline')
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function mapVehicle(
   entry: VehicleDataEntry | VehicleListEntry,
 ): TeslaVehicleSummary {
   const full = entry as VehicleDataEntry;
+  const latitude =
+    typeof full.drive_state?.latitude === 'number'
+      ? full.drive_state.latitude
+      : null;
+  const longitude =
+    typeof full.drive_state?.longitude === 'number'
+      ? full.drive_state.longitude
+      : null;
+  const gpsAsOf =
+    typeof full.drive_state?.gps_as_of === 'number'
+      ? new Date(full.drive_state.gps_as_of * 1000).toISOString()
+      : null;
   return {
     id: String(entry.id),
     vin: entry.vin ?? null,
@@ -119,6 +169,9 @@ function mapVehicle(
       typeof full.charge_state?.battery_range === 'number'
         ? full.charge_state.battery_range
         : null,
+    latitude,
+    longitude,
+    gpsAsOf,
   };
 }
 
@@ -134,7 +187,9 @@ export async function fetchVehiclesWithState(args: {
 
   // Fetch per-vehicle data in parallel; offline vehicles return an error we
   // downgrade to null-filled summaries so the onboarding UI can still render
-  // them and let the user pick.
+  // them and let the user pick. `drive_state` is included here so the plan
+  // form's START field can use the car's GPS fix when the vehicle is awake;
+  // sleeping vehicles will simply yield `latitude: null`.
   return Promise.all(
     list.map(async (v) => {
       try {
@@ -142,12 +197,15 @@ export async function fetchVehiclesWithState(args: {
           args.accessToken,
           args.region,
           `/api/1/vehicles/${v.id}/vehicle_data?endpoints=${encodeURIComponent(
-            'vehicle_state;charge_state',
+            'vehicle_state;charge_state;drive_state',
           )}`,
         );
         return mapVehicle(data);
-      } catch {
-        return mapVehicle(v);
+      } catch (err) {
+        if (isPerVehicleUnavailableFleetError(err)) {
+          return mapVehicle(v);
+        }
+        throw err;
       }
     }),
   );
