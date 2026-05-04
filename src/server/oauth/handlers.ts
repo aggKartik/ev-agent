@@ -95,6 +95,56 @@ export async function handleOAuthConnect(
   });
 }
 
+function callbackErrorRedirect(providerSlug: string, reason: string): Response {
+  return redirectToOnboarding({
+    connect: 'error',
+    provider: providerSlug,
+    reason,
+  });
+}
+
+type CallbackParams =
+  | { ok: true; code: string; state: string }
+  | { ok: false; reason: string };
+
+function parseCallbackParams(request: Request): CallbackParams {
+  const url = new URL(request.url);
+  const remoteError = url.searchParams.get('error');
+  if (remoteError) return { ok: false, reason: remoteError };
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  if (!code || !state) return { ok: false, reason: 'missing_params' };
+  return { ok: true, code, state };
+}
+
+function callbackErrorReason(err: unknown): string | null {
+  if (err instanceof InvalidStateError) return err.reason;
+  if (err instanceof OAuthError) return err.code;
+  return null;
+}
+
+async function persistOAuthCallback(args: {
+  provider: OAuthProvider;
+  providerSlug: string;
+  clerkUserId: string;
+  request: Request;
+  code: string;
+  state: string;
+}): Promise<void> {
+  const { tokens } = await completeAuthorization({
+    provider: args.provider,
+    clerkUserId: args.clerkUserId,
+    redirectUri: resolveRedirectUri(args.providerSlug),
+    request: args.request,
+    code: args.code,
+    state: args.state,
+  });
+  const user = await getOrLinkUserByClerkId(db, args.clerkUserId, () =>
+    resolveClerkPrimaryEmail(args.clerkUserId),
+  );
+  await upsertLinkedAccount(db, args.providerSlug, user.id, tokens);
+}
+
 /**
  * GET /api/oauth/{provider}/callback
  *
@@ -112,59 +162,23 @@ export async function handleOAuthCallback(
   }
 
   const resolved = resolveProvider(providerSlug);
-  if ('response' in resolved) {
-    return resolved.response;
-  }
-  const { provider } = resolved;
+  if ('response' in resolved) return resolved.response;
 
-  const url = new URL(request.url);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const remoteError = url.searchParams.get('error');
-
-  if (remoteError) {
-    return redirectToOnboarding({
-      connect: 'error',
-      provider: providerSlug,
-      reason: remoteError,
-    });
-  }
-  if (!code || !state) {
-    return redirectToOnboarding({
-      connect: 'error',
-      provider: providerSlug,
-      reason: 'missing_params',
-    });
-  }
+  const params = parseCallbackParams(request);
+  if (!params.ok) return callbackErrorRedirect(providerSlug, params.reason);
 
   try {
-    const { tokens } = await completeAuthorization({
-      provider,
+    await persistOAuthCallback({
+      provider: resolved.provider,
+      providerSlug,
       clerkUserId: userId,
-      redirectUri: resolveRedirectUri(providerSlug),
       request,
-      code,
-      state,
+      code: params.code,
+      state: params.state,
     });
-    const user = await getOrLinkUserByClerkId(db, userId, () =>
-      resolveClerkPrimaryEmail(userId),
-    );
-    await upsertLinkedAccount(db, providerSlug, user.id, tokens);
   } catch (err) {
-    if (err instanceof InvalidStateError) {
-      return redirectToOnboarding({
-        connect: 'error',
-        provider: providerSlug,
-        reason: err.reason,
-      });
-    }
-    if (err instanceof OAuthError) {
-      return redirectToOnboarding({
-        connect: 'error',
-        provider: providerSlug,
-        reason: err.code,
-      });
-    }
+    const reason = callbackErrorReason(err);
+    if (reason) return callbackErrorRedirect(providerSlug, reason);
     throw err;
   }
 

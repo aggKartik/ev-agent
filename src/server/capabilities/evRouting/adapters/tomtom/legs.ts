@@ -47,27 +47,42 @@ function appendPoint(points: Coordinate[], p: Coordinate): void {
   points.push(p);
 }
 
+/**
+ * TomTom Routing/LDEV: omission means `coordinatePrecision=default` → polyline divisor 10^5.
+ * Anything outside [4, 10] is treated as default.
+ */
+function legPolylinePrecision(precRaw: number | undefined): number {
+  if (typeof precRaw !== 'number') return 5;
+  if (precRaw < 4 || precRaw > 10) return 5;
+  return precRaw;
+}
+
+function tryAppendEncodedPolyline(
+  points: Coordinate[],
+  leg: TomTomLeg,
+): boolean {
+  const enc = leg.summary?.encodedPolyline ?? leg.encodedPolyline;
+  if (typeof enc !== 'string' || enc.length < 2) return false;
+  const prec = legPolylinePrecision(
+    leg.summary?.encodedPolylinePrecision ?? leg.encodedPolylinePrecision,
+  );
+  for (const pt of decodeGoogleEncodedPolyline(enc, prec)) {
+    appendPoint(points, pt);
+  }
+  return true;
+}
+
+function appendRawPoints(points: Coordinate[], leg: TomTomLeg): void {
+  if (!Array.isArray(leg.points)) return;
+  for (const p of leg.points) {
+    if (isPoint(p)) appendPoint(points, pointToCoord(p));
+  }
+}
+
 /** Decode leg geometry: encoded polyline (summary or leg root), else point list. */
 function appendTomTomLegGeometry(points: Coordinate[], leg: TomTomLeg): void {
-  const enc = leg.summary?.encodedPolyline ?? leg.encodedPolyline;
-  const precRaw =
-    leg.summary?.encodedPolylinePrecision ?? leg.encodedPolylinePrecision;
-  if (typeof enc === 'string' && enc.length >= 2) {
-    /** TomTom Routing/LDEV: omission means `coordinatePrecision=default` → polyline divisor 10^5. */
-    const prec =
-      typeof precRaw === 'number' && precRaw >= 4 && precRaw <= 10
-        ? precRaw
-        : 5;
-    const decoded = decodeGoogleEncodedPolyline(enc, prec);
-    for (const pt of decoded) appendPoint(points, pt);
-    return;
-  }
-  const raw = leg.points;
-  if (Array.isArray(raw)) {
-    for (const p of raw) {
-      if (isPoint(p)) appendPoint(points, pointToCoord(p));
-    }
-  }
+  if (tryAppendEncodedPolyline(points, leg)) return;
+  appendRawPoints(points, leg);
 }
 
 /** Concatenate decoded coordinates from LDEV routing legs into one corridor. */

@@ -1,12 +1,9 @@
 import { useMemo } from 'react';
 import type { DashboardSummary } from '#/features/dashboard/types/contracts';
-import { DASHBOARD_FALLBACK_TESLA } from '#/features/dashboard/utils/data';
 import {
   buildDashboardSummary,
-  buildErroredTeslaSummary,
-  buildLinkedTeslaSummary,
-  buildPendingTeslaSummary,
-  teslaVehicleSummaryToDashboard,
+  type ComposeTeslaInput,
+  composeTeslaSummary,
 } from '#/features/dashboard/utils/helpers';
 import { trpc } from '#/lib/trpc';
 import { pickTeslaVehicleForIdentity } from '#/shared/vehicles/teslaPick';
@@ -49,108 +46,18 @@ export function useDashboardSummary(): {
 
   const summary = useMemo<DashboardSummary>(() => {
     const firstName = profileQuery.data?.firstName ?? null;
-    const profileVehicle = vehicleQuery.data?.profile?.identity ?? null;
-
-    if (teslaStatus.isPending) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: buildPendingTeslaSummary({
-          linked: false,
-          label: 'Checking',
-          detail: 'Checking whether Tesla is connected…',
-        }),
-      });
-    }
-
-    if (teslaStatus.isError) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: buildErroredTeslaSummary({
-          label: 'Status unavailable',
-          detail:
-            teslaStatus.error.message ??
-            'Could not verify Tesla link. Refresh the page or try again.',
-          linked: false,
-        }),
-      });
-    }
-
-    if (!teslaLinked) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: DASHBOARD_FALLBACK_TESLA,
-      });
-    }
-
-    const vehicleData = teslaVehicles.data;
-    const vehiclesStillLoading =
-      vehicleData === undefined &&
-      (teslaVehicles.isLoading || teslaVehicles.isFetching);
-
-    if (vehiclesStillLoading) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: buildPendingTeslaSummary({
-          linked: true,
-          label: 'Loading',
-          detail: 'Fetching live vehicle data from Tesla…',
-        }),
-      });
-    }
-
-    if (teslaVehicles.isError && vehicleData === undefined) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: buildErroredTeslaSummary({
-          label: 'Can’t load vehicle',
-          detail:
-            teslaVehicles.error?.message ??
-            'We could not reach Tesla right now. Try again in a moment.',
-        }),
-      });
-    }
-
-    const list = vehicleData ?? [];
-    const first =
-      pickTeslaVehicleForIdentity(list, profileVehicle) ?? list[0] ?? null;
-
-    if (!first) {
-      return buildDashboardSummary({
-        firstName,
-        tesla: buildErroredTeslaSummary({
-          label: 'No vehicle',
-          detail:
-            'No Tesla vehicle was returned for this account. Add a vehicle in the Tesla app, then tap Refresh.',
-        }),
-      });
-    }
-
-    return buildDashboardSummary({
-      firstName,
-      tesla: buildLinkedTeslaSummary({
-        vehicle: teslaVehicleSummaryToDashboard({
-          ...first,
-          model: profileVehicle?.model ?? null,
-          year: profileVehicle?.year ?? null,
-        }),
-        refreshedAt:
-          teslaVehicles.dataUpdatedAt > 0
-            ? new Date(teslaVehicles.dataUpdatedAt).toISOString()
-            : new Date().toISOString(),
-      }),
+    const tesla = composeTeslaSummary({
+      teslaStatus: deriveTeslaStatus(teslaStatus, teslaLinked),
+      vehiclesQuery: deriveVehiclesQuery(teslaVehicles),
+      profileVehicle: vehicleQuery.data?.profile?.identity ?? null,
+      pickVehicle: pickTeslaVehicleForIdentity,
     });
+    return buildDashboardSummary({ firstName, tesla });
   }, [
     profileQuery.data?.firstName,
     teslaLinked,
-    teslaStatus.isPending,
-    teslaStatus.isError,
-    teslaStatus.error,
-    teslaVehicles.data,
-    teslaVehicles.dataUpdatedAt,
-    teslaVehicles.isError,
-    teslaVehicles.error,
-    teslaVehicles.isLoading,
-    teslaVehicles.isFetching,
+    teslaStatus,
+    teslaVehicles,
     vehicleQuery.data?.profile?.identity,
   ]);
 
@@ -164,4 +71,33 @@ export function useDashboardSummary(): {
     isRefreshing: teslaVehicles.isFetching,
     refresh,
   };
+}
+
+function deriveTeslaStatus(
+  q: ReturnType<typeof trpc.oauth.status.useQuery>,
+  linked: boolean,
+): ComposeTeslaInput['teslaStatus'] {
+  if (q.isPending) return { kind: 'pending' };
+  if (q.isError) {
+    return {
+      kind: 'errored',
+      message: q.error?.message ?? '',
+    };
+  }
+  return linked ? { kind: 'linked' } : { kind: 'unlinked' };
+}
+
+function deriveVehiclesQuery(
+  q: ReturnType<typeof trpc.tesla.vehicles.useQuery>,
+): ComposeTeslaInput['vehiclesQuery'] {
+  const stillLoading = q.data === undefined && (q.isLoading || q.isFetching);
+  if (stillLoading) return { kind: 'loading' };
+  if (q.isError && q.data === undefined) {
+    return { kind: 'errored', message: q.error?.message ?? '' };
+  }
+  const refreshedAt =
+    q.dataUpdatedAt > 0
+      ? new Date(q.dataUpdatedAt).toISOString()
+      : new Date().toISOString();
+  return { kind: 'ready', data: q.data ?? [], refreshedAt };
 }

@@ -128,50 +128,32 @@ export function isPerVehicleUnavailableFleetError(err: unknown): boolean {
   return false;
 }
 
+function numberOrNull(value: unknown): number | null {
+  return typeof value === 'number' ? value : null;
+}
+
+function gpsTimestamp(seconds: unknown): string | null {
+  if (typeof seconds !== 'number') return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
 function mapVehicle(
   entry: VehicleDataEntry | VehicleListEntry,
 ): TeslaVehicleSummary {
   const full = entry as VehicleDataEntry;
-  const latitude =
-    typeof full.drive_state?.latitude === 'number'
-      ? full.drive_state.latitude
-      : null;
-  const longitude =
-    typeof full.drive_state?.longitude === 'number'
-      ? full.drive_state.longitude
-      : null;
-  const gpsAsOf =
-    typeof full.drive_state?.gps_as_of === 'number'
-      ? new Date(full.drive_state.gps_as_of * 1000).toISOString()
-      : null;
   return {
     id: String(entry.id),
     vin: entry.vin ?? null,
     displayName: entry.display_name ?? null,
     state: entry.state ?? null,
-    odometerMi:
-      typeof full.vehicle_state?.odometer === 'number'
-        ? full.vehicle_state.odometer
-        : null,
-    batteryLevel:
-      typeof full.charge_state?.battery_level === 'number'
-        ? full.charge_state.battery_level
-        : null,
-    usableBatteryLevel:
-      typeof full.charge_state?.usable_battery_level === 'number'
-        ? full.charge_state.usable_battery_level
-        : null,
-    chargeLimitSoc:
-      typeof full.charge_state?.charge_limit_soc === 'number'
-        ? full.charge_state.charge_limit_soc
-        : null,
-    batteryRangeMi:
-      typeof full.charge_state?.battery_range === 'number'
-        ? full.charge_state.battery_range
-        : null,
-    latitude,
-    longitude,
-    gpsAsOf,
+    odometerMi: numberOrNull(full.vehicle_state?.odometer),
+    batteryLevel: numberOrNull(full.charge_state?.battery_level),
+    usableBatteryLevel: numberOrNull(full.charge_state?.usable_battery_level),
+    chargeLimitSoc: numberOrNull(full.charge_state?.charge_limit_soc),
+    batteryRangeMi: numberOrNull(full.charge_state?.battery_range),
+    latitude: numberOrNull(full.drive_state?.latitude),
+    longitude: numberOrNull(full.drive_state?.longitude),
+    gpsAsOf: gpsTimestamp(full.drive_state?.gps_as_of),
   };
 }
 

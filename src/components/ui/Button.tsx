@@ -25,6 +25,79 @@ export type ButtonProps = Omit<
     contentMode?: 'default' | 'custom';
   };
 
+function SpinnerIcon() {
+  return (
+    <span data-part="spinner" data-icon="true" aria-hidden="true">
+      <Spinner />
+    </span>
+  );
+}
+
+function DefaultContent({
+  loading,
+  loadingText,
+  leadingIcon,
+  trailingIcon,
+  children,
+}: {
+  loading: boolean;
+  loadingText: ReactNode;
+  leadingIcon: ReactNode;
+  trailingIcon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <span className={contentClass}>
+      {loading ? (
+        <SpinnerIcon />
+      ) : (
+        <span data-part="leading-icon" data-icon="true">
+          {leadingIcon}
+        </span>
+      )}
+      <span>{loading && loadingText ? loadingText : children}</span>
+      {!loading ? (
+        <span data-part="trailing-icon" data-icon="true">
+          {trailingIcon}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function CustomContent({
+  loading,
+  children,
+}: {
+  loading: boolean;
+  children: ReactNode;
+}) {
+  if (!loading) return <>{children}</>;
+  return (
+    <span className={contentClass}>
+      <SpinnerIcon />
+    </span>
+  );
+}
+
+function buildBaseButtonProps(args: {
+  recipeProps: Parameters<typeof button>[0];
+  className: string | undefined;
+  unstyled: boolean | undefined;
+  disabled: boolean | undefined;
+  isLoading: boolean;
+  type: ButtonProps['type'];
+}) {
+  const { recipeProps, className, unstyled, disabled, isLoading, type } = args;
+  return {
+    type: type ?? 'button',
+    className: cx(unstyled ? undefined : button(recipeProps), className),
+    disabled: Boolean(disabled || isLoading),
+    'aria-busy': isLoading || undefined,
+    'data-loading': isLoading ? '' : undefined,
+  } as const;
+}
+
 export default function Button(props: ButtonProps) {
   const [recipeProps, localProps] = button.splitVariantProps(props);
   const {
@@ -42,59 +115,40 @@ export default function Button(props: ButtonProps) {
     ...rest
   } = localProps;
 
-  const isDisabled = Boolean(disabled || loading);
+  const isLoading = Boolean(loading);
+  const isCustom = Boolean(iconOnly) || contentMode === 'custom';
+  const buttonProps = buildBaseButtonProps({
+    recipeProps,
+    className,
+    unstyled,
+    disabled,
+    isLoading,
+    type,
+  });
 
-  if (iconOnly || contentMode === 'custom') {
+  if (isCustom) {
     return (
       <ark.button
-        type={type ?? 'button'}
-        className={cx(unstyled ? undefined : button(recipeProps), className)}
-        disabled={isDisabled}
-        aria-busy={loading || undefined}
-        data-loading={loading ? '' : undefined}
+        {...buttonProps}
         data-icon-only={iconOnly ? '' : undefined}
         data-content-mode={contentMode === 'custom' ? 'custom' : undefined}
         {...rest}
       >
-        {loading ? (
-          <span className={contentClass}>
-            <span data-part="spinner" data-icon="true" aria-hidden="true">
-              <Spinner />
-            </span>
-          </span>
-        ) : (
-          children
-        )}
+        <CustomContent loading={isLoading}>{children}</CustomContent>
       </ark.button>
     );
   }
 
   return (
-    <ark.button
-      type={type ?? 'button'}
-      className={cx(unstyled ? undefined : button(recipeProps), className)}
-      disabled={isDisabled}
-      aria-busy={loading || undefined}
-      data-loading={loading ? '' : undefined}
-      {...rest}
-    >
-      <span className={contentClass}>
-        {loading ? (
-          <span data-part="spinner" data-icon="true" aria-hidden="true">
-            <Spinner />
-          </span>
-        ) : (
-          <span data-part="leading-icon" data-icon="true">
-            {leadingIcon}
-          </span>
-        )}
-        <span>{loading && loadingText ? loadingText : children}</span>
-        {!loading ? (
-          <span data-part="trailing-icon" data-icon="true">
-            {trailingIcon}
-          </span>
-        ) : null}
-      </span>
+    <ark.button {...buttonProps} {...rest}>
+      <DefaultContent
+        loading={isLoading}
+        loadingText={loadingText}
+        leadingIcon={leadingIcon}
+        trailingIcon={trailingIcon}
+      >
+        {children}
+      </DefaultContent>
     </ark.button>
   );
 }

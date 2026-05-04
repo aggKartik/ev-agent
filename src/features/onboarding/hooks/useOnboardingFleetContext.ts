@@ -50,30 +50,23 @@ export function useOnboardingFleetContext(args: {
   }, [fleetVehicles, selectedTeslaVehicleId]);
 
   const selectedPrefill = selectedRow?.onboardingIdentity ?? null;
+  const prefillSuccess = teslaLinked && fleetFetchSucceeded;
+  const catalogIdentityReady = isCatalogIdentityReady({
+    model: selectedPrefill?.model ?? null,
+    year: selectedPrefill?.year ?? null,
+  });
 
   const identityReady =
-    teslaLinked &&
-    fleetFetchSucceeded &&
-    selectedRow != null &&
-    isCatalogIdentityReady({
-      model: selectedPrefill?.model ?? null,
-      year: selectedPrefill?.year ?? null,
-    });
-
-  const prefillSuccess = teslaLinked && fleetFetchSucceeded;
+    prefillSuccess && selectedRow != null && catalogIdentityReady;
 
   const linkedButNoVinIdentity =
     prefillSuccess &&
-    fleetVehicles != null &&
-    fleetVehicles.length > 0 &&
+    (fleetVehicles?.length ?? 0) > 0 &&
     selectedRow != null &&
-    !isCatalogIdentityReady({
-      model: selectedPrefill?.model ?? null,
-      year: selectedPrefill?.year ?? null,
-    });
+    !catalogIdentityReady;
 
   const linkedWithoutVehicleSlot =
-    prefillSuccess && fleetVehicles != null && fleetVehicles.length === 0;
+    prefillSuccess && fleetVehicles?.length === 0;
 
   const resolveProviderLabel = useCallback(
     (slug: string) =>

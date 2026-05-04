@@ -28,6 +28,69 @@ const timelineIconClass = css({
   height: '14px',
 });
 
+const STOP_ICONS = {
+  charge: BatteryCharging,
+  end: Flag,
+  activity: Sparkles,
+  start: MapPin,
+} as const;
+
+function pickStopIcon(kind: PlanStop['kind']): React.ComponentType {
+  return STOP_ICONS[kind as keyof typeof STOP_ICONS] ?? MapPin;
+}
+
+function driveNoteForStop(stop: PlanStop): string | null {
+  if (stop.driveMinutes <= 0) return null;
+  return `${formatPlanMinutes(stop.driveMinutes)} · ${stop.miles} mi from prev`;
+}
+
+function StopRow({
+  stop,
+  selected,
+  onSelect,
+}: {
+  stop: PlanStop;
+  selected: boolean;
+  onSelect?: (id: string) => void;
+}) {
+  const StopIcon = pickStopIcon(stop.kind);
+  const driveNote = driveNoteForStop(stop);
+  return (
+    <Button
+      type="button"
+      unstyled
+      contentMode="custom"
+      className={timelineClasses.row}
+      aria-pressed={selected}
+      style={
+        {
+          '--stop-color': stop.color ?? 'var(--colors-peach-400)',
+        } as CSSProperties
+      }
+      onClick={() => onSelect?.(stop.id)}
+    >
+      <Box className={timelineClasses.icon}>
+        <Icon
+          icon={StopIcon}
+          size="sm"
+          strokeWidth={1.75}
+          className={timelineIconClass}
+        />
+      </Box>
+      <Box className={timelineClasses.body}>
+        <Box className={timelineClasses.primary}>{stop.name}</Box>
+        <Box className={timelineClasses.meta}>{getStopMeta(stop)}</Box>
+        {stop.sub ? (
+          <Box className={timelineClasses.secondary}>{stop.sub}</Box>
+        ) : null}
+        {driveNote ? (
+          <Box className={timelineClasses.note}>{driveNote}</Box>
+        ) : null}
+      </Box>
+    </Button>
+  );
+}
+
 export default function StopTimeline({
   stops,
   selectedStopId,
@@ -35,56 +98,14 @@ export default function StopTimeline({
 }: StopTimelineProps) {
   return (
     <Stack className={listClass}>
-      {stops.map((stop) => {
-        const StopIcon =
-          stop.kind === 'charge'
-            ? BatteryCharging
-            : stop.kind === 'end'
-              ? Flag
-              : stop.kind === 'activity'
-                ? Sparkles
-                : MapPin;
-        const stopMeta = getStopMeta(stop);
-        const driveNote =
-          stop.driveMinutes > 0
-            ? `${formatPlanMinutes(stop.driveMinutes)} · ${stop.miles} mi from prev`
-            : null;
-        return (
-          <Button
-            key={stop.id}
-            type="button"
-            unstyled
-            contentMode="custom"
-            className={timelineClasses.row}
-            aria-pressed={selectedStopId === stop.id}
-            style={
-              {
-                '--stop-color': stop.color ?? 'var(--colors-peach-400)',
-              } as CSSProperties
-            }
-            onClick={() => onSelectStop?.(stop.id)}
-          >
-            <Box className={timelineClasses.icon}>
-              <Icon
-                icon={StopIcon}
-                size="sm"
-                strokeWidth={1.75}
-                className={timelineIconClass}
-              />
-            </Box>
-            <Box className={timelineClasses.body}>
-              <Box className={timelineClasses.primary}>{stop.name}</Box>
-              <Box className={timelineClasses.meta}>{stopMeta}</Box>
-              {stop.sub ? (
-                <Box className={timelineClasses.secondary}>{stop.sub}</Box>
-              ) : null}
-              {driveNote ? (
-                <Box className={timelineClasses.note}>{driveNote}</Box>
-              ) : null}
-            </Box>
-          </Button>
-        );
-      })}
+      {stops.map((stop) => (
+        <StopRow
+          key={stop.id}
+          stop={stop}
+          selected={selectedStopId === stop.id}
+          onSelect={onSelectStop}
+        />
+      ))}
     </Stack>
   );
 }

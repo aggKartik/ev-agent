@@ -59,68 +59,24 @@ export function useRouteLayers({
 
     clearLayers(map, layersRef.current);
 
-    const geometryReady = Boolean(result && result.geometry.length >= 2);
-    /** Road polyline; falls back to stop-to-stop chords when geometry is missing. */
-    const routePolyline: Coordinate[] = result
-      ? geometryReady
-        ? result.geometry
-        : visibleStops.map((stop) => stop.coordinate)
-      : previewGeometry;
+    const { polyline, fitPoints } = pickRouteGeometry({
+      result,
+      visibleStops,
+      previewGeometry,
+    });
 
-    /** Bounding set: ride along road plus markers so endpoints stay in view. */
-    const viewportFitPoints =
-      geometryReady && result
-        ? [...result.geometry, ...visibleStops.map((s) => s.coordinate)]
-        : routePolyline;
-
-    if (routePolyline.length >= 2) {
-      layersRef.current.halo = leaflet
-        .polyline(toLatLngs(routePolyline), {
-          color: PLAN_COLORS.end,
-          weight: 14,
-          opacity: 0.18,
-          lineCap: 'round',
-          lineJoin: 'round',
-          interactive: false,
-        })
-        .addTo(map);
-      layersRef.current.route = leaflet
-        .polyline(toLatLngs(routePolyline), {
-          color: PLAN_COLORS.start,
-          weight: 4,
-          opacity: 1,
-          lineCap: 'round',
-          lineJoin: 'round',
-          className: 'evagent-route',
-          interactive: false,
-        })
-        .addTo(map);
-    }
-
-    if (result) {
-      for (const stop of visibleStops) {
-        const isEndpoint = stop.kind === 'start' || stop.kind === 'end';
-        const marker = leaflet
-          .marker([stop.coordinate.lat, stop.coordinate.lng], {
-            icon: isEndpoint
-              ? makePinIcon(leaflet, stop)
-              : makeWaypointIcon(leaflet, stop, selectedStopId === stop.id),
-          })
-          .addTo(map);
-        marker.on('click', () => onSelectStop?.(stop.id));
-        layersRef.current.markers.push(marker);
-      }
-    } else if (request) {
-      addPreviewMarkers(leaflet, map, request, layersRef.current);
-    }
-
-    const pointsKey = viewportFitPoints
-      .map((p) => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`)
-      .join('|');
-    if (pointsKey !== lastPointsKeyRef.current) {
-      fitViewport(leaflet, map, viewportFitPoints);
-      lastPointsKeyRef.current = pointsKey;
-    }
+    drawRoutePolyline(leaflet, map, polyline, layersRef.current);
+    drawMarkers({
+      leaflet,
+      map,
+      result,
+      request,
+      visibleStops,
+      selectedStopId,
+      onSelectStop,
+      layers: layersRef.current,
+    });
+    maybeFitViewport(leaflet, map, fitPoints, lastPointsKeyRef);
   }, [
     leafletRef,
     mapRef,
@@ -132,6 +88,119 @@ export function useRouteLayers({
     selectedStopId,
     onSelectStop,
   ]);
+}
+
+/** Decide which polyline to draw and which points the viewport should fit. */
+function pickRouteGeometry(args: {
+  result: PlanResult | null | undefined;
+  visibleStops: PlanStop[];
+  previewGeometry: Coordinate[];
+}): { polyline: Coordinate[]; fitPoints: Coordinate[] } {
+  const { result, visibleStops, previewGeometry } = args;
+  if (!result) {
+    return { polyline: previewGeometry, fitPoints: previewGeometry };
+  }
+  const stopCoords = visibleStops.map((s) => s.coordinate);
+  if (result.geometry.length >= 2) {
+    return {
+      polyline: result.geometry,
+      fitPoints: [...result.geometry, ...stopCoords],
+    };
+  }
+  return { polyline: stopCoords, fitPoints: stopCoords };
+}
+
+function drawRoutePolyline(
+  leaflet: LeafletModule,
+  map: Leaflet.Map,
+  routePolyline: Coordinate[],
+  layers: LayerState,
+) {
+  if (routePolyline.length < 2) return;
+  layers.halo = leaflet
+    .polyline(toLatLngs(routePolyline), {
+      color: PLAN_COLORS.end,
+      weight: 14,
+      opacity: 0.18,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    })
+    .addTo(map);
+  layers.route = leaflet
+    .polyline(toLatLngs(routePolyline), {
+      color: PLAN_COLORS.start,
+      weight: 4,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'evagent-route',
+      interactive: false,
+    })
+    .addTo(map);
+}
+
+function drawMarkers(args: {
+  leaflet: LeafletModule;
+  map: Leaflet.Map;
+  result: PlanResult | null | undefined;
+  request: PlanRequest | null | undefined;
+  visibleStops: PlanStop[];
+  selectedStopId: string | null | undefined;
+  onSelectStop?: (id: string) => void;
+  layers: LayerState;
+}) {
+  const {
+    leaflet,
+    map,
+    result,
+    request,
+    visibleStops,
+    selectedStopId,
+    onSelectStop,
+    layers,
+  } = args;
+  if (result) {
+    for (const stop of visibleStops) {
+      addStopMarker(leaflet, map, stop, selectedStopId, onSelectStop, layers);
+    }
+    return;
+  }
+  if (request) addPreviewMarkers(leaflet, map, request, layers);
+}
+
+function addStopMarker(
+  leaflet: LeafletModule,
+  map: Leaflet.Map,
+  stop: PlanStop,
+  selectedStopId: string | null | undefined,
+  onSelectStop: ((id: string) => void) | undefined,
+  layers: LayerState,
+) {
+  const isEndpoint = stop.kind === 'start' || stop.kind === 'end';
+  const marker = leaflet
+    .marker([stop.coordinate.lat, stop.coordinate.lng], {
+      icon: isEndpoint
+        ? makePinIcon(leaflet, stop)
+        : makeWaypointIcon(leaflet, stop, selectedStopId === stop.id),
+    })
+    .addTo(map);
+  marker.on('click', () => onSelectStop?.(stop.id));
+  layers.markers.push(marker);
+}
+
+function maybeFitViewport(
+  leaflet: LeafletModule,
+  map: Leaflet.Map,
+  points: Coordinate[],
+  lastKeyRef: { current: string },
+) {
+  const key = points
+    .map((p) => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`)
+    .join('|');
+  if (key === lastKeyRef.current) return;
+  fitViewport(leaflet, map, points);
+  lastKeyRef.current = key;
 }
 
 function clearLayers(map: Leaflet.Map, layers: LayerState) {

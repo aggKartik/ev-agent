@@ -178,63 +178,130 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
       stageTopAlign={false}
     >
       <OnboardingStepStage transitionKey={transitionKey} direction={direction}>
-        {currentStep === 'NAME' ? (
-          <form.Field name="name">
-            {(field) => (
-              <NameStep
-                value={field.state.value}
-                onChange={field.handleChange}
-                onNext={() => {
-                  field.handleBlur();
-                  goNext();
-                }}
-              />
-            )}
-          </form.Field>
-        ) : null}
-
-        {currentStep === 'CONNECT' ? (
-          <>
-            <form.Field name="connect">
-              {(field) => (
-                <ConnectStep
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  errorReason={connectErrorReason}
-                  connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
-                  isTeslaLinked={fleet.teslaLinked}
-                  teslaFleetVehicles={fleet.fleetVehicles}
-                  teslaFleetLoading={fleet.fleetLoading}
-                  selectedTeslaVehicleId={formValues.teslaVehicleId}
-                  onTeslaVehicleIdChange={(id) =>
-                    form.setFieldValue('teslaVehicleId', id)
-                  }
-                />
-              )}
-            </form.Field>
-            {fleet.linkedWithoutVehicleSlot || fleet.linkedButNoVinIdentity ? (
-              <OnboardingConnectNotice
-                kind={
-                  fleet.linkedWithoutVehicleSlot ? 'noVehicle' : 'vinIdentity'
-                }
-              />
-            ) : null}
-          </>
-        ) : null}
-
-        {currentStep === 'SUCCESS' ? (
-          <SuccessStep
-            carSummary={fleet.trimmedTeslaSummary}
-            errorMessage={submitError}
-            isSubmitting={isSubmitting}
-            onNext={() => {
-              void submitOnboarding(formValues.name.trim(), {
-                teslaVehicleId: formValues.teslaVehicleId,
-              });
-            }}
-          />
-        ) : null}
+        <NameStepSlot
+          visible={currentStep === 'NAME'}
+          form={form}
+          onNext={goNext}
+        />
+        <ConnectStepSlot
+          visible={currentStep === 'CONNECT'}
+          form={form}
+          formValues={formValues}
+          fleet={fleet}
+          connectErrorReason={connectErrorReason}
+        />
+        <SuccessStepSlot
+          visible={currentStep === 'SUCCESS'}
+          fleet={fleet}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
+          onSubmit={() => {
+            void submitOnboarding(formValues.name.trim(), {
+              teslaVehicleId: formValues.teslaVehicleId,
+            });
+          }}
+        />
       </OnboardingStepStage>
     </AppShell>
+  );
+}
+
+type WizardForm = ReturnType<typeof useOnboardingForm>;
+type WizardFleet = ReturnType<typeof useOnboardingFleetContext>;
+
+function NameStepSlot({
+  visible,
+  form,
+  onNext,
+}: {
+  visible: boolean;
+  form: WizardForm;
+  onNext: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <form.Field name="name">
+      {(field) => (
+        <NameStep
+          value={field.state.value}
+          onChange={field.handleChange}
+          onNext={() => {
+            field.handleBlur();
+            onNext();
+          }}
+        />
+      )}
+    </form.Field>
+  );
+}
+
+function ConnectStepSlot({
+  visible,
+  form,
+  formValues,
+  fleet,
+  connectErrorReason,
+}: {
+  visible: boolean;
+  form: WizardForm;
+  formValues: OnboardingFormValues;
+  fleet: WizardFleet;
+  connectErrorReason: string | null;
+}) {
+  if (!visible) return null;
+  const noticeKind = pickConnectNoticeKind(fleet);
+  return (
+    <>
+      <form.Field name="connect">
+        {(field) => (
+          <ConnectStep
+            value={field.state.value}
+            onChange={field.handleChange}
+            errorReason={connectErrorReason}
+            connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
+            isTeslaLinked={fleet.teslaLinked}
+            teslaFleetVehicles={fleet.fleetVehicles}
+            teslaFleetLoading={fleet.fleetLoading}
+            selectedTeslaVehicleId={formValues.teslaVehicleId}
+            onTeslaVehicleIdChange={(id) =>
+              form.setFieldValue('teslaVehicleId', id)
+            }
+          />
+        )}
+      </form.Field>
+      {noticeKind ? <OnboardingConnectNotice kind={noticeKind} /> : null}
+    </>
+  );
+}
+
+function pickConnectNoticeKind(
+  fleet: WizardFleet,
+): 'noVehicle' | 'vinIdentity' | null {
+  if (fleet.linkedWithoutVehicleSlot) return 'noVehicle';
+  if (fleet.linkedButNoVinIdentity) return 'vinIdentity';
+  return null;
+}
+
+function SuccessStepSlot({
+  visible,
+  fleet,
+  submitError,
+  isSubmitting,
+  onSubmit,
+}: {
+  visible: boolean;
+  fleet: WizardFleet;
+  submitError: string | null;
+  isSubmitting: boolean;
+  onSubmit: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <SuccessStep
+      carSummary={fleet.trimmedTeslaSummary}
+      errorMessage={submitError}
+      isSubmitting={isSubmitting}
+      onNext={onSubmit}
+    />
   );
 }

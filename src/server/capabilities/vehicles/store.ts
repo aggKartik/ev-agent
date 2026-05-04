@@ -110,6 +110,42 @@ export async function completeOnboarding(
   return row;
 }
 
+/** Maps each input override field to the corresponding `vehicles` column. */
+const OVERRIDE_COLUMN_BY_FIELD = {
+  usableRangeMiles: 'overrideUsableRangeMiles',
+  batteryCapacityKWh: 'overrideBatteryCapacityKwh',
+  consumptionWhPerMile: 'overrideConsumptionWhPerMile',
+  connectorTypes: 'overrideConnectorTypes',
+} as const satisfies Record<
+  keyof NonNullable<UpsertOverridesInput['overrides']>,
+  string
+>;
+
+function applyOverrideColumns(
+  update: Record<string, unknown>,
+  overrides: UpsertOverridesInput['overrides'],
+): void {
+  if (!overrides) return;
+  for (const [field, column] of Object.entries(OVERRIDE_COLUMN_BY_FIELD)) {
+    if (field in overrides) {
+      update[column] = (overrides as Record<string, unknown>)[field] ?? null;
+    }
+  }
+}
+
+function applyPreferenceColumns(
+  update: Record<string, unknown>,
+  preferences: UpsertOverridesInput['preferences'],
+): void {
+  if (!preferences) return;
+  if (typeof preferences.targetArrivalSocPercent === 'number') {
+    update.targetArrivalSocPercent = preferences.targetArrivalSocPercent;
+  }
+  if (typeof preferences.postChargeSocPercent === 'number') {
+    update.postChargeSocPercent = preferences.postChargeSocPercent;
+  }
+}
+
 /**
  * Apply a partial set of overrides + preferences. `null` clears an override
  * (caller should set it explicitly when the form value matches the catalog
@@ -121,34 +157,8 @@ export async function upsertOverrides(
   input: UpsertOverridesInput,
 ): Promise<VehicleRow | null> {
   const update: Record<string, unknown> = { updatedAt: sql`now()` };
-
-  if (input.overrides) {
-    if ('usableRangeMiles' in input.overrides) {
-      update.overrideUsableRangeMiles =
-        input.overrides.usableRangeMiles ?? null;
-    }
-    if ('batteryCapacityKWh' in input.overrides) {
-      update.overrideBatteryCapacityKwh =
-        input.overrides.batteryCapacityKWh ?? null;
-    }
-    if ('consumptionWhPerMile' in input.overrides) {
-      update.overrideConsumptionWhPerMile =
-        input.overrides.consumptionWhPerMile ?? null;
-    }
-    if ('connectorTypes' in input.overrides) {
-      update.overrideConnectorTypes = input.overrides.connectorTypes ?? null;
-    }
-  }
-
-  if (input.preferences) {
-    if (typeof input.preferences.targetArrivalSocPercent === 'number') {
-      update.targetArrivalSocPercent =
-        input.preferences.targetArrivalSocPercent;
-    }
-    if (typeof input.preferences.postChargeSocPercent === 'number') {
-      update.postChargeSocPercent = input.preferences.postChargeSocPercent;
-    }
-  }
+  applyOverrideColumns(update, input.overrides);
+  applyPreferenceColumns(update, input.preferences);
 
   // No fields actually changed (caller passed an empty diff) — short-circuit
   // so we don't bump `updatedAt` for nothing.
