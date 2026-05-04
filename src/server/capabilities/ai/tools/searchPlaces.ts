@@ -27,6 +27,64 @@ type MapboxResponse = {
   features?: MapboxFeature[];
 };
 
+type Candidate = {
+  name: string;
+  sub: string | undefined;
+  coordinate: { lat: number; lng: number };
+  address: string | undefined;
+};
+
+function extractCoordinate(
+  feature: MapboxFeature,
+): { lat: number; lng: number } | null {
+  const geom = feature.geometry?.coordinates;
+  if (geom && typeof geom[0] === 'number' && typeof geom[1] === 'number') {
+    return { lat: geom[1], lng: geom[0] };
+  }
+  const propCoord = feature.properties?.coordinates;
+  if (
+    propCoord &&
+    typeof propCoord.latitude === 'number' &&
+    typeof propCoord.longitude === 'number'
+  ) {
+    return { lat: propCoord.latitude, lng: propCoord.longitude };
+  }
+  return null;
+}
+
+function extractName(feature: MapboxFeature): string {
+  return feature.properties?.name ?? feature.text ?? feature.place_name ?? '';
+}
+
+function extractSub(feature: MapboxFeature): string | undefined {
+  const ctx = feature.properties?.context;
+  return ctx?.neighborhood?.name ?? ctx?.place?.name ?? undefined;
+}
+
+function extractAddress(feature: MapboxFeature): string | undefined {
+  const props = feature.properties;
+  return (
+    props?.full_address ??
+    props?.place_formatted ??
+    props?.address ??
+    feature.place_name ??
+    undefined
+  );
+}
+
+function featureToCandidate(feature: MapboxFeature): Candidate | null {
+  const coordinate = extractCoordinate(feature);
+  if (!coordinate) return null;
+  const name = extractName(feature);
+  if (!name) return null;
+  return {
+    name,
+    sub: extractSub(feature),
+    coordinate,
+    address: extractAddress(feature),
+  };
+}
+
 export function makeSearchPlacesTool({ signal }: Deps) {
   return tool({
     description:
@@ -83,46 +141,8 @@ export function makeSearchPlacesTool({ signal }: Deps) {
       const features = Array.isArray(data.features) ? data.features : [];
 
       const candidates = features
-        .map((feature) => {
-          const lngLat =
-            feature.geometry?.coordinates ??
-            (feature.properties?.coordinates
-              ? ([
-                  feature.properties.coordinates.longitude,
-                  feature.properties.coordinates.latitude,
-                ] as [number | undefined, number | undefined])
-              : undefined);
-          if (
-            !lngLat ||
-            typeof lngLat[0] !== 'number' ||
-            typeof lngLat[1] !== 'number'
-          ) {
-            return null;
-          }
-          const name =
-            feature.properties?.name ??
-            feature.text ??
-            feature.place_name ??
-            '';
-          if (!name) return null;
-          const sub =
-            feature.properties?.context?.neighborhood?.name ??
-            feature.properties?.context?.place?.name ??
-            undefined;
-          const address =
-            feature.properties?.full_address ??
-            feature.properties?.place_formatted ??
-            feature.properties?.address ??
-            feature.place_name ??
-            undefined;
-          return {
-            name,
-            sub,
-            coordinate: { lat: lngLat[1], lng: lngLat[0] },
-            address,
-          };
-        })
-        .filter((c): c is NonNullable<typeof c> => c !== null);
+        .map(featureToCandidate)
+        .filter((c): c is Candidate => c !== null);
 
       return { candidates };
     },
