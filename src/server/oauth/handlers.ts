@@ -1,5 +1,6 @@
 import { auth } from '@clerk/tanstack-react-start/server';
 import { env } from '#/lib/env';
+import { registerAllProviders } from '#/server/integrations';
 import { db } from '#/server/platform/db';
 import {
   getOrLinkUserByClerkId,
@@ -11,6 +12,12 @@ import { getProviderBySlug } from './registry';
 import { clearStateCookie } from './state-cookie';
 import { upsertLinkedAccount } from './store';
 import type { OAuthProvider } from './types';
+
+// Ensure every OAuth provider is registered before any callback or connect
+// request reaches getProviderBySlug. Routes handling OAuth go through their
+// own bundles and may be evaluated before the tRPC router has populated the
+// registry, so we re-run the (idempotent) registration here.
+registerAllProviders();
 
 /**
  * Derive the OAuth redirect URI for a given provider. Falls back to
