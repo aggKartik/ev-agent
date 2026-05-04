@@ -6,7 +6,7 @@ import type {
   PlanStop,
 } from '#/shared/plan/contracts';
 
-export type PlanFlowStatus = 'draft' | 'planning' | 'ready';
+type PlanFlowStatus = 'draft' | 'planning' | 'ready';
 export type PlanMapMode = 'preview' | 'building' | 'ready';
 
 const NARRATION_CAP = 80;
@@ -16,7 +16,7 @@ function capNarrationEntries<T>(entries: T[], cap: number): T[] {
   return entries.slice(entries.length - cap);
 }
 
-export type NarrationEntry = {
+type NarrationEntry = {
   id: number;
   text: string;
 };

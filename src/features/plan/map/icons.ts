@@ -8,7 +8,7 @@ export const PLAN_COLORS = {
   end: 'var(--colors-magenta-400)',
 };
 
-export const iconSvg = {
+const iconSvg = {
   bolt: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 13h6l-1 8 9-11h-6l1-7Z"/></svg>',
   crosshair:
     '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
@@ -16,7 +16,7 @@ export const iconSvg = {
   pin: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>',
 };
 
-export function escapeHtml(value: string) {
+function escapeHtml(value: string) {
   return value.replace(
     /[&<>"']/g,
     (char) =>

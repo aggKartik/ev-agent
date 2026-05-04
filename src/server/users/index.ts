@@ -133,17 +133,6 @@ function isUniqueEmailViolation(err: unknown): boolean {
   return false;
 }
 
-/**
- * @deprecated Prefer {@link getOrLinkUserByClerkId} with a Clerk email resolver.
- * Retained for call sites that cannot resolve email (tests / scripts).
- */
-export async function getOrCreateUserByClerkId(
-  db: Kysely<Database>,
-  clerkUserId: string,
-): Promise<{ id: number }> {
-  return getOrLinkUserByClerkId(db, clerkUserId, async () => null);
-}
-
 /** Primary email from Clerk (for linking pre-existing users by email). */
 export async function resolveClerkPrimaryEmail(
   clerkUserId: string,

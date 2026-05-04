@@ -12,7 +12,7 @@ import {
   PLAN_DEFAULT_VEHICLE_LABEL,
 } from './constants';
 
-export { coordinateSchema, type Coordinate };
+export type { Coordinate };
 
 export const evConnectorSlugSchema = z.enum([
   'NACS',
@@ -22,7 +22,7 @@ export const evConnectorSlugSchema = z.enum([
   'CHADEMO',
 ]);
 
-export const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);
+const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);
 
 /**
  * Loose draft shape used by the plan form while the **Driver** is still
@@ -30,7 +30,7 @@ export const planActivityIdSchema = z.enum(PLAN_ACTIVITY_IDS);
  * suggestion is selected; submission is gated by `planAddressSchema`
  * below, which requires it.
  */
-export const planAddressDraftSchema = z.object({
+const planAddressDraftSchema = z.object({
   full: z.string(),
   primary: z.string().optional(),
   secondary: z.string().optional(),
@@ -44,19 +44,19 @@ export const planAddressDraftSchema = z.object({
  * resolved coordinate are blocked by `planRequestSchema.safeParse` in
  * the form's `canPlan` check.
  */
-export const planAddressSchema = z.object({
+const planAddressSchema = z.object({
   full: z.string().min(1),
   primary: z.string().min(1).optional(),
   secondary: z.string().optional(),
   coordinate: coordinateSchema,
 });
 
-export const planActivitySelectionSchema = z.object({
+const planActivitySelectionSchema = z.object({
   id: planActivityIdSchema,
   dwellMinutes: z.number().int().min(15).max(180),
 });
 
-export const planArrivalTimeSchema = z
+const planArrivalTimeSchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected 24h HH:MM');
 
@@ -122,14 +122,9 @@ export const addressReverseGeocodeSchema = z.object({
   coordinate: coordinateSchema,
 });
 
-export const planStopKindSchema = z.enum([
-  'start',
-  'activity',
-  'charge',
-  'end',
-]);
+const planStopKindSchema = z.enum(['start', 'activity', 'charge', 'end']);
 
-export const planStopSchema = z.object({
+const planStopSchema = z.object({
   id: z.string().min(1),
   kind: planStopKindSchema,
   name: z.string().min(1),
@@ -146,7 +141,7 @@ export const planStopSchema = z.object({
   arrivalTime: planArrivalTimeSchema,
 });
 
-export const planTotalsSchema = z.object({
+const planTotalsSchema = z.object({
   miles: z.number().min(0),
   driveMinutes: z.number().min(0),
   dwellMinutes: z.number().min(0),
@@ -155,7 +150,7 @@ export const planTotalsSchema = z.object({
   arrivalTime: planArrivalTimeSchema,
 });
 
-export const planPhaseSchema = z.object({
+const planPhaseSchema = z.object({
   label: z.string().min(1),
   detail: z.string().min(1),
 });
@@ -180,7 +175,6 @@ export type PlanAddress = z.infer<typeof planAddressSchema>;
 export type PlanAddressDraft = z.infer<typeof planAddressDraftSchema>;
 export type PlanActivitySelection = z.infer<typeof planActivitySelectionSchema>;
 export type PlanRequest = z.infer<typeof planRequestSchema>;
-export type PlanStopKind = z.infer<typeof planStopKindSchema>;
 export type PlanStop = z.infer<typeof planStopSchema>;
 export type PlanPhase = z.infer<typeof planPhaseSchema>;
 export type PlanResult = z.infer<typeof planResultSchema>;

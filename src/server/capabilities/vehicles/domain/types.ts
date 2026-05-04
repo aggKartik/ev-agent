@@ -1,8 +1,6 @@
 import type {
   VehicleEnergyProfile,
-  VehicleIdentity,
   VehicleOverrides,
-  VehiclePreferences,
 } from '#/shared/vehicles/contracts';
 
 /**
@@ -10,12 +8,7 @@ import type {
  * (resolveEnergyProfile, diffOverrides, vehicles router) can import from a
  * single place without dragging the whole contracts module in.
  */
-export type {
-  VehicleEnergyProfile,
-  VehicleIdentity,
-  VehicleOverrides,
-  VehiclePreferences,
-};
+export type { VehicleEnergyProfile, VehicleOverrides };
 
 /**
  * The shape we accept from `db.selectFrom('vehicles')`. Kept narrow so the

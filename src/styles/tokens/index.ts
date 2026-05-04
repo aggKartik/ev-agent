@@ -9,7 +9,6 @@ export { radii } from './radii';
 export { semanticShadows, shadows } from './shadows';
 export { sizes, spacing } from './spacing';
 export { textStyles } from './textStyles';
-export { transitions } from './transitions';
 export {
   fontSizes,
   fonts,

@@ -12,7 +12,7 @@ import {
   DASHBOARD_UTILITY_TILES,
 } from '#/features/dashboard/utils/data';
 
-export function getDashboardUtilities(
+function getDashboardUtilities(
   tesla: DashboardTeslaSummary,
 ): DashboardUtilityTile[] {
   return DASHBOARD_UTILITY_TILES.map((tile) => {
@@ -47,19 +47,12 @@ export function buildDashboardSummary(args: {
   };
 }
 
-export function getDashboardFallbackSummary(): DashboardSummary {
-  return buildDashboardSummary({
-    firstName: null,
-    tesla: DASHBOARD_FALLBACK_TESLA,
-  });
-}
-
 /**
  * Map a raw `TeslaVehicleSummary` (server shape) into the dashboard's
  * vehicle contract. Pure function so the live hook + tests can both use
  * it.
  */
-export function teslaVehicleSummaryToDashboard(args: {
+function teslaVehicleSummaryToDashboard(args: {
   id: string;
   vin: string | null;
   displayName: string | null;
@@ -86,7 +79,7 @@ export function teslaVehicleSummaryToDashboard(args: {
   };
 }
 
-export function buildPendingTeslaSummary(args: {
+function buildPendingTeslaSummary(args: {
   detail: string;
   label?: string;
   linked: boolean;
@@ -102,7 +95,7 @@ export function buildPendingTeslaSummary(args: {
   };
 }
 
-export function buildErroredTeslaSummary(args: {
+function buildErroredTeslaSummary(args: {
   detail: string;
   label?: string;
   linked?: boolean;
@@ -218,7 +211,7 @@ function composeLinkedTeslaSummary(
   });
 }
 
-export function buildLinkedTeslaSummary(args: {
+function buildLinkedTeslaSummary(args: {
   vehicle: DashboardTeslaVehicle;
   refreshedAt: string;
 }): DashboardTeslaSummary {

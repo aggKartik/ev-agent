@@ -17,7 +17,7 @@ import { evConnectorSlugSchema } from '#/shared/plan/contracts';
  * validate through these.
  */
 
-export const vehicleIdentitySchema = z.object({
+const vehicleIdentitySchema = z.object({
   make: z.string().min(1).max(64),
   model: z.string().min(1).max(64),
   year: z.string().regex(/^\d{4}$/),
@@ -25,9 +25,7 @@ export const vehicleIdentitySchema = z.object({
   teslaVehicleId: z.string().min(1).max(64).optional(),
 });
 
-export type VehicleIdentity = z.infer<typeof vehicleIdentitySchema>;
-
-export const vehicleOverridesSchema = z.object({
+const vehicleOverridesSchema = z.object({
   usableRangeMiles: z.number().positive().max(500).nullable().optional(),
   batteryCapacityKWh: z.number().positive().max(250).nullable().optional(),
   consumptionWhPerMile: z.number().positive().max(800).nullable().optional(),
@@ -36,7 +34,7 @@ export const vehicleOverridesSchema = z.object({
 
 export type VehicleOverrides = z.infer<typeof vehicleOverridesSchema>;
 
-export const vehiclePreferencesSchema = z.object({
+const vehiclePreferencesSchema = z.object({
   targetArrivalSocPercent: z
     .number()
     .min(0)
@@ -49,9 +47,7 @@ export const vehiclePreferencesSchema = z.object({
     .default(PLAN_DEFAULT_POST_CHARGE_SOC_PERCENT),
 });
 
-export type VehiclePreferences = z.infer<typeof vehiclePreferencesSchema>;
-
-export const vehicleEnergyProfileSchema = z.object({
+const vehicleEnergyProfileSchema = z.object({
   identity: vehicleIdentitySchema,
   vehicleLabel: z.string().min(1),
   usableRangeMiles: z
@@ -77,7 +73,7 @@ export const vehicleEnergyProfileSchema = z.object({
 
 export type VehicleEnergyProfile = z.infer<typeof vehicleEnergyProfileSchema>;
 
-export const completeOnboardingInputSchema = vehicleIdentitySchema;
+const completeOnboardingInputSchema = vehicleIdentitySchema;
 export type CompleteOnboardingInput = z.infer<
   typeof completeOnboardingInputSchema
 >;
@@ -85,9 +81,6 @@ export type CompleteOnboardingInput = z.infer<
 export const completeOnboardingFromTeslaInputSchema = z.object({
   teslaVehicleId: z.string().min(1).max(64),
 });
-export type CompleteOnboardingFromTeslaInput = z.infer<
-  typeof completeOnboardingFromTeslaInputSchema
->;
 
 export const upsertOverridesInputSchema = z.object({
   overrides: vehicleOverridesSchema.optional(),

@@ -8,7 +8,7 @@
 import { TRPCError } from '@trpc/server';
 
 /** Max simultaneous plan streams per user. */
-export const PLAN_STREAM_MAX_CONCURRENT = 1;
+const PLAN_STREAM_MAX_CONCURRENT = 1;
 
 /** Max plan stream starts per user inside `PLAN_STREAM_RATE_WINDOW_MS`. */
 export const PLAN_STREAM_RATE_LIMIT = 5;

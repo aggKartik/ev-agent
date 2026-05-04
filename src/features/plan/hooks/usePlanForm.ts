@@ -22,7 +22,7 @@ type UsePlanFormArgs = {
   onSubmit: (request: PlanRequest) => void;
 };
 
-export type PlanFormValues = {
+type PlanFormValues = {
   from: PlanAddressDraft;
   to: PlanAddressDraft;
   activities: PlanRequest['activities'];

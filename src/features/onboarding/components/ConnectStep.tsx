@@ -11,8 +11,7 @@ import { chip } from '#/styled-system/recipes/chip';
 import { connect } from '#/styled-system/recipes/connect';
 import { step } from '#/styled-system/recipes/step';
 
-export type TeslaFleetRow =
-  inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
+type TeslaFleetRow = inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
 
 type ConnectStepProps = {
   value: string;
