@@ -92,47 +92,63 @@ export function corridorCoordsFromTomTomLegs(legs: TomTomLeg[]): Coordinate[] {
   return geom;
 }
 
+function dwellMinutesForCharge(seconds: number | undefined): number {
+  if (typeof seconds !== 'number') return 28;
+  return Math.min(240, Math.max(5, Math.ceil(seconds / 60)));
+}
+
+function chargeKey(coord: TomTomPoint): string {
+  return `${coord.latitude?.toFixed(5)},${coord.longitude?.toFixed(5)}`;
+}
+
+function buildChargeAnchor(
+  ordinal: number,
+  info: ChargingInfoLeg,
+  coordRaw: TomTomPoint,
+): EvChargeStopCandidate {
+  const name = info.chargingParkName?.slice(0, 80);
+  const candidate: EvChargeStopCandidate = {
+    ordinal,
+    coordinate: pointToCoord(coordRaw),
+    rationale: ['TomTom LDEV charging waypoint', name ? ` — ${name}` : ''].join(
+      '',
+    ),
+    suggestedDwellMinutes: dwellMinutesForCharge(info.chargingTimeInSeconds),
+  };
+  if (
+    typeof info.chargingParkUuid === 'string' &&
+    info.chargingParkUuid.length > 0
+  ) {
+    candidate.vendor = { tomTomChargingParkUuid: info.chargingParkUuid };
+  }
+  return candidate;
+}
+
+type ChargeAtLeg = { info: ChargingInfoLeg; coord: TomTomPoint };
+
+function chargeAtLeg(leg: TomTomLeg): ChargeAtLeg | null {
+  const info = leg.summary?.chargingInformationAtEndOfLeg;
+  const coord = info?.chargingParkLocation?.coordinate;
+  if (!info || !isPoint(coord)) return null;
+  return { info, coord };
+}
+
 /** Extract chargers from LDEV legs (one per leg ending with charging summary). */
 export function extractChargeAnchorsFromTomTomLegs(
   legs: TomTomLeg[],
 ): EvChargeStopCandidate[] {
   const out: EvChargeStopCandidate[] = [];
-  let ordinal = 0;
   const seen = new Set<string>();
+  let ordinal = 0;
 
   for (const leg of legs) {
-    const info = leg.summary?.chargingInformationAtEndOfLeg;
-    const coordRaw = info?.chargingParkLocation?.coordinate;
-    if (!info || !isPoint(coordRaw)) continue;
+    const charge = chargeAtLeg(leg);
+    if (!charge) continue;
     ordinal += 1;
-    const key = `${coordRaw.latitude?.toFixed(5)},${coordRaw.longitude?.toFixed(5)}`;
+    const key = chargeKey(charge.coord);
     if (seen.has(key)) continue;
     seen.add(key);
-    const minutes =
-      typeof info.chargingTimeInSeconds === 'number'
-        ? Math.min(240, Math.max(5, Math.ceil(info.chargingTimeInSeconds / 60)))
-        : 28;
-
-    const name = info.chargingParkName?.slice(0, 80);
-
-    const candidate: EvChargeStopCandidate = {
-      ordinal,
-      coordinate: pointToCoord(coordRaw),
-      rationale: [
-        'TomTom LDEV charging waypoint',
-        name ? ` — ${name}` : '',
-      ].join(''),
-      suggestedDwellMinutes: minutes,
-    };
-    if (
-      typeof info.chargingParkUuid === 'string' &&
-      info.chargingParkUuid.length > 0
-    ) {
-      candidate.vendor = {
-        tomTomChargingParkUuid: info.chargingParkUuid,
-      };
-    }
-    out.push(candidate);
+    out.push(buildChargeAnchor(ordinal, charge.info, charge.coord));
   }
   return out;
 }

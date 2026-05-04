@@ -56,7 +56,8 @@ function readFirstStoredEntry(): RawPersisted | null {
     try {
       return JSON.parse(raw) as RawPersisted;
     } catch {
-      return null;
+      // Corrupted entry on this key — fall through to the next legacy key
+      // instead of giving up so we can recover from a bad latest write.
     }
   }
   return null;

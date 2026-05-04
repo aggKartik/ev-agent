@@ -176,6 +176,20 @@ async function fetchLdev(
   }
 }
 
+async function readLdevBody(
+  res: Response,
+): Promise<{ text: string } | TomTomLdevPrefetchResult> {
+  try {
+    return { text: await res.text() };
+  } catch (e) {
+    return {
+      ok: false,
+      reason: 'fetch_aborted_or_network',
+      fetchError: describeFetchError(e),
+    };
+  }
+}
+
 function parseLdevBody(
   text: string,
 ): { parsed: TomTomLdevResponse } | { error: 'json_parse_error' } {
@@ -288,7 +302,9 @@ export async function tryTomTomLongDistanceEvRouteDetailed(
   if ('ok' in fetched) return fetched;
   const { res } = fetched;
 
-  const text = await res.text();
+  const bodyRead = await readLdevBody(res);
+  if ('ok' in bodyRead) return bodyRead;
+  const text = bodyRead.text;
   const bodyTextForDiag = truncatePreview(text);
 
   if (!res.ok) {

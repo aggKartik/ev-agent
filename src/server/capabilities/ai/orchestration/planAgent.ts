@@ -55,6 +55,22 @@ function startPlanAgentStream(
   });
 }
 
+function readStopId(stop: unknown): string | null {
+  if (!stop || typeof stop !== 'object') return null;
+  const id = (stop as { id?: unknown }).id;
+  return typeof id === 'string' ? id : null;
+}
+
+/** Validate one streamed stop and emit it the first time we see its id. */
+function emitStopOnce(stop: unknown, seen: Set<string>, emit: Emit): void {
+  const id = readStopId(stop);
+  if (id === null || seen.has(id)) return;
+  const parsed = planAgentModelResultSchema.shape.stops.element.safeParse(stop);
+  if (!parsed.success) return;
+  seen.add(parsed.data.id);
+  emit({ type: 'stop', stop: parsed.data });
+}
+
 /** Each partial stop the agent streams becomes a `stop` event the first time we see its id. */
 async function emitNewStopsFromStream(
   stream: StreamHandle,
@@ -64,22 +80,8 @@ async function emitNewStopsFromStream(
   for await (const partial of stream.partialOutputStream) {
     const stops = partial?.stops;
     if (!Array.isArray(stops)) continue;
-    for (const stop of stops) {
-      const id = readStopId(stop);
-      if (id === null || seenStopIds.has(id)) continue;
-      const parsed =
-        planAgentModelResultSchema.shape.stops.element.safeParse(stop);
-      if (!parsed.success) continue;
-      seenStopIds.add(parsed.data.id);
-      emit({ type: 'stop', stop: parsed.data });
-    }
+    for (const stop of stops) emitStopOnce(stop, seenStopIds, emit);
   }
-}
-
-function readStopId(stop: unknown): string | null {
-  if (!stop || typeof stop !== 'object') return null;
-  const id = (stop as { id?: unknown }).id;
-  return typeof id === 'string' ? id : null;
 }
 
 async function awaitStreamOutput(

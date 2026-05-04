@@ -12,52 +12,59 @@ import type { Database } from '#/server/platform/db/types';
  * (Clerk today, anything else tomorrow) resolve into a user row via helpers here.
  */
 
-/**
- * Look up the internal user for a given Clerk user id. If no row exists yet,
- * tries to attach `clerkUserId` to an existing row matched by email (when
- * `resolveEmail` returns a primary email). Otherwise inserts a new row.
- * Race-safe for concurrent first requests.
- */
-export async function getOrLinkUserByClerkId(
+async function findUserByClerkId(
   db: Kysely<Database>,
   clerkUserId: string,
-  resolveEmail: () => Promise<string | null>,
-): Promise<{ id: number }> {
-  const existing = await db
+): Promise<{ id: number } | undefined> {
+  return db
     .selectFrom('users')
     .select('id')
     .where('clerkUserId', '=', clerkUserId)
     .executeTakeFirst();
+}
 
-  if (existing) return existing;
+/**
+ * Try to claim an unlinked existing user with this email by writing
+ * `clerkUserId` onto their row. Returns the linked id, or `null` if there
+ * is no email or no eligible row.
+ */
+async function tryLinkExistingByEmail(
+  db: Kysely<Database>,
+  clerkUserId: string,
+  email: string,
+): Promise<{ id: number } | null> {
+  const linked = await db
+    .updateTable('users')
+    .set({ clerkUserId })
+    .where('email', '=', email)
+    .where('clerkUserId', 'is', null)
+    .returning('id')
+    .executeTakeFirst();
+  return linked ?? null;
+}
 
-  const email = await resolveEmail();
+/**
+ * Decide whether the new user row should carry the email column. Returns
+ * `null` if email is already owned by someone else (so the INSERT must
+ * skip it to avoid the unique-constraint violation).
+ */
+async function resolveInsertEmail(
+  db: Kysely<Database>,
+  email: string,
+): Promise<string | null> {
+  const claimed = await db
+    .selectFrom('users')
+    .select('id')
+    .where('email', '=', email)
+    .executeTakeFirst();
+  return claimed ? null : email;
+}
 
-  // `email` column has a UNIQUE constraint. Only include it in the INSERT
-  // when no other user already owns it — otherwise the insert would throw
-  // an unhandled unique-constraint violation (the `onConflict` clause only
-  // covers `clerkUserId`).
-  let insertEmail: string | undefined;
-  if (email) {
-    const linked = await db
-      .updateTable('users')
-      .set({ clerkUserId })
-      .where('email', '=', email)
-      .where('clerkUserId', 'is', null)
-      .returning('id')
-      .executeTakeFirst();
-
-    if (linked) return { id: linked.id };
-
-    const claimed = await db
-      .selectFrom('users')
-      .select('id')
-      .where('email', '=', email)
-      .executeTakeFirst();
-
-    if (!claimed) insertEmail = email;
-  }
-
+async function insertNewClerkUser(
+  db: Kysely<Database>,
+  clerkUserId: string,
+  insertEmail: string | undefined,
+): Promise<void> {
   try {
     await db
       .insertInto('users')
@@ -72,24 +79,44 @@ export async function getOrLinkUserByClerkId(
     // SELECT above and this INSERT: a concurrent request may have just
     // inserted a row with the same email. Retry once without the email
     // so the Clerk user still gets an internal row.
-    if (insertEmail && isUniqueEmailViolation(err)) {
-      await db
-        .insertInto('users')
-        .values({ clerkUserId })
-        .onConflict((oc) => oc.column('clerkUserId').doNothing())
-        .execute();
-    } else {
-      throw err;
-    }
+    if (!insertEmail || !isUniqueEmailViolation(err)) throw err;
+    await db
+      .insertInto('users')
+      .values({ clerkUserId })
+      .onConflict((oc) => oc.column('clerkUserId').doNothing())
+      .execute();
+  }
+}
+
+/**
+ * Look up the internal user for a given Clerk user id. If no row exists yet,
+ * tries to attach `clerkUserId` to an existing row matched by email (when
+ * `resolveEmail` returns a primary email). Otherwise inserts a new row.
+ * Race-safe for concurrent first requests.
+ */
+export async function getOrLinkUserByClerkId(
+  db: Kysely<Database>,
+  clerkUserId: string,
+  resolveEmail: () => Promise<string | null>,
+): Promise<{ id: number }> {
+  const existing = await findUserByClerkId(db, clerkUserId);
+  if (existing) return existing;
+
+  const email = await resolveEmail();
+  let insertEmail: string | undefined;
+  if (email) {
+    const linked = await tryLinkExistingByEmail(db, clerkUserId, email);
+    if (linked) return linked;
+    insertEmail = (await resolveInsertEmail(db, email)) ?? undefined;
   }
 
-  const row = await db
+  await insertNewClerkUser(db, clerkUserId, insertEmail);
+
+  return db
     .selectFrom('users')
     .select('id')
     .where('clerkUserId', '=', clerkUserId)
     .executeTakeFirstOrThrow();
-
-  return row;
 }
 
 /** Postgres unique-violation (SQLSTATE 23505) on the `users_email_key` index. */

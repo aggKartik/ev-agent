@@ -81,6 +81,7 @@ type Mut = {
   timeoutMs: number;
   verboseTomTomFlag: boolean;
   groups: Set<ToolGroup>;
+  toolsFlagProvided: boolean;
 };
 
 type ArgHandler = {
@@ -101,8 +102,10 @@ const ARG_HANDLERS: readonly ArgHandler[] = [
   },
   {
     match: (arg) => arg.startsWith('--tools='),
-    apply: (arg, mut) =>
-      parseToolsFlag(arg.slice('--tools='.length), mut.groups),
+    apply: (arg, mut) => {
+      mut.toolsFlagProvided = true;
+      parseToolsFlag(arg.slice('--tools='.length), mut.groups);
+    },
   },
   {
     match: (arg) => arg.startsWith('--timeout='),
@@ -123,11 +126,17 @@ export function parseArgs(argv: string[]): ParsedArgs {
     timeoutMs: DEFAULT_TIMEOUT_MS,
     verboseTomTomFlag: false,
     groups: new Set<ToolGroup>(),
+    toolsFlagProvided: false,
   };
 
   for (let i = 2; i < argv.length; i++) dispatchArg(argv[i], mut);
 
   if (mut.groups.size === 0) {
+    if (mut.toolsFlagProvided) {
+      failWith(
+        '--tools must include at least one of: narrate | ocm | mapbox | tomtom',
+      );
+    }
     for (const g of ALL_GROUPS) mut.groups.add(g);
   }
 
