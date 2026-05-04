@@ -70,6 +70,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "fallow": "^2.63.0",
     "jsdom": "^28.1.0",
     "nitro": "^3.0.260311-beta",
     "postcss": "^8.5.8",
@@ -77,5 +78,8 @@
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5"
-  }
+  },
+  "trustedDependencies": [
+    "fallow"
+  ]
 }
