@@ -1,0 +1,23 @@
+{
+  "clone_groups": [
+    "src/features/onboarding/components/ConnectStep.tsx:253-273|src/features/onboarding/components/NameStep.tsx:15-27|src/features/onboarding/components/SuccessStep.tsx:32-44",
+    "src/features/plan/hooks/usePlanSubmit.test.ts:6-24|src/features/plan/store.test.ts:23-41",
+    "src/features/plan/hooks/usePlanSubmit.test.ts:62-72|src/features/plan/store.test.ts:88-97",
+    "src/routes/dashboard/route.tsx:1-22|src/routes/plan/route.tsx:1-22",
+    "src/routes/sign-in/index.tsx:1-11|src/routes/sign-up/index.tsx:1-11",
+    "src/routes/sign-in/index.tsx:11-86|src/routes/sign-up/index.tsx:11-87",
+    "src/routes/sign-in/index.tsx:47-75|src/routes/sign-up/index.tsx:47-76",
+    "src/server/capabilities/ai/tools/findChargingStations.ts:29-33|src/server/capabilities/ai/tools/searchPlaces.ts:96-100",
+    "src/server/capabilities/ai/tools/findChargingStations.ts:60-68|src/server/capabilities/ai/tools/getDirections.ts:58-66|src/server/capabilities/ai/tools/searchPlaces.ts:135-142",
+    "src/server/capabilities/ai/tools/getDirections.ts:56-66|src/server/capabilities/ai/tools/searchPlaces.ts:133-142",
+    "src/server/capabilities/vehicles/domain/types.ts:18-30|src/server/platform/db/types.ts:23-36",
+    "src/server/integrations/mapbox/searchbox.ts:131-143|src/server/integrations/mapbox/searchbox.ts:210-220",
+    "src/server/integrations/tesla/auth/provider.ts:99-111|src/server/integrations/tesla/fleet/partner.ts:57-69",
+    "src/server/integrations/tesla/auth/provider.ts:111-127|src/server/integrations/tesla/fleet/partner.ts:69-85",
+    "src/server/oauth/handlers.ts:157-165|src/server/oauth/handlers.ts:70-80",
+    "src/server/platform/db/migrate-rollback-all.ts:8-60|src/server/platform/db/migrate.ts:3-55",
+    "src/server/platform/db/migrations/001_initial_tables.ts:10-17|src/server/platform/db/migrations/001_initial_tables.ts:21-28|src/server/platform/db/migrations/005_drop_legacy_cars.ts:24-31",
+    "src/server/platform/db/migrations/001_initial_tables.ts:16-39|src/server/platform/db/migrations/005_drop_legacy_cars.ts:19-42",
+    "src/server/platform/db/migrations/002_oauth_accounts.ts:36-43|src/server/platform/db/migrations/004_vehicles.ts:42-49"
+  ]
+}

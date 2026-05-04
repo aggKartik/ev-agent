@@ -2,8 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
     "src/router.tsx",
+    "src/start.ts",
     "src/routes/**/*.{ts,tsx}",
     "src/server/platform/db/migrations/**/*.ts",
+    "src/test/setup.ts",
     "scripts/**/main.ts",
     "scripts/**/*.ts"
   ],

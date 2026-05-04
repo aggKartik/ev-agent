@@ -20,9 +20,11 @@
     "smoke:tools": "bun --env-file=.env run scripts/smoke/plan-tools/main.ts",
     "tesla:register-partner": "bun --env-file=.env run scripts/tesla/register-partner.ts",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "biome format",
     "lint": "biome lint",
-    "lint:complexity": "bun run scripts/lint/fallow-complexity.ts",
+    "lint:complexity": "bun run test:coverage && FALLOW_COVERAGE=coverage/coverage-final.json bunx fallow audit --health-baseline .fallow-baselines/health-baseline.json --dead-code-baseline .fallow-baselines/dead-code-baseline.json --dupes-baseline .fallow-baselines/dupes-baseline.json",
+    "lint:complexity:save-baselines": "bun run test:coverage && bunx fallow health --coverage coverage/coverage-final.json --save-baseline .fallow-baselines/health-baseline.json && bunx fallow dead-code --save-baseline .fallow-baselines/dead-code-baseline.json && bunx fallow dupes --save-baseline .fallow-baselines/dupes-baseline.json",
     "check": "biome check && bun run lint:complexity"
   },
   "dependencies": {
@@ -40,7 +42,6 @@
     "@tanstack/react-query": "^5.96.2",
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
-    "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
     "@trpc/client": "^11.16.0",
@@ -71,6 +72,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-istanbul": "3",
     "fallow": "^2.63.0",
     "jsdom": "^28.1.0",
     "nitro": "^3.0.260311-beta",

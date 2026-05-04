@@ -9,6 +9,20 @@ const config = defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
     setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      // Istanbul-format because fallow's CRAP scoring reads
+      // coverage-final.json (v8 native format isn't supported).
+      provider: 'istanbul',
+      reporter: ['text', 'json'],
+      reportsDirectory: 'coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.ts',
+        'src/test/**',
+        'src/routeTree.gen.ts',
+        'src/server/platform/db/migrations/**',
+      ],
+    },
   },
   plugins: [
     devtools(),
