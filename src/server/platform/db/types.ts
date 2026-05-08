@@ -1,10 +1,4 @@
-import type {
-  ColumnType,
-  Generated,
-  Insertable,
-  Selectable,
-  Updateable,
-} from 'kysely';
+import type { ColumnType, Generated } from 'kysely';
 
 /**
  * Internal source of truth for every user. External identity providers
@@ -72,15 +66,3 @@ export interface Database {
   vehicles: VehicleTable;
   oauthAccounts: OAuthAccountTable;
 }
-
-export type User = Selectable<UserTable>;
-export type NewUser = Insertable<UserTable>;
-export type UserUpdate = Updateable<UserTable>;
-
-export type Vehicle = Selectable<VehicleTable>;
-export type NewVehicle = Insertable<VehicleTable>;
-export type VehicleUpdate = Updateable<VehicleTable>;
-
-export type OAuthAccount = Selectable<OAuthAccountTable>;
-export type NewOAuthAccount = Insertable<OAuthAccountTable>;
-export type OAuthAccountUpdate = Updateable<OAuthAccountTable>;

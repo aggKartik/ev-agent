@@ -32,44 +32,61 @@ export type PersistedState = {
   values: OnboardingFormValues;
 };
 
+type RawPersisted = {
+  currentStep?: unknown;
+  values?: Partial<
+    OnboardingFormValues & {
+      make?: unknown;
+      model?: unknown;
+      year?: unknown;
+    }
+  >;
+};
+
+const STORAGE_KEYS_TO_TRY = [
+  STORAGE_KEY,
+  STORAGE_KEY_V3,
+  LEGACY_STORAGE_KEY,
+] as const;
+
+function readFirstStoredEntry(): RawPersisted | null {
+  for (const key of STORAGE_KEYS_TO_TRY) {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      return JSON.parse(raw) as RawPersisted;
+    } catch {
+      // Corrupted entry on this key — fall through to the next legacy key
+      // instead of giving up so we can recover from a bad latest write.
+    }
+  }
+  return null;
+}
+
+function asString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function coerceFormValues(
+  raw: RawPersisted['values'] | undefined,
+): OnboardingFormValues {
+  const v = raw ?? {};
+  return {
+    ...defaultFormValues(),
+    name: asString(v.name),
+    connect: asString(v.connect),
+    teslaVehicleId: asString(v.teslaVehicleId),
+  };
+}
+
 export function readPersisted(): PersistedState | null {
   if (typeof window === 'undefined') return null;
-
-  try {
-    const keys = [STORAGE_KEY, STORAGE_KEY_V3, LEGACY_STORAGE_KEY];
-    for (const storageKey of keys) {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw) as {
-        currentStep?: unknown;
-        values?: Partial<
-          OnboardingFormValues & {
-            make?: unknown;
-            model?: unknown;
-            year?: unknown;
-          }
-        >;
-      };
-      const step = coerceStoredStep(parsed.currentStep);
-      const valuesRaw = parsed.values ?? {};
-      return {
-        step,
-        values: {
-          ...defaultFormValues(),
-          name: typeof valuesRaw.name === 'string' ? valuesRaw.name : '',
-          connect:
-            typeof valuesRaw.connect === 'string' ? valuesRaw.connect : '',
-          teslaVehicleId:
-            typeof valuesRaw.teslaVehicleId === 'string'
-              ? valuesRaw.teslaVehicleId
-              : '',
-        },
-      };
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  const raw = readFirstStoredEntry();
+  if (!raw) return null;
+  return {
+    step: coerceStoredStep(raw.currentStep),
+    values: coerceFormValues(raw.values),
+  };
 }
 
 export function writePersisted(state: PersistedState): void {

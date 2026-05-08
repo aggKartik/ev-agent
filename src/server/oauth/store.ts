@@ -1,6 +1,6 @@
-import type { Kysely } from 'kysely';
+import type { Kysely, Selectable } from 'kysely';
 import { sql } from 'kysely';
-import type { Database, OAuthAccount } from '#/server/platform/db/types';
+import type { Database, OAuthAccountTable } from '#/server/platform/db/types';
 import { decryptToken, encryptToken } from './crypto';
 import { NotLinkedError } from './errors';
 import type { OAuthProvider, TokenSet } from './types';
@@ -29,11 +29,11 @@ export type LinkedStatus = {
   expiresAt: Date | null;
 };
 
-export async function getLinkedAccount(
+async function getLinkedAccount(
   db: Kysely<Database>,
   provider: string,
   userId: number,
-): Promise<OAuthAccount | null> {
+): Promise<Selectable<OAuthAccountTable> | null> {
   const row = await db
     .selectFrom('oauthAccounts')
     .selectAll()

@@ -4,6 +4,7 @@ import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Spinner from '#/components/ui/Spinner';
 import { Text } from '#/components/ui/Text';
+import { OnboardingStepHeader } from '#/features/onboarding/components/StepHeader';
 import { VisualPanel } from '#/features/onboarding/components/VisualPanel';
 import { trpc } from '#/lib/trpc';
 import type { AppRouter } from '#/server/platform/trpc/router';
@@ -11,8 +12,7 @@ import { chip } from '#/styled-system/recipes/chip';
 import { connect } from '#/styled-system/recipes/connect';
 import { step } from '#/styled-system/recipes/step';
 
-export type TeslaFleetRow =
-  inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
+type TeslaFleetRow = inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
 
 type ConnectStepProps = {
   value: string;
@@ -72,6 +72,79 @@ type ProviderOptionProps = {
   connectedDetail?: string | null;
 };
 
+type ProviderState = 'connected' | 'loading' | 'idle';
+
+type ProviderStatusQuery = {
+  data: { linked: boolean } | undefined;
+  isLoading: boolean;
+};
+
+function deriveProviderState(
+  tile: ProviderTile,
+  status: ProviderStatusQuery,
+): ProviderState {
+  if (!tile.oauth) return 'idle';
+  if (status.data?.linked === true) return 'connected';
+  if (status.isLoading && !status.data) return 'loading';
+  return 'idle';
+}
+
+function buildProviderTileStyle(
+  selected: boolean,
+  isConnected: boolean,
+): React.CSSProperties {
+  const cursor = isConnected ? 'default' : 'pointer';
+  if (!selected) return { cursor };
+  return {
+    borderColor: 'var(--colors-peach-400)',
+    background:
+      'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
+    cursor,
+  };
+}
+
+function buildProviderClickHandler(args: {
+  tile: ProviderTile;
+  state: ProviderState;
+  onChange: (value: string) => void;
+  onSelect: () => void;
+}): () => void {
+  const { tile, state, onChange, onSelect } = args;
+  return () => {
+    if (!tile.oauth) {
+      onChange(tile.label);
+      return;
+    }
+    if (state === 'connected') return;
+    if (state === 'loading') return;
+    onSelect();
+  };
+}
+
+function ProviderStatusChip({
+  state,
+  label,
+}: {
+  state: ProviderState;
+  label: string;
+}) {
+  const chipClasses = chip();
+  return (
+    <Box className={chipClasses} aria-live="polite" data-state={state}>
+      {state === 'loading' ? (
+        <>
+          <Spinner size="0.9em" label={`Checking ${label}`} />
+          CHECKING
+        </>
+      ) : state === 'connected' ? (
+        'CONNECTED'
+      ) : (
+        'LINK'
+      )}
+    </Box>
+  );
+}
+
 function ProviderOption({
   tile,
   selected,
@@ -81,7 +154,6 @@ function ProviderOption({
   connectedDetail,
 }: ProviderOptionProps) {
   const cardClasses = connect();
-  const chipClasses = chip();
 
   const status = trpc.oauth.status.useQuery(
     { provider: tile.slug },
@@ -92,38 +164,16 @@ function ProviderOption({
     },
   );
 
-  const isConnected = tile.oauth && status.data?.linked === true;
-  const isLoading = tile.oauth && status.isLoading && !status.data;
+  const state = deriveProviderState(tile, status);
+  const isConnected = state === 'connected';
 
   useReflectLinkedProvider({
     enabled: tile.oauth,
-    linked: status.data?.linked === true,
+    linked: isConnected,
     label: tile.label,
     currentValue: connectFieldValue,
     onChange,
   });
-
-  const style = selected
-    ? {
-        borderColor: 'var(--colors-peach-400)',
-        background:
-          'linear-gradient(160deg, rgba(255,149,102,0.12), rgba(123,75,209,0.1))',
-        cursor: isConnected ? 'default' : 'pointer',
-      }
-    : { cursor: isConnected ? 'default' : 'pointer' };
-
-  const handleClick = () => {
-    if (!tile.oauth) {
-      onChange(tile.label);
-      return;
-    }
-    if (isConnected) {
-      onChange(tile.label);
-      return;
-    }
-    if (isLoading) return;
-    onSelect();
-  };
 
   const title = isConnected ? `${tile.label} linked` : `Connect ${tile.label}`;
   const description =
@@ -134,8 +184,8 @@ function ProviderOption({
       type="button"
       unstyled
       className={cardClasses.card}
-      style={style}
-      onClick={handleClick}
+      style={buildProviderTileStyle(selected, isConnected)}
+      onClick={buildProviderClickHandler({ tile, state, onChange, onSelect })}
       aria-pressed={selected}
       aria-disabled={isConnected || undefined}
     >
@@ -145,24 +195,7 @@ function ProviderOption({
         <Box className={cardClasses.desc}>{description}</Box>
       </Box>
       {tile.oauth ? (
-        <Box
-          className={chipClasses}
-          aria-live="polite"
-          data-state={
-            isConnected ? 'connected' : isLoading ? 'loading' : 'idle'
-          }
-        >
-          {isLoading ? (
-            <>
-              <Spinner size="0.9em" label={`Checking ${tile.label}`} />
-              CHECKING
-            </>
-          ) : isConnected ? (
-            'CONNECTED'
-          ) : (
-            'LINK'
-          )}
-        </Box>
+        <ProviderStatusChip state={state} label={tile.label} />
       ) : null}
     </Button>
   );
@@ -237,14 +270,21 @@ export default function ConnectStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>02 · TELEMETRY</Box>
-        <Text as="h1" className={stepClasses.title}>
-          Link Tesla for <Box as="em">live data</Box>.
-        </Text>
-        <Text className={stepClasses.desc}>
-          Required. Fleet telemetry lets us infer your vehicle, range profile,
-          and charging context — routes stay calibrated to how you drive.
-        </Text>
+        <OnboardingStepHeader
+          kicker="02 · TELEMETRY"
+          title={
+            <>
+              Link Tesla for <Box as="em">live data</Box>.
+            </>
+          }
+          description={
+            <>
+              Required. Fleet telemetry lets us infer your vehicle, range
+              profile, and charging context — routes stay calibrated to how you
+              drive.
+            </>
+          }
+        />
 
         {errorReason ? (
           <Box

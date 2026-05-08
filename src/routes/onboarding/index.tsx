@@ -4,13 +4,14 @@ import { useCallback } from 'react';
 import { Box } from 'styled-system/jsx';
 import AppShell from '#/components/layout/AppShell';
 import Header from '#/components/layout/Header';
-import ConnectStep from '#/features/onboarding/components/ConnectStep';
-import NameStep from '#/features/onboarding/components/NameStep';
-import OnboardingConnectNotice from '#/features/onboarding/components/OnboardingConnectNotice';
 import OnboardingPinnedNav from '#/features/onboarding/components/OnboardingPinnedNav';
 import OnboardingProgressStrip from '#/features/onboarding/components/OnboardingProgressStrip';
+import {
+  ConnectStepSlot,
+  NameStepSlot,
+  SuccessStepSlot,
+} from '#/features/onboarding/components/OnboardingStepSlots';
 import OnboardingStepStage from '#/features/onboarding/components/OnboardingStepStage';
-import SuccessStep from '#/features/onboarding/components/SuccessStep';
 import { useKeyboardStepNavigation } from '#/features/onboarding/hooks/useKeyboardStepNavigation';
 import { useOAuthCallbackResult } from '#/features/onboarding/hooks/useOAuthCallbackResult';
 import { useOnboardingAutofillSingleTeslaVehicle } from '#/features/onboarding/hooks/useOnboardingAutofillSingleTeslaVehicle';
@@ -178,62 +179,29 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
       stageTopAlign={false}
     >
       <OnboardingStepStage transitionKey={transitionKey} direction={direction}>
-        {currentStep === 'NAME' ? (
-          <form.Field name="name">
-            {(field) => (
-              <NameStep
-                value={field.state.value}
-                onChange={field.handleChange}
-                onNext={() => {
-                  field.handleBlur();
-                  goNext();
-                }}
-              />
-            )}
-          </form.Field>
-        ) : null}
-
-        {currentStep === 'CONNECT' ? (
-          <>
-            <form.Field name="connect">
-              {(field) => (
-                <ConnectStep
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  errorReason={connectErrorReason}
-                  connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
-                  isTeslaLinked={fleet.teslaLinked}
-                  teslaFleetVehicles={fleet.fleetVehicles}
-                  teslaFleetLoading={fleet.fleetLoading}
-                  selectedTeslaVehicleId={formValues.teslaVehicleId}
-                  onTeslaVehicleIdChange={(id) =>
-                    form.setFieldValue('teslaVehicleId', id)
-                  }
-                />
-              )}
-            </form.Field>
-            {fleet.linkedWithoutVehicleSlot || fleet.linkedButNoVinIdentity ? (
-              <OnboardingConnectNotice
-                kind={
-                  fleet.linkedWithoutVehicleSlot ? 'noVehicle' : 'vinIdentity'
-                }
-              />
-            ) : null}
-          </>
-        ) : null}
-
-        {currentStep === 'SUCCESS' ? (
-          <SuccessStep
-            carSummary={fleet.trimmedTeslaSummary}
-            errorMessage={submitError}
-            isSubmitting={isSubmitting}
-            onNext={() => {
-              void submitOnboarding(formValues.name.trim(), {
-                teslaVehicleId: formValues.teslaVehicleId,
-              });
-            }}
-          />
-        ) : null}
+        <NameStepSlot
+          visible={currentStep === 'NAME'}
+          form={form}
+          onNext={goNext}
+        />
+        <ConnectStepSlot
+          visible={currentStep === 'CONNECT'}
+          form={form}
+          formValues={formValues}
+          fleet={fleet}
+          connectErrorReason={connectErrorReason ?? null}
+        />
+        <SuccessStepSlot
+          visible={currentStep === 'SUCCESS'}
+          fleet={fleet}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
+          onSubmit={() => {
+            void submitOnboarding(formValues.name.trim(), {
+              teslaVehicleId: formValues.teslaVehicleId,
+            });
+          }}
+        />
       </OnboardingStepStage>
     </AppShell>
   );

@@ -21,7 +21,7 @@ import { sectionHeader } from '#/styled-system/recipes/section-header';
 import { selectableRow } from '#/styled-system/recipes/selectable-row';
 
 /** Shared underline input row (start/end fields + vehicle row). */
-export const planFormInputWrapClass = css({
+const planFormInputWrapClass = css({
   display: 'flex',
   alignItems: 'center',
   gap: '2',
@@ -34,7 +34,7 @@ export const planFormInputWrapClass = css({
 });
 
 /** Shared large display input (addresses + vehicle model / numbers). */
-export const planFormTextInputClass = css({
+const planFormTextInputClass = css({
   flex: 1,
   border: 'none',
   borderRadius: 0,

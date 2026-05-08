@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # fallow audit auto-detects the base branch and runs a base-snapshot
+          # analysis to attribute findings as introduced vs inherited; it needs
+          # the full git history.
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run check

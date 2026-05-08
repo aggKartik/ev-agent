@@ -1,6 +1,6 @@
-import { Box, Stack } from 'styled-system/jsx';
+import { Box } from 'styled-system/jsx';
 import Input from '#/components/ui/Input';
-import { Text } from '#/components/ui/Text';
+import { OnboardingStepHeader } from '#/features/onboarding/components/StepHeader';
 import { VisualPanel } from '#/features/onboarding/components/VisualPanel';
 import { step } from '#/styled-system/recipes/step';
 
@@ -16,27 +16,31 @@ export default function NameStep({ value, onChange, onNext }: NameStepProps) {
 
   return (
     <Box className={stepClasses.card}>
-      <Stack gap="0">
-        <Box className={stepClasses.kicker}>01 · WHO'S DRIVING</Box>
-        <Text as="h1" className={stepClasses.title}>
-          What should we <Box as="em">call you</Box>?
-        </Text>
-        <Text className={stepClasses.desc}>
-          Just your first name is fine — we'll use it on your trip plans and
-          when we text route changes.
-        </Text>
-        <Box className={stepClasses.field}>
-          <Input
-            type="text"
-            placeholder="Type your name…"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && canAdvance) onNext();
-            }}
-          />
-        </Box>
-      </Stack>
+      <OnboardingStepHeader
+        kicker="01 · WHO'S DRIVING"
+        title={
+          <>
+            What should we <Box as="em">call you</Box>?
+          </>
+        }
+        description={
+          <>
+            Just your first name is fine — we'll use it on your trip plans and
+            when we text route changes.
+          </>
+        }
+      />
+      <Box className={stepClasses.field}>
+        <Input
+          type="text"
+          placeholder="Type your name…"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && canAdvance) onNext();
+          }}
+        />
+      </Box>
       <VisualPanel kind="name" />
     </Box>
   );

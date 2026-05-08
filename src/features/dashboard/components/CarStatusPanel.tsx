@@ -34,6 +34,59 @@ type CarStatusPanelProps = {
   onRerunSetup: () => void;
 };
 
+type ActionMode = 'connect' | 'refresh' | 'checking';
+
+const REFRESHABLE_STATUSES = new Set<DashboardTeslaSummary['status']>([
+  'linked',
+  'offline',
+  'error',
+  'pending',
+]);
+
+function pickActionMode(tesla: DashboardTeslaSummary): ActionMode {
+  if (tesla.status === 'unlinked') return 'connect';
+  if (tesla.linked && REFRESHABLE_STATUSES.has(tesla.status)) return 'refresh';
+  return 'checking';
+}
+
+function PrimaryAction({
+  mode,
+  isRefreshing,
+  onConnect,
+  onRefresh,
+}: {
+  mode: ActionMode;
+  isRefreshing: boolean;
+  onConnect: () => void;
+  onRefresh: () => void;
+}) {
+  if (mode === 'connect') {
+    return (
+      <Button variant="primary" size="sm" onClick={onConnect}>
+        Connect Tesla
+      </Button>
+    );
+  }
+  if (mode === 'refresh') {
+    return (
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={onRefresh}
+        loading={isRefreshing}
+        loadingText="Refreshing"
+      >
+        Refresh
+      </Button>
+    );
+  }
+  return (
+    <Button variant="primary" size="sm" disabled>
+      Checking…
+    </Button>
+  );
+}
+
 export default function CarStatusPanel({
   tesla,
   isRefreshing,
@@ -48,14 +101,8 @@ export default function CarStatusPanel({
   const range = tesla.vehicle?.rangeMi;
   const odometer = tesla.vehicle?.odometerMi;
   const carName = tesla.vehicle?.displayName ?? 'Tesla integration';
-  const shouldConnect = tesla.status === 'unlinked';
   const telemetryHint = teslaTelemetryGapHint(tesla);
-  const showRefresh =
-    tesla.linked &&
-    (tesla.status === 'linked' ||
-      tesla.status === 'offline' ||
-      tesla.status === 'error' ||
-      tesla.status === 'pending');
+  const actionMode = pickActionMode(tesla);
 
   return (
     <Box className={cx(panel({ variant: 'glass-feature' }), slots.carPanel)}>
@@ -139,25 +186,12 @@ export default function CarStatusPanel({
       </Box>
 
       <Box className={slots.disabledActionRow}>
-        {shouldConnect ? (
-          <Button variant="primary" size="sm" onClick={onConnect}>
-            Connect Tesla
-          </Button>
-        ) : showRefresh ? (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onRefresh}
-            loading={isRefreshing}
-            loadingText="Refreshing"
-          >
-            Refresh
-          </Button>
-        ) : (
-          <Button variant="primary" size="sm" disabled>
-            Checking…
-          </Button>
-        )}
+        <PrimaryAction
+          mode={actionMode}
+          isRefreshing={isRefreshing}
+          onConnect={onConnect}
+          onRefresh={onRefresh}
+        />
         <Button variant="ghost" size="sm" onClick={onRerunSetup}>
           Re-run setup
         </Button>

@@ -3,10 +3,15 @@
 ## Quick Start Commands
 - Use Bun for everything (`bun install`, not npm/pnpm/yarn).
 - Dev server: `bun dev` (Vite on port `3000`).
-- Quality checks: `bun run check` (Biome lint+format), `bun run lint`, `bun run format`.
+- Quality checks: `bun run check` runs Biome + Vitest (with Istanbul coverage) + `fallow audit` against the saved baselines in `.fallow-baselines/`.
 - Tests: `bun test` (runs Vitest; missing tests now surface as failures since `--passWithNoTests` was removed).
 - Manual smoke (plan tools + EV prefetch, no LLM): `bun run smoke:tools` (entry `scripts/smoke/plan-tools/main.ts`; use `--help` for flags).
 - Production build: `bun run build` (runs `prepare` first, then Vite build).
+
+### Fallow baselines
+
+- `fallow audit` runs in `--gate new-only` mode and only fails on findings introduced by the current PR. The current state of the repo (dead code, complexity, duplication) is captured as baselines in `.fallow-baselines/` so existing inherited findings are excluded from the verdict.
+- After intentional cleanup (deleting dead code, refactoring complex functions, deduplicating clones), refresh the baselines with `bun run lint:complexity:save-baselines` and commit the regenerated `.fallow-baselines/*.json` files. Never commit a baseline that is *worse* than the current state without justification — the baseline is the bar, not a mask.
 
 ## Generated Files (Do Not Hand Edit)
 - `src/routeTree.gen.ts` is TanStack Router generated output; treat as read-only.

@@ -2,7 +2,7 @@ import { Box, Center, Flex, Grid } from 'styled-system/jsx';
 import { Text } from '#/components/ui/Text';
 import { css } from '#/styled-system/css';
 
-export type VisualPanelData = {
+type VisualPanelData = {
   make?: string;
   model?: string;
   year?: number | string;

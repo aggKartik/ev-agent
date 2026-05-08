@@ -1,0 +1,352 @@
+{
+  "finding_counts": {
+    "scripts/smoke/plan-tools/args.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "scripts/smoke/plan-tools/main.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "scripts/smoke/plan-tools/runners.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "scripts/tesla/register-partner.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/components/layout/AppShell.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/components/ui/Button.tsx": {
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "src/components/ui/Icon.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/auth/hooks/useEmailCodeAuth.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/features/auth/hooks/useGoogleOAuth.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/dashboard/components/CarStatusPanel.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/features/dashboard/components/TripMiniMap.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/dashboard/hooks/useDashboardSummary.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/features/dashboard/utils/helpers.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/features/onboarding/components/ConnectStep.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "src/features/onboarding/components/SuccessStep.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/components/VisualPanel.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useKeyboardStepNavigation.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useOAuthCallbackResult.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useOnboardingAutofillSingleTeslaVehicle.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useOnboardingFleetContext.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useOnboardingStepChrome.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/hooks/useOnboardingSubmit.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/utils/search.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/features/onboarding/utils/vehicleSummary.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/components/PlanAddressField.tsx": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "src/features/plan/components/PlanForm.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/features/plan/components/PlanStage.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/components/RouteMap.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/components/StopTimeline.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/hooks/useCurrentLocation.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/features/plan/hooks/useLeafletMap.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/hooks/usePersistVehicleOverrides.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/hooks/usePlanForm.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "src/features/plan/hooks/useRouteLayers.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/features/plan/map/icons.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/routes/onboarding/route.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/routes/plan/index.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/orchestration/getPlanModel.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/orchestration/planAgent.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/parsing/planAgentRecovery.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/tools/findChargingStations.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/tools/getDirections.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/tools/narrateProgress.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/ai/tools/searchPlaces.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "src/server/capabilities/evRouting/adapters/tomtom/longDistanceEv.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "src/server/capabilities/evRouting/domain/computeEvRoute.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/capabilities/vehicles/store.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/integrations/mapbox/searchbox.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "src/server/integrations/tesla/auth/provider.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/integrations/tesla/fleet/fleet-api.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/server/integrations/tesla/vehicle/vin.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/modules/plan/router.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/server/modules/tesla/router.ts": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "src/server/oauth/handlers.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "src/server/oauth/state-cookie.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/platform/db/migrate-rollback-all.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/platform/db/migrate.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "src/server/users/index.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    }
+  },
+  "runtime_coverage_findings": [],
+  "target_keys": [
+    "src/features/plan/utils/helpers.ts:high impact"
+  ]
+}

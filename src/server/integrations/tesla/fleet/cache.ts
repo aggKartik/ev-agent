@@ -13,7 +13,7 @@ import type { TeslaVehicleSummary } from './fleet-api';
  * location) reads.
  */
 
-export const TESLA_TELEMETRY_TTL_MS = 10 * 60_000;
+const TESLA_TELEMETRY_TTL_MS = 10 * 60_000;
 
 type Entry = {
   fetchedAt: number;
@@ -46,9 +46,4 @@ export function setCached(userId: number, value: TeslaVehicleSummary[]): void {
 
 export function invalidate(userId: number): void {
   cache.delete(userId);
-}
-
-/** Test-only escape hatch; not exported from the integration barrel. */
-export function __resetTeslaCache(): void {
-  cache.clear();
 }

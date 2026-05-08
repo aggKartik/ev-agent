@@ -14,7 +14,7 @@
 
 import type { PlanActivityId } from '#/shared/plan/constants';
 
-export const PLAN_COLORS = {
+const PLAN_COLORS = {
   peach: 'var(--colors-peach-400)',
   lime: 'var(--colors-lime-300)',
   sun: 'var(--colors-sun-300)',

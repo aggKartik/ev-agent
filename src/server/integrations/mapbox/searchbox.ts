@@ -157,6 +157,45 @@ export async function mapboxSuggest({
     .filter((s): s is MapboxSuggestion => s !== null);
 }
 
+type RetrieveFeature = NonNullable<RetrieveResponse['features']>[number];
+
+function extractRetrieveCoordinate(
+  feature: RetrieveFeature,
+): { lat: number; lng: number } | null {
+  const coords = feature.geometry?.coordinates;
+  if (
+    !coords ||
+    typeof coords[0] !== 'number' ||
+    typeof coords[1] !== 'number'
+  ) {
+    return null;
+  }
+  return { lat: coords[1], lng: coords[0] };
+}
+
+function extractRetrieveAddress(
+  feature: RetrieveFeature,
+): { full: string; primary: string; secondary: string } | null {
+  const props = feature.properties;
+  const primary = props?.name ?? props?.full_address ?? '';
+  if (!primary) return null;
+  const secondary = props?.place_formatted ?? props?.full_address ?? '';
+  const full = props?.full_address
+    ? props.full_address
+    : `${primary}${secondary ? `, ${secondary}` : ''}`;
+  return { full, primary, secondary };
+}
+
+function featureToRetrievedAddress(
+  feature: RetrieveFeature,
+): MapboxRetrievedAddress | null {
+  const coordinate = extractRetrieveCoordinate(feature);
+  if (!coordinate) return null;
+  const address = extractRetrieveAddress(feature);
+  if (!address) return null;
+  return { ...address, coordinate };
+}
+
 export async function mapboxRetrieve({
   mapboxId,
   sessionToken,
@@ -181,30 +220,7 @@ export async function mapboxRetrieve({
   const data = (await response.json()) as RetrieveResponse;
   const feature = data.features?.[0];
   if (!feature) return null;
-  const coords = feature.geometry?.coordinates;
-  if (
-    !coords ||
-    typeof coords[0] !== 'number' ||
-    typeof coords[1] !== 'number'
-  ) {
-    return null;
-  }
-  const primary =
-    feature.properties?.name ?? feature.properties?.full_address ?? '';
-  if (!primary) return null;
-  const secondary =
-    feature.properties?.place_formatted ??
-    feature.properties?.full_address ??
-    '';
-  const full = feature.properties?.full_address
-    ? feature.properties.full_address
-    : `${primary}${secondary ? `, ${secondary}` : ''}`;
-  return {
-    full,
-    primary,
-    secondary,
-    coordinate: { lat: coords[1], lng: coords[0] },
-  };
+  return featureToRetrievedAddress(feature);
 }
 
 /**

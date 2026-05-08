@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "src/router.tsx",
+    "src/start.ts",
+    "src/routes/**/*.{ts,tsx}",
+    "src/server/platform/db/migrations/**/*.ts",
+    "src/test/setup.ts",
+    "scripts/**/main.ts",
+    "scripts/**/*.ts"
+  ],
+  "ignorePatterns": [
+    "src/routeTree.gen.ts",
+    "styled-system/**"
+  ],
+  "duplicates": {
+    "enabled": true
+  },
+  "health": {
+    "maxCognitive": 10
+  },
+  "rules": {
+    "unused-dependencies": "warn",
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn"
+  }
+}
