@@ -3,6 +3,7 @@ import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
 import { Text } from '#/components/ui/Text';
+import { OnboardingStepHeader } from '#/features/onboarding/components/StepHeader';
 import { VisualPanel } from '#/features/onboarding/components/VisualPanel';
 import { css } from '#/styled-system/css';
 import { step } from '#/styled-system/recipes/step';
@@ -34,14 +35,20 @@ export default function SuccessStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>ROUTE READY</Box>
-        <Text as="h1" className={stepClasses.title}>
-          All set. Let's hit the <Box as="em">road</Box>.
-        </Text>
-        <Text className={stepClasses.desc}>
-          We've synced your Tesla vehicle data with our range profiles and trip
-          tools. Saving your dashboard…
-        </Text>
+        <OnboardingStepHeader
+          kicker="ROUTE READY"
+          title={
+            <>
+              All set. Let's hit the <Box as="em">road</Box>.
+            </>
+          }
+          description={
+            <>
+              We've synced your Tesla vehicle data with our range profiles and
+              trip tools. Saving your dashboard…
+            </>
+          }
+        />
 
         {errorMessage ? (
           <Text marginTop="3" color="magenta.300" role="alert">

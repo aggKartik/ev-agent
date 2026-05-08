@@ -33,6 +33,33 @@ function SpinnerIcon() {
   );
 }
 
+function renderLeadingIcon(loading: boolean, icon: ReactNode) {
+  if (loading) return <SpinnerIcon />;
+  if (!icon) return null;
+  return (
+    <span data-part="leading-icon" data-icon="true">
+      {icon}
+    </span>
+  );
+}
+
+function renderTrailingIcon(loading: boolean, icon: ReactNode) {
+  if (loading || !icon) return null;
+  return (
+    <span data-part="trailing-icon" data-icon="true">
+      {icon}
+    </span>
+  );
+}
+
+function renderLabel(
+  loading: boolean,
+  loadingText: ReactNode,
+  children: ReactNode,
+) {
+  return loading && loadingText ? loadingText : children;
+}
+
 function DefaultContent({
   loading,
   loadingText,
@@ -48,19 +75,9 @@ function DefaultContent({
 }) {
   return (
     <span className={contentClass}>
-      {loading ? (
-        <SpinnerIcon />
-      ) : (
-        <span data-part="leading-icon" data-icon="true">
-          {leadingIcon}
-        </span>
-      )}
-      <span>{loading && loadingText ? loadingText : children}</span>
-      {!loading ? (
-        <span data-part="trailing-icon" data-icon="true">
-          {trailingIcon}
-        </span>
-      ) : null}
+      {renderLeadingIcon(loading, leadingIcon)}
+      <span>{renderLabel(loading, loadingText, children)}</span>
+      {renderTrailingIcon(loading, trailingIcon)}
     </span>
   );
 }

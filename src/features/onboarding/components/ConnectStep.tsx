@@ -4,6 +4,7 @@ import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Spinner from '#/components/ui/Spinner';
 import { Text } from '#/components/ui/Text';
+import { OnboardingStepHeader } from '#/features/onboarding/components/StepHeader';
 import { VisualPanel } from '#/features/onboarding/components/VisualPanel';
 import { trpc } from '#/lib/trpc';
 import type { AppRouter } from '#/server/platform/trpc/router';
@@ -110,10 +111,11 @@ function buildProviderClickHandler(args: {
 }): () => void {
   const { tile, state, onChange, onSelect } = args;
   return () => {
-    if (!tile.oauth || state === 'connected') {
+    if (!tile.oauth) {
       onChange(tile.label);
       return;
     }
+    if (state === 'connected') return;
     if (state === 'loading') return;
     onSelect();
   };
@@ -268,14 +270,21 @@ export default function ConnectStep({
   return (
     <Box className={stepClasses.card}>
       <Stack gap="0">
-        <Box className={stepClasses.kicker}>02 · TELEMETRY</Box>
-        <Text as="h1" className={stepClasses.title}>
-          Link Tesla for <Box as="em">live data</Box>.
-        </Text>
-        <Text className={stepClasses.desc}>
-          Required. Fleet telemetry lets us infer your vehicle, range profile,
-          and charging context — routes stay calibrated to how you drive.
-        </Text>
+        <OnboardingStepHeader
+          kicker="02 · TELEMETRY"
+          title={
+            <>
+              Link Tesla for <Box as="em">live data</Box>.
+            </>
+          }
+          description={
+            <>
+              Required. Fleet telemetry lets us infer your vehicle, range
+              profile, and charging context — routes stay calibrated to how you
+              drive.
+            </>
+          }
+        />
 
         {errorReason ? (
           <Box

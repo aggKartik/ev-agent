@@ -51,6 +51,19 @@ describe('corridorCoordsFromTomTomLegs', () => {
     expect(p?.lat).toBeCloseTo(1.2, 4);
     expect(p?.lng).toBeCloseTo(-3.4, 4);
   });
+
+  it('defaults invalid encodedPolylinePrecision values to 5', () => {
+    const enc = polyline.encode([[1.2, -3.4]], 5);
+
+    for (const encodedPolylinePrecision of [Number.NaN, 4.5]) {
+      const [p] = corridorCoordsFromTomTomLegs([
+        { encodedPolyline: enc, encodedPolylinePrecision, summary: {} },
+      ]);
+
+      expect(p?.lat).toBeCloseTo(1.2, 4);
+      expect(p?.lng).toBeCloseTo(-3.4, 4);
+    }
+  });
 });
 
 describe('extractChargeAnchorsFromTomTomLegs', () => {

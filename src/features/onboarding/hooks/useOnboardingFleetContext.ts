@@ -20,6 +20,10 @@ function isCatalogIdentityReady(args: {
  * Tesla + OAuth provider list reads for onboarding CONNECT. No form or stepper;
  * pure tRPC subscription + derived readiness flags.
  */
+export type OnboardingFleetContext = ReturnType<
+  typeof useOnboardingFleetContext
+>;
+
 export function useOnboardingFleetContext(args: {
   selectedTeslaVehicleId: string;
 }) {

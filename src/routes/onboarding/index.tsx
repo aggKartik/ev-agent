@@ -4,13 +4,14 @@ import { useCallback } from 'react';
 import { Box } from 'styled-system/jsx';
 import AppShell from '#/components/layout/AppShell';
 import Header from '#/components/layout/Header';
-import ConnectStep from '#/features/onboarding/components/ConnectStep';
-import NameStep from '#/features/onboarding/components/NameStep';
-import OnboardingConnectNotice from '#/features/onboarding/components/OnboardingConnectNotice';
 import OnboardingPinnedNav from '#/features/onboarding/components/OnboardingPinnedNav';
 import OnboardingProgressStrip from '#/features/onboarding/components/OnboardingProgressStrip';
+import {
+  ConnectStepSlot,
+  NameStepSlot,
+  SuccessStepSlot,
+} from '#/features/onboarding/components/OnboardingStepSlots';
 import OnboardingStepStage from '#/features/onboarding/components/OnboardingStepStage';
-import SuccessStep from '#/features/onboarding/components/SuccessStep';
 import { useKeyboardStepNavigation } from '#/features/onboarding/hooks/useKeyboardStepNavigation';
 import { useOAuthCallbackResult } from '#/features/onboarding/hooks/useOAuthCallbackResult';
 import { useOnboardingAutofillSingleTeslaVehicle } from '#/features/onboarding/hooks/useOnboardingAutofillSingleTeslaVehicle';
@@ -203,105 +204,5 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
         />
       </OnboardingStepStage>
     </AppShell>
-  );
-}
-
-type WizardForm = ReturnType<typeof useOnboardingForm>;
-type WizardFleet = ReturnType<typeof useOnboardingFleetContext>;
-
-function NameStepSlot({
-  visible,
-  form,
-  onNext,
-}: {
-  visible: boolean;
-  form: WizardForm;
-  onNext: () => void;
-}) {
-  if (!visible) return null;
-  return (
-    <form.Field name="name">
-      {(field) => (
-        <NameStep
-          value={field.state.value}
-          onChange={field.handleChange}
-          onNext={() => {
-            field.handleBlur();
-            onNext();
-          }}
-        />
-      )}
-    </form.Field>
-  );
-}
-
-function ConnectStepSlot({
-  visible,
-  form,
-  formValues,
-  fleet,
-  connectErrorReason,
-}: {
-  visible: boolean;
-  form: WizardForm;
-  formValues: OnboardingFormValues;
-  fleet: WizardFleet;
-  connectErrorReason: string | null;
-}) {
-  if (!visible) return null;
-  const noticeKind = pickConnectNoticeKind(fleet);
-  return (
-    <>
-      <form.Field name="connect">
-        {(field) => (
-          <ConnectStep
-            value={field.state.value}
-            onChange={field.handleChange}
-            errorReason={connectErrorReason ?? undefined}
-            connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
-            isTeslaLinked={fleet.teslaLinked}
-            teslaFleetVehicles={fleet.fleetVehicles}
-            teslaFleetLoading={fleet.fleetLoading}
-            selectedTeslaVehicleId={formValues.teslaVehicleId}
-            onTeslaVehicleIdChange={(id) =>
-              form.setFieldValue('teslaVehicleId', id)
-            }
-          />
-        )}
-      </form.Field>
-      {noticeKind ? <OnboardingConnectNotice kind={noticeKind} /> : null}
-    </>
-  );
-}
-
-function pickConnectNoticeKind(
-  fleet: WizardFleet,
-): 'noVehicle' | 'vinIdentity' | null {
-  if (fleet.linkedWithoutVehicleSlot) return 'noVehicle';
-  if (fleet.linkedButNoVinIdentity) return 'vinIdentity';
-  return null;
-}
-
-function SuccessStepSlot({
-  visible,
-  fleet,
-  submitError,
-  isSubmitting,
-  onSubmit,
-}: {
-  visible: boolean;
-  fleet: WizardFleet;
-  submitError: string | null;
-  isSubmitting: boolean;
-  onSubmit: () => void;
-}) {
-  if (!visible) return null;
-  return (
-    <SuccessStep
-      carSummary={fleet.trimmedTeslaSummary || undefined}
-      errorMessage={submitError}
-      isSubmitting={isSubmitting}
-      onNext={onSubmit}
-    />
   );
 }

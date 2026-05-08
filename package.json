@@ -24,7 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "format": "biome format",
     "lint": "biome lint",
-    "lint:complexity": "bun run test:coverage && FALLOW_COVERAGE=coverage/coverage-final.json bunx fallow audit --base origin/main --health-baseline .fallow-baselines/health-baseline.json --dead-code-baseline .fallow-baselines/dead-code-baseline.json --dupes-baseline .fallow-baselines/dupes-baseline.json",
+    "lint:complexity": "bun run test:coverage && FALLOW_COVERAGE=coverage/coverage-final.json bunx fallow audit --gate new-only --base origin/main --health-baseline .fallow-baselines/health-baseline.json --dead-code-baseline .fallow-baselines/dead-code-baseline.json --dupes-baseline .fallow-baselines/dupes-baseline.json",
     "lint:complexity:save-baselines": "bun run test:coverage && bunx fallow health --coverage coverage/coverage-final.json --save-baseline .fallow-baselines/health-baseline.json && bunx fallow dead-code --save-baseline .fallow-baselines/dead-code-baseline.json && bunx fallow dupes --save-baseline .fallow-baselines/dupes-baseline.json",
     "check": "bun run typecheck && biome check && bun run lint:complexity"
   },

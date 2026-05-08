@@ -53,6 +53,7 @@ function appendPoint(points: Coordinate[], p: Coordinate): void {
  */
 function legPolylinePrecision(precRaw: number | undefined): number {
   if (typeof precRaw !== 'number') return 5;
+  if (!Number.isFinite(precRaw) || !Number.isInteger(precRaw)) return 5;
   if (precRaw < 4 || precRaw > 10) return 5;
   return precRaw;
 }
@@ -66,8 +67,12 @@ function tryAppendEncodedPolyline(
   const prec = legPolylinePrecision(
     leg.summary?.encodedPolylinePrecision ?? leg.encodedPolylinePrecision,
   );
-  for (const pt of decodeGoogleEncodedPolyline(enc, prec)) {
-    appendPoint(points, pt);
+  try {
+    for (const pt of decodeGoogleEncodedPolyline(enc, prec)) {
+      appendPoint(points, pt);
+    }
+  } catch {
+    return false;
   }
   return true;
 }

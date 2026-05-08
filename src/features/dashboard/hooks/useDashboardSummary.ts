@@ -22,6 +22,7 @@ type TeslaStatusQuery = {
 
 type TeslaVehiclesQuery = {
   data: TeslaVehicleClientRow[] | undefined;
+  isPending: boolean;
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
@@ -111,7 +112,8 @@ function deriveTeslaStatus(
 function deriveVehiclesQuery(
   q: TeslaVehiclesQuery,
 ): ComposeTeslaInput['vehiclesQuery'] {
-  const stillLoading = q.data === undefined && (q.isLoading || q.isFetching);
+  const stillLoading =
+    q.data === undefined && (q.isPending || q.isLoading || q.isFetching);
   if (stillLoading) return { kind: 'loading' };
   if (q.isError && q.data === undefined) {
     return { kind: 'errored', message: q.error?.message ?? '' };

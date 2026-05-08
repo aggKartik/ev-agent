@@ -9,6 +9,7 @@
 - Production build: `bun run build` (runs `prepare` first, then Vite build).
 
 ### Fallow baselines
+
 - `fallow audit` runs in `--gate new-only` mode and only fails on findings introduced by the current PR. The current state of the repo (dead code, complexity, duplication) is captured as baselines in `.fallow-baselines/` so existing inherited findings are excluded from the verdict.
 - After intentional cleanup (deleting dead code, refactoring complex functions, deduplicating clones), refresh the baselines with `bun run lint:complexity:save-baselines` and commit the regenerated `.fallow-baselines/*.json` files. Never commit a baseline that is *worse* than the current state without justification — the baseline is the bar, not a mask.
 

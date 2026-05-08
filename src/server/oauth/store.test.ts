@@ -1,10 +1,10 @@
 import type { Selectable } from 'kysely';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { decryptToken, encryptToken } from '#/server/oauth/crypto';
+import { NotLinkedError } from '#/server/oauth/errors';
+import { getFreshAccessToken } from '#/server/oauth/store';
+import type { OAuthProvider, TokenSet } from '#/server/oauth/types';
 import type { OAuthAccountTable } from '#/server/platform/db/types';
-import { decryptToken, encryptToken } from './crypto';
-import { NotLinkedError } from './errors';
-import { getFreshAccessToken } from './store';
-import type { OAuthProvider, TokenSet } from './types';
 
 const TEST_KEY = Buffer.alloc(32, 7).toString('base64');
 
