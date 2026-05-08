@@ -188,7 +188,7 @@ function OnboardingWizard({ search, initialStep, defaultValues }: WizardProps) {
           form={form}
           formValues={formValues}
           fleet={fleet}
-          connectErrorReason={connectErrorReason}
+          connectErrorReason={connectErrorReason ?? null}
         />
         <SuccessStepSlot
           visible={currentStep === 'SUCCESS'}
@@ -257,7 +257,7 @@ function ConnectStepSlot({
           <ConnectStep
             value={field.state.value}
             onChange={field.handleChange}
-            errorReason={connectErrorReason}
+            errorReason={connectErrorReason ?? undefined}
             connectedDetails={{ tesla: fleet.teslaConnectedDetail }}
             isTeslaLinked={fleet.teslaLinked}
             teslaFleetVehicles={fleet.fleetVehicles}
@@ -298,7 +298,7 @@ function SuccessStepSlot({
   if (!visible) return null;
   return (
     <SuccessStep
-      carSummary={fleet.trimmedTeslaSummary}
+      carSummary={fleet.trimmedTeslaSummary || undefined}
       errorMessage={submitError}
       isSubmitting={isSubmitting}
       onNext={onSubmit}

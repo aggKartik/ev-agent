@@ -30,13 +30,7 @@ type RunOpts = {
 
 type Emit = (event: PlanStreamEvent) => void;
 
-type StreamHandle = ReturnType<typeof streamText>;
-
-function startPlanAgentStream(
-  request: PlanRequest,
-  emit: Emit,
-  opts: RunOpts,
-): StreamHandle {
+function startPlanAgentStream(request: PlanRequest, emit: Emit, opts: RunOpts) {
   const { signal, evRoutePlan } = opts;
   return streamText({
     model: getPlanModel(),
@@ -54,6 +48,8 @@ function startPlanAgentStream(
     abortSignal: signal,
   });
 }
+
+type StreamHandle = ReturnType<typeof startPlanAgentStream>;
 
 function readStopId(stop: unknown): string | null {
   if (!stop || typeof stop !== 'object') return null;

@@ -123,6 +123,8 @@ type TeslaVehicleListEntry = {
 };
 
 type ProfileVehicleIdentity = {
+  teslaVehicleId?: string | null;
+  vin?: string | null;
   model?: string | null;
   year?: string | null;
 } | null;

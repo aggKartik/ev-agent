@@ -1,3 +1,4 @@
+import type { inferRouterOutputs } from '@trpc/server';
 import { useMemo } from 'react';
 import type { DashboardSummary } from '#/features/dashboard/types/contracts';
 import {
@@ -6,7 +7,27 @@ import {
   composeTeslaSummary,
 } from '#/features/dashboard/utils/helpers';
 import { trpc } from '#/lib/trpc';
+import type { AppRouter } from '#/server/platform/trpc/router';
 import { pickTeslaVehicleForIdentity } from '#/shared/vehicles/teslaPick';
+
+type TeslaVehicleClientRow =
+  inferRouterOutputs<AppRouter>['tesla']['vehicles'][number];
+
+type TeslaStatusQuery = {
+  data: { linked: boolean } | undefined;
+  isPending: boolean;
+  isError: boolean;
+  error: { message?: string } | null;
+};
+
+type TeslaVehiclesQuery = {
+  data: TeslaVehicleClientRow[] | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  error: { message?: string } | null;
+  dataUpdatedAt: number;
+};
 
 /**
  * Composes the dashboard read model from three live sources: the **Driver**
@@ -49,7 +70,7 @@ export function useDashboardSummary(): {
     const tesla = composeTeslaSummary({
       teslaStatus: deriveTeslaStatus(teslaStatus, teslaLinked),
       vehiclesQuery: deriveVehiclesQuery(teslaVehicles),
-      profileVehicle: vehicleQuery.data?.profile?.identity ?? null,
+      profileVehicle: vehicleQuery.data?.vehicle ?? null,
       pickVehicle: pickTeslaVehicleForIdentity,
     });
     return buildDashboardSummary({ firstName, tesla });
@@ -58,7 +79,7 @@ export function useDashboardSummary(): {
     teslaLinked,
     teslaStatus,
     teslaVehicles,
-    vehicleQuery.data?.profile?.identity,
+    vehicleQuery.data?.vehicle,
   ]);
 
   const refresh = async () => {
@@ -74,7 +95,7 @@ export function useDashboardSummary(): {
 }
 
 function deriveTeslaStatus(
-  q: ReturnType<typeof trpc.oauth.status.useQuery>,
+  q: TeslaStatusQuery,
   linked: boolean,
 ): ComposeTeslaInput['teslaStatus'] {
   if (q.isPending) return { kind: 'pending' };
@@ -88,7 +109,7 @@ function deriveTeslaStatus(
 }
 
 function deriveVehiclesQuery(
-  q: ReturnType<typeof trpc.tesla.vehicles.useQuery>,
+  q: TeslaVehiclesQuery,
 ): ComposeTeslaInput['vehiclesQuery'] {
   const stillLoading = q.data === undefined && (q.isLoading || q.isFetching);
   if (stillLoading) return { kind: 'loading' };

@@ -1,4 +1,10 @@
-import { BatteryCharging, Flag, MapPin, Sparkles } from 'lucide-react';
+import {
+  BatteryCharging,
+  Flag,
+  type LucideIcon,
+  MapPin,
+  Sparkles,
+} from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { Box, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
@@ -35,7 +41,7 @@ const STOP_ICONS = {
   start: MapPin,
 } as const;
 
-function pickStopIcon(kind: PlanStop['kind']): React.ComponentType {
+function pickStopIcon(kind: PlanStop['kind']): LucideIcon {
   return STOP_ICONS[kind as keyof typeof STOP_ICONS] ?? MapPin;
 }
 

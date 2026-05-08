@@ -73,9 +73,14 @@ type ProviderOptionProps = {
 
 type ProviderState = 'connected' | 'loading' | 'idle';
 
+type ProviderStatusQuery = {
+  data: { linked: boolean } | undefined;
+  isLoading: boolean;
+};
+
 function deriveProviderState(
   tile: ProviderTile,
-  status: ReturnType<typeof trpc.oauth.status.useQuery>,
+  status: ProviderStatusQuery,
 ): ProviderState {
   if (!tile.oauth) return 'idle';
   if (status.data?.linked === true) return 'connected';
