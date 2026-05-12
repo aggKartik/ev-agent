@@ -8,7 +8,7 @@ type AuthShellProps = {
 
 export default function AuthShell({ children }: AuthShellProps) {
   return (
-    <AppShell header={<Header showMeta={false} />}>
+    <AppShell header={<Header showMeta={false} />} background="horizon-only">
       <StageInner>{children}</StageInner>
     </AppShell>
   );

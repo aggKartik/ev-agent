@@ -53,7 +53,13 @@ function SignUpRoute() {
         <Stack textAlign="center" alignItems="center" gap="0">
           <Box className={stepClasses.kicker}>SIGN UP</Box>
           <Text as="h1" className={stepClasses.title}>
-            Start your <Box as="em">first trip</Box>.
+            Start your{' '}
+            <Box as="em">
+              first trip
+              <Box as="span" className={stepClasses.titlePunct}>
+                .
+              </Box>
+            </Box>
           </Text>
           <Text className={stepClasses.desc}>
             Sign up with Google in one tap — we'll set up your garage and route

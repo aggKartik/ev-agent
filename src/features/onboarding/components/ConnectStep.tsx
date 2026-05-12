@@ -274,7 +274,13 @@ export default function ConnectStep({
           kicker="02 · TELEMETRY"
           title={
             <>
-              Link Tesla for <Box as="em">live data</Box>.
+              Link Tesla for{' '}
+              <Box as="em">
+                live data
+                <Box as="span" className={stepClasses.titlePunct}>
+                  .
+                </Box>
+              </Box>
             </>
           }
           description={

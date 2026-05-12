@@ -21,6 +21,20 @@ const formClass = css({
   maxWidth: '420px',
 });
 
+const authInputClass = css({
+  minHeight: '52px',
+  paddingBottom: '3',
+  fontFamily: 'sans',
+  fontSize: { base: '20px', md: '22px' },
+  fontWeight: 'medium',
+  lineHeight: '1.2',
+  textAlign: 'center',
+  borderBottomColor: 'alpha.cream-28',
+  '&::placeholder': {
+    color: 'alpha.cream-45',
+  },
+});
+
 const rowClass = css({
   display: 'flex',
   gap: '2',
@@ -163,6 +177,7 @@ function CodeStage({
       </Text>
       <Input
         ref={codeInputRef}
+        className={authInputClass}
         type="text"
         inputMode="numeric"
         autoComplete="one-time-code"
@@ -220,6 +235,7 @@ function EmailStage({
   return (
     <Stack className={formClass} alignItems="center">
       <Input
+        className={authInputClass}
         type="email"
         autoComplete="email"
         placeholder="you@example.com"

@@ -5,7 +5,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { useState } from 'react';
-import Header from '#/components/layout/Header';
 import { trpc, trpcClient } from '#/lib/trpc';
 import { css } from '#/styled-system/css';
 import '../styles/global.css';
@@ -95,7 +94,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ClerkProvider>
           <trpc.Provider client={trpcClient} queryClient={queryClient}>
             <QueryClientProvider client={queryClient}>
-              <Header />
               <main className={mainClass}>{children}</main>
               <TanStackDevtools
                 config={{

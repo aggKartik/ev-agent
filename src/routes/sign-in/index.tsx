@@ -53,7 +53,13 @@ function SignInRoute() {
         <Stack textAlign="center" alignItems="center" gap="0">
           <Box className={stepClasses.kicker}>SIGN IN</Box>
           <Text as="h1" className={stepClasses.title}>
-            Welcome <Box as="em">back</Box>.
+            Welcome{' '}
+            <Box as="em">
+              back
+              <Box as="span" className={stepClasses.titlePunct}>
+                .
+              </Box>
+            </Box>
           </Text>
           <Text className={stepClasses.desc}>
             Continue with Google to pick up where you left off.

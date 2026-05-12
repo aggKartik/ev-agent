@@ -2,7 +2,7 @@ import { defineSlotRecipe } from '@pandacss/dev';
 
 export const stepRecipe = defineSlotRecipe({
   className: 'step',
-  slots: ['card', 'kicker', 'title', 'desc', 'field'],
+  slots: ['card', 'kicker', 'title', 'titlePunct', 'desc', 'field'],
   base: {
     card: {
       width: '100%',
@@ -50,9 +50,18 @@ export const stepRecipe = defineSlotRecipe({
         lineHeight: '1.08',
         paddingBottom: '0.08em',
         marginBottom: '-0.08em',
-        paddingRight: '0.16em',
-        marginRight: '-0.16em',
       },
+    },
+    titlePunct: {
+      fontFamily: 'display',
+      fontStyle: 'normal',
+      fontWeight: 'bold',
+      letterSpacing: '-0.03em',
+      color: 'cream.200',
+      background: 'none',
+      WebkitBackgroundClip: 'border-box',
+      backgroundClip: 'border-box',
+      WebkitTextFillColor: 'cream.200',
     },
     desc: {
       fontSize: '15px',
