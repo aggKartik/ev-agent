@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { buildStopTimelineItems } from '#/features/plan/utils/timelineItems';
 import type { PlanStop } from '#/shared/plan/contracts';
-import { buildStopTimelineItems } from './timelineItems';
 
 function makeStop(id: string, kind: PlanStop['kind']): PlanStop {
   return {
@@ -25,6 +25,10 @@ function itemIds(stops: PlanStop[]) {
 }
 
 describe('buildStopTimelineItems', () => {
+  it('returns no items for an empty stop list', () => {
+    expect(buildStopTimelineItems([])).toEqual([]);
+  });
+
   describe('paired stops', () => {
     it('groups a charge stop followed by an activity stop', () => {
       const charge = makeStop('charge-1', 'charge');
