@@ -31,6 +31,7 @@ export default function OnboardingPinnedNav({
           <Button
             variant="ghost"
             size="sm"
+            iconOnly
             className={o.dockEdgeButton}
             aria-label="Back step"
             onClick={onPrev}
@@ -40,6 +41,7 @@ export default function OnboardingPinnedNav({
           <Button
             variant="ghost"
             size="sm"
+            iconOnly
             className={o.dockEdgeButton}
             aria-label="Next step"
             disabled={!canAdvance}

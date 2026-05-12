@@ -39,7 +39,13 @@ export default function SuccessStep({
           kicker="ROUTE READY"
           title={
             <>
-              All set. Let's hit the <Box as="em">road</Box>.
+              All set. Let's hit the{' '}
+              <Box as="em">
+                road
+                <Box as="span" className={stepClasses.titlePunct}>
+                  .
+                </Box>
+              </Box>
             </>
           }
           description={

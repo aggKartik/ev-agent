@@ -20,7 +20,13 @@ export default function NameStep({ value, onChange, onNext }: NameStepProps) {
         kicker="01 · WHO'S DRIVING"
         title={
           <>
-            What should we <Box as="em">call you</Box>?
+            What should we{' '}
+            <Box as="em">
+              call you
+              <Box as="span" className={stepClasses.titlePunct}>
+                ?
+              </Box>
+            </Box>
           </>
         }
         description={
