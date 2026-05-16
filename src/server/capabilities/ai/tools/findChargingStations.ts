@@ -78,12 +78,19 @@ function totalConnectionStalls(connections: OcmConnection[]): number {
   }, 0);
 }
 
-function stationCoordinate(station: OcmStation) {
-  const lat = station.AddressInfo?.Latitude;
-  const lng = station.AddressInfo?.Longitude;
-  return typeof lat === 'number' && typeof lng === 'number'
-    ? { lat, lng }
-    : null;
+function coordinateFromAddressInfo(
+  address: NonNullable<OcmStation['AddressInfo']>,
+): Station['coordinate'] | null {
+  const lat = address.Latitude;
+  if (typeof lat !== 'number') return null;
+  const lng = address.Longitude;
+  if (typeof lng !== 'number') return null;
+  return { lat, lng };
+}
+
+function stationCoordinate(station: OcmStation): Station['coordinate'] | null {
+  const address = station.AddressInfo;
+  return address ? coordinateFromAddressInfo(address) : null;
 }
 
 function stationConnections(station: OcmStation): OcmConnection[] {
@@ -97,14 +104,22 @@ function failsPowerFilter(
   return typeof minPowerKw === 'number' && powerKw < minPowerKw;
 }
 
+function stationName(station: OcmStation): string {
+  return station.AddressInfo?.Title ?? 'Charging station';
+}
+
+function stationNetwork(station: OcmStation): string {
+  return station.OperatorInfo?.Title ?? 'Unknown network';
+}
+
 function buildStationCandidate(
   station: OcmStation,
   coordinate: Station['coordinate'],
   connections: OcmConnection[],
 ): Station {
   return {
-    name: station.AddressInfo?.Title ?? 'Charging station',
-    network: station.OperatorInfo?.Title ?? 'Unknown network',
+    name: stationName(station),
+    network: stationNetwork(station),
     powerKw: maxConnectionPower(connections),
     stalls: totalConnectionStalls(connections),
     coordinate,
