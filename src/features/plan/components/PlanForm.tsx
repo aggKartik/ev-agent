@@ -5,6 +5,7 @@ import { Box, Flex, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
 import { Text } from '#/components/ui/Text';
+import { useAutoFillCurrentLocation } from '#/features/plan/hooks/useAutoFillCurrentLocation';
 import { useCurrentLocation } from '#/features/plan/hooks/useCurrentLocation';
 import type { PlanForm as PlanFormApi } from '#/features/plan/hooks/usePlanForm';
 import { useSyncPlanVehicleFieldsFromContext } from '#/features/plan/hooks/useSyncPlanVehicleFieldsFromContext';
@@ -75,6 +76,38 @@ const vehicleInfoPanelClass = css({
   maxWidth: 'panel-form',
 });
 
+type CurrentLocationActionState = {
+  autoLabel: string | null;
+  canUseCurrentLocation: boolean;
+  showCurrentLocationAction: boolean;
+  useCurrentLocationLabel: string;
+};
+
+function getCurrentLocationActionState(
+  currentLocation: ReturnType<typeof useCurrentLocation>,
+): CurrentLocationActionState {
+  const canUseCurrentLocation = Boolean(currentLocation.address?.coordinate);
+  const sourceLabel =
+    currentLocation.source === 'tesla'
+      ? 'AUTO · FROM CAR'
+      : currentLocation.source === 'device'
+        ? 'AUTO · THIS DEVICE'
+        : null;
+  const useCurrentLocationLabel = currentLocation.isPending
+    ? 'Locating car or device'
+    : currentLocation.source === 'device'
+      ? 'Use current device location'
+      : 'Use car location';
+
+  return {
+    autoLabel: sourceLabel,
+    canUseCurrentLocation,
+    showCurrentLocationAction:
+      canUseCurrentLocation || currentLocation.isPending,
+    useCurrentLocationLabel,
+  };
+}
+
 export default function PlanForm({
   context,
   form,
@@ -86,6 +119,7 @@ export default function PlanForm({
   const currentLocation = useCurrentLocation();
 
   useSyncPlanVehicleFieldsFromContext(context, form);
+  useAutoFillCurrentLocation(form, currentLocation);
 
   const canPlan = useMemo(
     () =>
@@ -139,12 +173,11 @@ export default function PlanForm({
           {(fromField) => (
             <form.Field name="fromLocked">
               {(lockedField) => {
-                const autoLabel =
-                  currentLocation.source === 'tesla'
-                    ? 'AUTO · FROM CAR'
-                    : currentLocation.source === 'device'
-                      ? 'AUTO · THIS DEVICE'
-                      : null;
+                const {
+                  autoLabel,
+                  showCurrentLocationAction,
+                  useCurrentLocationLabel,
+                } = getCurrentLocationActionState(currentLocation);
                 return (
                   <PlanAddressField
                     label="START"
@@ -176,15 +209,18 @@ export default function PlanForm({
                       fromField.handleChange(address);
                     }}
                     onUseCar={
-                      currentLocation.address
+                      showCurrentLocationAction
                         ? () => {
                             const addr = currentLocation.address;
-                            if (!addr) return;
+                            if (!addr?.coordinate) return;
                             fromField.handleChange(addr);
                             lockedField.handleChange(true);
                           }
                         : undefined
                     }
+                    useCarDisabled={currentLocation.isPending}
+                    useCarLabel={useCurrentLocationLabel}
+                    useCarLoading={currentLocation.isPending}
                   />
                 );
               }}

@@ -100,6 +100,9 @@ export type PlanAddressFieldProps = {
   onChange: (value: string) => void;
   onSelect: (address: PlanAddress) => void;
   onUseCar?: () => void;
+  useCarLoading?: boolean;
+  useCarDisabled?: boolean;
+  useCarLabel?: string;
 };
 
 export function PlanAddressField({
@@ -111,6 +114,9 @@ export function PlanAddressField({
   onChange,
   onSelect,
   onUseCar,
+  useCarLoading = false,
+  useCarDisabled = false,
+  useCarLabel = 'Use car location',
 }: PlanAddressFieldProps) {
   const inputId = useId();
   const listboxId = `${inputId}-suggestions`;
@@ -254,8 +260,10 @@ export function PlanAddressField({
             variant="ghost"
             size="sm"
             iconOnly
-            aria-label="Use car location"
+            aria-label={useCarLabel}
             className={addrActionClass}
+            disabled={useCarDisabled}
+            loading={useCarLoading}
             onClick={onUseCar}
           >
             <Icon icon={Crosshair} size="sm" />
