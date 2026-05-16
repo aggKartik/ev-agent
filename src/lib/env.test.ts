@@ -3,7 +3,7 @@ import { envSchema } from './env';
 
 const baseEnv = {
   DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/ev_agent',
-  OPENAI_API_KEY: 'sk-or-test',
+  GEMINI_API_KEY: 'gemini-test',
   MAPBOX_TOKEN: 'pk.test',
   TOMTOM_API_KEY: 'tomtom-test',
 };
@@ -14,7 +14,7 @@ describe('envSchema', () => {
     expect(parsed.NODE_ENV).toBe('development');
     expect(parsed.PORT).toBe('3000');
     expect(parsed.TESLA_REGION).toBe('na');
-    expect(parsed.OPENAI_API_KEY).toBe('sk-or-test');
+    expect(parsed.GEMINI_API_KEY).toBe('gemini-test');
     expect(parsed.MAPBOX_TOKEN).toBe('pk.test');
     expect(parsed.TOMTOM_API_KEY).toBe('tomtom-test');
   });
@@ -24,8 +24,8 @@ describe('envSchema', () => {
     expect(() => envSchema.parse(rest)).toThrow();
   });
 
-  it('throws when OPENAI_API_KEY is missing', () => {
-    const { OPENAI_API_KEY: _drop, ...rest } = baseEnv;
+  it('throws when GEMINI_API_KEY is missing', () => {
+    const { GEMINI_API_KEY: _drop, ...rest } = baseEnv;
     expect(() => envSchema.parse(rest)).toThrow();
   });
 
@@ -57,26 +57,23 @@ describe('envSchema', () => {
     ).toThrow();
   });
 
-  it('accepts optional OPENAI_BASE_URL only when it is a valid URL', () => {
-    expect(() =>
-      envSchema.parse({ ...baseEnv, OPENAI_BASE_URL: 'not-a-url' }),
-    ).toThrow();
-    const parsed = envSchema.parse({
-      ...baseEnv,
-      OPENAI_BASE_URL: 'https://api.openai.com/v1',
-    });
-    expect(parsed.OPENAI_BASE_URL).toBe('https://api.openai.com/v1');
+  it('treats GEMINI_MODEL and OPENCHARGEMAP_KEY as optional', () => {
+    const parsed = envSchema.parse(baseEnv);
+    expect(parsed.GEMINI_MODEL).toBeUndefined();
+    expect(parsed.OPENCHARGEMAP_KEY).toBeUndefined();
   });
 
-  it('treats OPENAI_MODEL and OPENCHARGEMAP_KEY as optional', () => {
-    const parsed = envSchema.parse(baseEnv);
-    expect(parsed.OPENAI_MODEL).toBeUndefined();
-    expect(parsed.OPENCHARGEMAP_KEY).toBeUndefined();
+  it('accepts optional GEMINI_MODEL when provided', () => {
+    const parsed = envSchema.parse({
+      ...baseEnv,
+      GEMINI_MODEL: 'gemini-2.5-flash',
+    });
+    expect(parsed.GEMINI_MODEL).toBe('gemini-2.5-flash');
   });
 
   it('rejects empty / whitespace-only required secrets', () => {
     for (const key of [
-      'OPENAI_API_KEY',
+      'GEMINI_API_KEY',
       'MAPBOX_TOKEN',
       'TOMTOM_API_KEY',
     ] as const) {

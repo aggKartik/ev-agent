@@ -8,7 +8,7 @@
 
 const TEST_ENV: Record<string, string> = {
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
-  OPENAI_API_KEY: 'test-openai-key',
+  GEMINI_API_KEY: 'test-gemini-key',
   MAPBOX_TOKEN: 'test-mapbox-token',
   TOMTOM_API_KEY: 'test-tomtom-key',
 };

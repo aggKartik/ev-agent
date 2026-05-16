@@ -30,11 +30,10 @@ export const envSchema = z.object({
   /** EC public key PEM served at `/.well-known/appspecific/com.tesla.3p.public-key.pem` for Fleet partner registration. */
   TESLA_FLEET_PUBLIC_KEY_PEM: z.string().optional(),
 
-  // Plan agent LLM. OpenAI-compatible HTTP API; see
+  // Plan agent LLM. Gemini provider; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.
-  OPENAI_API_KEY: z.string().trim().min(1),
-  OPENAI_BASE_URL: z.string().url().optional(),
-  OPENAI_MODEL: z.string().optional(),
+  GEMINI_API_KEY: z.string().trim().min(1),
+  GEMINI_MODEL: z.string().optional(),
 
   // Mapbox token for places + directions tools.
   MAPBOX_TOKEN: z.string().trim().min(1),
