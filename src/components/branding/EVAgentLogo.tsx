@@ -1,9 +1,13 @@
-import { Box, Stack } from 'styled-system/jsx';
+import { Link } from '@tanstack/react-router';
+import { Box } from 'styled-system/jsx';
 import { css } from '#/styled-system/css';
 
 type EVAgentLogoProps = {
   showSub?: boolean;
   size?: 'sm' | 'md';
+  to?: string;
+  href?: string;
+  ariaLabel?: string;
 };
 
 const logoClass = css({
@@ -13,6 +17,11 @@ const logoClass = css({
   color: 'cream.200',
   textDecoration: 'none',
   letterSpacing: '0.02em',
+  _focusVisible: {
+    outline: '2px solid {colors.peach.400}',
+    outlineOffset: '4px',
+    borderRadius: 'lg',
+  },
 });
 
 const wordmarkClass = css({
@@ -73,14 +82,14 @@ function LogoMark({ size = 34 }: { size?: number }) {
   );
 }
 
-export default function EVAgentLogo({
-  showSub = true,
-  size = 'md',
-}: EVAgentLogoProps) {
+function LogoContent({
+  showSub,
+  size,
+}: Required<Pick<EVAgentLogoProps, 'showSub' | 'size'>>) {
   const markSize = size === 'sm' ? 28 : 32;
 
   return (
-    <Stack className={logoClass} direction="row" alignItems="center">
+    <>
       <Box
         as="span"
         display="inline-flex"
@@ -101,6 +110,28 @@ export default function EVAgentLogo({
           ROUTE · CHARGE · WANDER
         </Box>
       ) : null}
-    </Stack>
+    </>
+  );
+}
+
+export default function EVAgentLogo({
+  showSub = true,
+  size = 'md',
+  to = '/',
+  href,
+  ariaLabel = 'EV Agent home',
+}: EVAgentLogoProps) {
+  if (href) {
+    return (
+      <a className={logoClass} href={href} aria-label={ariaLabel}>
+        <LogoContent showSub={showSub} size={size} />
+      </a>
+    );
+  }
+
+  return (
+    <Link className={logoClass} to={to} aria-label={ariaLabel}>
+      <LogoContent showSub={showSub} size={size} />
+    </Link>
   );
 }

@@ -74,7 +74,7 @@ export default function Header({
 }: HeaderProps) {
   return (
     <header className={headerClass}>
-      <EVAgentLogo showSub />
+      <EVAgentLogo showSub to="/" />
       <Box className={rightGroupClass}>
         {showMeta ? (
           <Box className={metaClass}>
