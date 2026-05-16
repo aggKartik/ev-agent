@@ -2,6 +2,7 @@ import { auth } from '@clerk/tanstack-react-start/server';
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
+import { parsePlanSearch } from '#/features/plan/utils/navigation';
 import { hasVehicleForClerkUser } from '#/server/users/requireVehicle';
 
 const requireOnboardedFn = createServerFn().handler(async () => {
@@ -20,6 +21,7 @@ const requireOnboardedFn = createServerFn().handler(async () => {
 });
 
 export const Route = createFileRoute('/plan')({
+  validateSearch: parsePlanSearch,
   beforeLoad: async () => await requireOnboardedFn(),
   component: PlanLayout,
 });

@@ -1,8 +1,11 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Box, Flex } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
-import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
+import {
+  navigatePlanBack,
+  parsePlanSearch,
+} from '#/features/plan/utils/navigation';
 import type { PlanResult } from '#/shared/plan/contracts';
 import { css } from '#/styled-system/css';
 
@@ -95,6 +98,8 @@ export default function ItineraryTopBar({
   onEdit,
 }: ItineraryTopBarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const planSearch = parsePlanSearch(location.search);
   const { request, totals } = result;
   const totalMin = totals.driveMinutes + totals.dwellMinutes;
   const h = Math.floor(totalMin / 60);
@@ -112,11 +117,10 @@ export default function ItineraryTopBar({
       <button
         type="button"
         className={backBtnClass}
-        aria-label="Back to onboarding"
+        aria-label="Back"
         onClick={() => {
-          void navigate({
-            to: '/onboarding',
-            search: emptyOnboardingSearch,
+          void navigatePlanBack((fallback) => navigate(fallback), {
+            from: planSearch.from,
           });
         }}
       >
