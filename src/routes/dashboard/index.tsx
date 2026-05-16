@@ -4,6 +4,7 @@ import Header from '#/components/layout/Header';
 import DashboardStage from '#/features/dashboard/components/DashboardStage';
 import { useDashboardSummary } from '#/features/dashboard/hooks/useDashboardSummary';
 import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
+import { dashboardPlanSearch } from '#/features/plan/utils/navigation';
 import { dashboard } from '#/styled-system/recipes/dashboard';
 
 export const Route = createFileRoute('/dashboard/')({
@@ -16,7 +17,7 @@ function DashboardRoute() {
   const slots = dashboard();
 
   const goPlan = () => {
-    void navigate({ to: '/plan' });
+    void navigate({ to: '/plan', search: dashboardPlanSearch });
   };
 
   const connectTesla = () => {

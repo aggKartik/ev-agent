@@ -1,6 +1,5 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Grid, Stack } from 'styled-system/jsx';
-import { emptyOnboardingSearch } from '#/features/onboarding/utils/search';
 import PlanForm from '#/features/plan/components/PlanForm';
 import PlanningLog from '#/features/plan/components/PlanningLog';
 import RouteMap from '#/features/plan/components/RouteMap';
@@ -15,6 +14,10 @@ import {
   useStatus,
   useStreamedStops,
 } from '#/features/plan/store';
+import {
+  navigateBackToDashboard,
+  parsePlanSearch,
+} from '#/features/plan/utils/navigation';
 import type { PlanContextResponse } from '#/shared/plan/contracts';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { css } from '#/styled-system/css';
@@ -55,6 +58,8 @@ export default function PlanStage({
   isSubmitting,
 }: PlanStageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const planSearch = parsePlanSearch(location.search);
   const status = useStatus();
   const result = useResult();
   const activeRequest = useActiveRequest();
@@ -77,10 +82,7 @@ export default function PlanStage({
           form={form}
           disabled={isSubmitting}
           onBack={() => {
-            void navigate({
-              to: '/onboarding',
-              search: { ...emptyOnboardingSearch, force: true },
-            });
+            void navigateBackToDashboard(navigate, planSearch.from);
           }}
         />
       )}
