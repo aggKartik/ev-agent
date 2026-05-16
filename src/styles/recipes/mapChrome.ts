@@ -9,6 +9,7 @@ export const mapChromeRecipe = defineSlotRecipe({
     'pill',
     'statusDot',
     'vignette',
+    'loadingOverlay',
     'empty',
     'topbar',
     'topbarTitle',
@@ -135,6 +136,9 @@ export const mapChromeRecipe = defineSlotRecipe({
       position: 'absolute',
       inset: 0,
       zIndex: 0,
+      overflow: 'hidden',
+      background:
+        'radial-gradient(ellipse 80% 60% at 50% 110%, {colors.alpha.magenta-20}, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 0%, {colors.alpha.peach-18}, transparent 60%), linear-gradient(180deg, {colors.night.800}, {colors.night.900})',
     },
     chrome: {
       position: 'absolute',
@@ -168,6 +172,22 @@ export const mapChromeRecipe = defineSlotRecipe({
       borderRadius: 'full',
       background: 'lime.300',
       boxShadow: 'glow-lime',
+    },
+    loadingOverlay: {
+      position: 'absolute',
+      inset: 0,
+      pointerEvents: 'none',
+      zIndex: 1,
+      opacity: 0,
+      transition: 'opacity 180ms {easings.ease-out}',
+      background:
+        'radial-gradient(ellipse 80% 60% at 50% 110%, {colors.alpha.magenta-20}, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 0%, {colors.alpha.peach-18}, transparent 60%), linear-gradient(180deg, {colors.night.800}, {colors.night.900})',
+      '&[data-visible=true]': {
+        opacity: 1,
+      },
+      '@media (prefers-reduced-motion: reduce)': {
+        transition: 'none',
+      },
     },
     vignette: {
       position: 'absolute',
