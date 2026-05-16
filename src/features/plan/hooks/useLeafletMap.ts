@@ -9,6 +9,14 @@ type UseLeafletMapResult = {
   tilesReady: boolean;
 };
 
+type ResizeInvalidation = {
+  disconnect: () => void;
+};
+
+const INITIAL_CENTER: Leaflet.LatLngExpression = [36.7, -120.5];
+const INITIAL_ZOOM = 6;
+const RESIZE_INVALIDATION_DELAYS_MS = [60, 200, 500, 1000];
+
 /**
  * Mounts a Leaflet map into the provided container element ref and returns
  * mutable refs to the live map / leaflet module, a `mapReady` boolean
@@ -25,9 +33,7 @@ export function useLeafletMap(
 
   useEffect(() => {
     let disposed = false;
-    let resizeObserver: ResizeObserver | null = null;
-    let resizeHandler: (() => void) | null = null;
-    const invalidateTimeouts: number[] = [];
+    let resizeInvalidation: ResizeInvalidation | null = null;
 
     async function mountMap() {
       if (!elRef.current || mapRef.current) return;
@@ -35,48 +41,15 @@ export function useLeafletMap(
       if (disposed || !elRef.current) return;
 
       leafletRef.current = leaflet;
-      const map = leaflet.map(elRef.current, {
-        zoomControl: false,
-        attributionControl: true,
+      const map = createLeafletMap(leaflet, elRef.current);
+      addDarkTileLayers(leaflet, map, {
+        isDisposed: () => disposed,
+        onBaseTilesLoaded: () => setTilesReady(true),
       });
-      map.setView([36.7, -120.5], 6);
-
-      const baseTileLayer = leaflet.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-        {
-          subdomains: 'abcd',
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          className: 'evagent-tiles',
-        },
-      );
-      baseTileLayer.once('load', () => {
-        if (!disposed) setTilesReady(true);
-      });
-      baseTileLayer.addTo(map);
-      leaflet
-        .tileLayer(
-          'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-          {
-            subdomains: 'abcd',
-            maxZoom: 19,
-            opacity: 0.65,
-            className: 'evagent-labels',
-          },
-        )
-        .addTo(map);
-
       leaflet.control.zoom({ position: 'bottomright' }).addTo(map);
-      mapRef.current = map;
 
-      const invalidate = () => map.invalidateSize();
-      resizeHandler = invalidate;
-      resizeObserver = new ResizeObserver(invalidate);
-      resizeObserver.observe(elRef.current);
-      window.addEventListener('resize', invalidate);
-      for (const delay of [60, 200, 500, 1000]) {
-        invalidateTimeouts.push(window.setTimeout(invalidate, delay));
-      }
+      mapRef.current = map;
+      resizeInvalidation = observeMapSize(map, elRef.current);
       setMapReady(true);
     }
 
@@ -84,11 +57,7 @@ export function useLeafletMap(
 
     return () => {
       disposed = true;
-      for (const timeoutId of invalidateTimeouts) {
-        window.clearTimeout(timeoutId);
-      }
-      resizeObserver?.disconnect();
-      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+      resizeInvalidation?.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
       leafletRef.current = null;
@@ -96,4 +65,71 @@ export function useLeafletMap(
   }, [elRef]);
 
   return { mapRef, leafletRef, mapReady, tilesReady };
+}
+
+function createLeafletMap(
+  leaflet: LeafletModule,
+  container: HTMLDivElement,
+): Leaflet.Map {
+  const map = leaflet.map(container, {
+    zoomControl: false,
+    attributionControl: true,
+  });
+  map.setView(INITIAL_CENTER, INITIAL_ZOOM);
+  return map;
+}
+
+function addDarkTileLayers(
+  leaflet: LeafletModule,
+  map: Leaflet.Map,
+  readiness: { isDisposed: () => boolean; onBaseTilesLoaded: () => void },
+) {
+  const baseTileLayer = leaflet.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+    {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      className: 'evagent-tiles',
+    },
+  );
+  baseTileLayer.once('load', () => {
+    if (!readiness.isDisposed()) readiness.onBaseTilesLoaded();
+  });
+  baseTileLayer.addTo(map);
+
+  leaflet
+    .tileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+      {
+        subdomains: 'abcd',
+        maxZoom: 19,
+        opacity: 0.65,
+        className: 'evagent-labels',
+      },
+    )
+    .addTo(map);
+}
+
+function observeMapSize(
+  map: Leaflet.Map,
+  container: HTMLDivElement,
+): ResizeInvalidation {
+  const timeoutIds: number[] = [];
+  const invalidate = () => map.invalidateSize();
+  const resizeObserver = new ResizeObserver(invalidate);
+
+  resizeObserver.observe(container);
+  window.addEventListener('resize', invalidate);
+  for (const delay of RESIZE_INVALIDATION_DELAYS_MS) {
+    timeoutIds.push(window.setTimeout(invalidate, delay));
+  }
+
+  return {
+    disconnect: () => {
+      for (const timeoutId of timeoutIds) window.clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', invalidate);
+    },
+  };
 }
