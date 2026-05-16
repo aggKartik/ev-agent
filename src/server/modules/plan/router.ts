@@ -99,21 +99,7 @@ export const planRouter = router({
         [signal, finished.signal, timeout].filter(Boolean) as AbortSignal[],
       );
 
-      const agentDone = (async () => {
-        let evRoutePlan: EvRoutePlan | undefined;
-        try {
-          evRoutePlan = await computeEvRoute(input, iterSignal);
-        } catch {
-          evRoutePlan = undefined;
-        }
-        return runPlanAgent(
-          input,
-          (event: PlanStreamEvent) => ee.emit('event', event),
-          { signal: iterSignal, evRoutePlan },
-        );
-      })()
-        .catch(() => undefined)
-        .finally(() => finished.abort());
+      const emit = (event: PlanStreamEvent) => ee.emit('event', event);
 
       let id = 0;
       id += 1;
@@ -128,6 +114,31 @@ export const planRouter = router({
         message:
           'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
       } satisfies PlanStreamEvent);
+
+      const agentDone = (async () => {
+        let evRoutePlan: EvRoutePlan | undefined;
+        try {
+          evRoutePlan = await computeEvRoute(input, iterSignal);
+          const chargeCount = evRoutePlan.chargeStopCandidates.length;
+          emit({
+            type: 'narration',
+            message:
+              evRoutePlan.source === 'tomtom_ld_ev'
+                ? `TomTom prefetch complete: grounded ${chargeCount} charge anchor${chargeCount === 1 ? '' : 's'} along ${Math.round(evRoutePlan.totalDistanceMiles)} mi.`
+                : `TomTom prefetch skipped; using fallback corridor with ${chargeCount} charge anchor${chargeCount === 1 ? '' : 's'}.`,
+          });
+        } catch {
+          evRoutePlan = undefined;
+          emit({
+            type: 'narration',
+            message:
+              'TomTom prefetch failed; falling back to map search and charger pairing.',
+          });
+        }
+        return runPlanAgent(input, emit, { signal: iterSignal, evRoutePlan });
+      })()
+        .catch(() => undefined)
+        .finally(() => finished.abort());
 
       try {
         for await (const [event] of on(ee, 'event', { signal: iterSignal })) {
