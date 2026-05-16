@@ -1,5 +1,5 @@
-import { Box } from 'styled-system/jsx';
-import { css } from '#/styled-system/css';
+import { useId } from 'react';
+import { css, cx } from '#/styled-system/css';
 
 type ActivityRoutePositionSelectorProps = {
   label: string;
@@ -24,20 +24,29 @@ const wrapClass = css({
   gap: '2',
   px: '3.5',
   pb: '3.5',
+  border: '0',
+  minWidth: '0',
+  m: '0',
 });
 
-const labelClass = css({
+const legendClass = css({
   textStyle: 'mono-meta',
   fontSize: '2xs',
   color: 'cream.200/72',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
+  p: '0',
+  mb: '2',
 });
 
 const chipRowClass = css({
   display: 'flex',
   gap: '2',
   flexWrap: 'wrap',
+});
+
+const radioInputClass = css({
+  srOnly: true,
 });
 
 const chipClass = css({
@@ -57,7 +66,7 @@ const chipClass = css({
     borderColor: 'cream.200/42',
     transform: 'translateY(-1px)',
   },
-  _focusVisible: {
+  _focusWithin: {
     outline: '2px solid token(colors.peach.300)',
     outlineOffset: '2px',
   },
@@ -80,28 +89,39 @@ export default function ActivityRoutePositionSelector({
   value,
   onChange,
 }: ActivityRoutePositionSelectorProps) {
+  const name = useId();
+
   return (
-    <Box className={wrapClass}>
-      <Box className={labelClass}>
-        Stop around {value}% into the drive · {timingLabelForPercent(value)}
-      </Box>
-      <Box className={chipRowClass} aria-label={`${label} route timing`}>
+    <fieldset className={wrapClass}>
+      <legend className={legendClass}>
+        {label} stop around {value}% into the drive ·{' '}
+        {timingLabelForPercent(value)}
+      </legend>
+      <div className={chipRowClass}>
         {routeTimingOptions.map((option) => {
           const selected = option.value === value;
           return (
-            <button
+            <label
               key={option.value}
-              type="button"
-              aria-pressed={selected}
-              className={`${chipClass} ${selected ? selectedChipClass : ''}`}
+              className={cx(
+                chipClass,
+                selected ? selectedChipClass : undefined,
+              )}
               style={selected ? { color } : undefined}
-              onClick={() => onChange(option.value)}
             >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={selected}
+                className={radioInputClass}
+                onChange={() => onChange(option.value)}
+              />
               {option.label}
-            </button>
+            </label>
           );
         })}
-      </Box>
-    </Box>
+      </div>
+    </fieldset>
   );
 }

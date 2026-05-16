@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import { planRequestSchema } from '#/shared/plan/contracts';
-import {
-  buildSystemPrompt,
-  buildUserPrompt,
-  formatRequestedActivities,
-} from './planAgentPrompts';
+import { formatRequestedActivities } from './planAgentActivityFormatting';
+import { buildSystemPrompt, buildUserPrompt } from './planAgentPrompts';
 
 const request = planRequestSchema.parse({
   from: {
