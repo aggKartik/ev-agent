@@ -57,20 +57,25 @@ beforeEach(() => {
 
 describe('dispatchStreamEvent', () => {
   it('phase: updates currentPhase and appends a narration line', () => {
-    dispatchStreamEvent({
-      type: 'phase',
+    const phaseEvent = {
+      type: 'phase' as const,
       label: 'Routing',
       detail: 'Computing corridor',
-    });
-    const state = usePlanFlowStore.getState();
-    expect(state.currentPhase).toEqual({
-      label: 'Routing',
-      detail: 'Computing corridor',
-    });
-    expect(state.narration).toHaveLength(1);
-    expect(state.narration[0]).toMatchObject({
-      kind: 'phase',
-      text: '→ Routing',
+    };
+
+    dispatchStreamEvent(phaseEvent);
+
+    expect(usePlanFlowStore.getState()).toMatchObject({
+      currentPhase: {
+        label: phaseEvent.label,
+        detail: phaseEvent.detail,
+      },
+      narration: [
+        {
+          kind: 'phase',
+          text: `→ ${phaseEvent.label}`,
+        },
+      ],
     });
   });
 

@@ -87,17 +87,24 @@ const detailClass = css({
   color: 'cream.700',
 });
 
+const ENTRY_TOKENS: Record<NarrationEntryKind, string> = {
+  phase: '✓',
+  message: '·',
+  tool: '⌁',
+  warning: '⚠',
+  finalization: '◆',
+};
+
+const TOOL_STATUS_TOKENS = {
+  started: '↻',
+  completed: '✓',
+  failed: '⚠',
+} as const;
+
 function tokenForEntry(kind: NarrationEntryKind, status?: string): string {
-  if (kind === 'phase') return '✓';
-  if (kind === 'warning') return '⚠';
-  if (kind === 'finalization') return '◆';
-  if (kind === 'tool') {
-    if (status === 'started') return '↻';
-    if (status === 'completed') return '✓';
-    if (status === 'failed') return '⚠';
-    return '⌁';
-  }
-  return '·';
+  return kind === 'tool' && status !== undefined && status in TOOL_STATUS_TOKENS
+    ? TOOL_STATUS_TOKENS[status as keyof typeof TOOL_STATUS_TOKENS]
+    : ENTRY_TOKENS[kind];
 }
 
 export default function PlanningLog({ request }: PlanningLogProps) {
