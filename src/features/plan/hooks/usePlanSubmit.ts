@@ -27,6 +27,13 @@ export function dispatchStreamEvent(event: PlanStreamEvent) {
     case 'narration':
       store.appendNarration(event.message);
       return;
+    case 'toolProgress':
+      store.appendToolProgress({
+        tool: event.tool,
+        status: event.status,
+        message: event.message,
+      });
+      return;
     case 'stop':
       store.appendStop(event.stop);
       return;

@@ -38,9 +38,9 @@ function startPlanAgentStream(request: PlanRequest, emit: Emit, opts: RunOpts) {
     prompt: buildUserPrompt(request, evRoutePlan),
     tools: {
       narrateProgress: makeNarrateProgressTool({ emit }),
-      searchPlaces: makeSearchPlacesTool({ signal }),
-      findChargingStations: makeFindChargingStationsTool({ signal }),
-      getDirections: makeGetDirectionsTool({ signal }),
+      searchPlaces: makeSearchPlacesTool({ signal, emit }),
+      findChargingStations: makeFindChargingStationsTool({ signal, emit }),
+      getDirections: makeGetDirectionsTool({ signal, emit }),
     },
     output: Output.object({ schema: planAgentModelResultSchema }),
     stopWhen: stepCountIs(PLAN_AGENT_MAX_STEPS),

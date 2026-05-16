@@ -57,18 +57,26 @@ beforeEach(() => {
 
 describe('dispatchStreamEvent', () => {
   it('phase: updates currentPhase and appends a narration line', () => {
-    dispatchStreamEvent({
-      type: 'phase',
+    const phaseEvent = {
+      type: 'phase' as const,
       label: 'Routing',
       detail: 'Computing corridor',
+    };
+
+    dispatchStreamEvent(phaseEvent);
+
+    expect(usePlanFlowStore.getState()).toMatchObject({
+      currentPhase: {
+        label: phaseEvent.label,
+        detail: phaseEvent.detail,
+      },
+      narration: [
+        {
+          kind: 'phase',
+          text: `→ ${phaseEvent.label}`,
+        },
+      ],
     });
-    const state = usePlanFlowStore.getState();
-    expect(state.currentPhase).toEqual({
-      label: 'Routing',
-      detail: 'Computing corridor',
-    });
-    expect(state.narration).toHaveLength(1);
-    expect(state.narration[0].text).toBe('→ Routing');
   });
 
   it('narration: appends a single narration entry with the message', () => {
@@ -78,7 +86,26 @@ describe('dispatchStreamEvent', () => {
     });
     const state = usePlanFlowStore.getState();
     expect(state.narration).toHaveLength(1);
-    expect(state.narration[0].text).toBe('Looking for chargers');
+    expect(state.narration[0]).toMatchObject({
+      kind: 'message',
+      text: 'Looking for chargers',
+    });
+  });
+
+  it('toolProgress: appends structured tool progress metadata', () => {
+    dispatchStreamEvent({
+      type: 'toolProgress',
+      tool: 'searchPlaces',
+      status: 'completed',
+      message: 'Found 3 place candidates.',
+    });
+
+    expect(usePlanFlowStore.getState().narration[0]).toMatchObject({
+      kind: 'tool',
+      tool: 'searchPlaces',
+      status: 'completed',
+      text: 'Found 3 place candidates.',
+    });
   });
 
   it('stop: appends the stop to streamedStops', () => {

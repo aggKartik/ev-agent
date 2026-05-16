@@ -1,10 +1,15 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { env } from '#/lib/env';
+import type { PlanStreamEvent } from '#/shared/plan/contracts';
+import { fetchMapboxJson, requireMapboxToken } from './mapboxHttp';
+import { emitPlanToolProgress } from './toolProgress';
 
 type Deps = {
   signal?: AbortSignal;
+  emit?: (event: PlanStreamEvent) => void;
 };
+
+type Waypoint = { lat: number; lng: number };
 
 type MapboxLeg = {
   distance?: number;
@@ -22,9 +27,88 @@ type MapboxDirectionsResponse = {
   routes?: MapboxRoute[];
 };
 
+type DirectionsResult = {
+  totalMiles: number;
+  totalMinutes: number;
+  legs: { miles: number; driveMinutes: number }[];
+  geometry: Waypoint[];
+};
+
 const METERS_PER_MILE = 1609.344;
 
-export function makeGetDirectionsTool({ signal }: Deps) {
+function milesFromMeters(meters: number): number {
+  return Math.round((meters / METERS_PER_MILE) * 10) / 10;
+}
+
+function minutesFromSeconds(seconds: number): number {
+  return Math.round(seconds / 60);
+}
+
+function routeNumber(value: number | undefined): number {
+  return typeof value === 'number' ? value : 0;
+}
+
+function buildDirectionsUrl(waypoints: Waypoint[]): string {
+  const coords = waypoints.map(({ lat, lng }) => `${lng},${lat}`).join(';');
+  const params = new URLSearchParams({
+    geometries: 'geojson',
+    overview: 'full',
+    access_token: requireMapboxToken('directions'),
+  });
+  return `https://api.mapbox.com/directions/v5/mapbox/driving/${coords}?${params.toString()}`;
+}
+
+function parseLeg(leg: MapboxLeg) {
+  return {
+    miles: milesFromMeters(routeNumber(leg.distance)),
+    driveMinutes: minutesFromSeconds(routeNumber(leg.duration)),
+  };
+}
+
+function isLngLatPair(pair: unknown): pair is [number, number] {
+  return (
+    Array.isArray(pair) &&
+    typeof pair[0] === 'number' &&
+    typeof pair[1] === 'number'
+  );
+}
+
+function parseGeometry(route: MapboxRoute): Waypoint[] {
+  return (route.geometry?.coordinates ?? [])
+    .filter(isLngLatPair)
+    .map(([lng, lat]) => ({ lat, lng }));
+}
+
+function parseDirections(data: MapboxDirectionsResponse): DirectionsResult {
+  const route = data.routes?.[0];
+  if (!route)
+    throw new Error('Mapbox returned no routes for the requested waypoints');
+  return {
+    totalMiles: milesFromMeters(routeNumber(route.distance)),
+    totalMinutes: minutesFromSeconds(routeNumber(route.duration)),
+    legs: (route.legs ?? []).map(parseLeg),
+    geometry: parseGeometry(route),
+  };
+}
+
+async function fetchDirections(
+  waypoints: Waypoint[],
+  signal?: AbortSignal,
+): Promise<DirectionsResult> {
+  const data = await fetchMapboxJson<MapboxDirectionsResponse>(
+    buildDirectionsUrl(waypoints),
+    'Mapbox directions failed',
+    signal,
+  );
+  return parseDirections(data);
+}
+
+function completedMessage(result: DirectionsResult): string {
+  const plural = result.legs.length === 1 ? '' : 's';
+  return `Directions ready: ${result.totalMiles} mi, ${result.totalMinutes} min, ${result.legs.length} leg${plural}.`;
+}
+
+export function makeGetDirectionsTool({ signal, emit }: Deps) {
   return tool({
     description:
       'Get real driving directions between an ordered list of waypoints. Returns total miles, total minutes, per-leg durations, and a polyline (lat/lng array) for the full route. Call this once at the end with all stops in driving order.',
@@ -40,65 +124,32 @@ export function makeGetDirectionsTool({ signal }: Deps) {
         .max(25),
     }),
     execute: async ({ waypoints }) => {
-      const token = env.MAPBOX_TOKEN;
-      if (!token) {
-        throw new Error(
-          'MAPBOX_TOKEN is not set. Configure it in .env to enable directions.',
+      emitPlanToolProgress(
+        emit,
+        'getDirections',
+        'started',
+        `Finalizing directions across ${waypoints.length} waypoint${waypoints.length === 1 ? '' : 's'}.`,
+      );
+      try {
+        const result = await fetchDirections(waypoints, signal);
+        emitPlanToolProgress(
+          emit,
+          'getDirections',
+          'completed',
+          completedMessage(result),
         );
-      }
-
-      const coords = waypoints.map(({ lat, lng }) => `${lng},${lat}`).join(';');
-      const params = new URLSearchParams({
-        geometries: 'geojson',
-        overview: 'full',
-        access_token: token,
-      });
-      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coords}?${params.toString()}`;
-
-      const response = await fetch(url, { signal });
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(
-          `Mapbox directions failed (${response.status}): ${body.slice(0, 200)}`,
+        return result;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Directions failed.';
+        emitPlanToolProgress(
+          emit,
+          'getDirections',
+          'failed',
+          `Direction finalization failed: ${message}`,
         );
+        throw error;
       }
-
-      const data = (await response.json()) as MapboxDirectionsResponse;
-      const route = data.routes?.[0];
-      if (!route) {
-        throw new Error(
-          'Mapbox returned no routes for the requested waypoints',
-        );
-      }
-
-      const totalMeters =
-        typeof route.distance === 'number' ? route.distance : 0;
-      const totalSeconds =
-        typeof route.duration === 'number' ? route.duration : 0;
-      const legs = (route.legs ?? []).map((leg) => {
-        const meters = typeof leg.distance === 'number' ? leg.distance : 0;
-        const seconds = typeof leg.duration === 'number' ? leg.duration : 0;
-        return {
-          miles: Math.round((meters / METERS_PER_MILE) * 10) / 10,
-          driveMinutes: Math.round(seconds / 60),
-        };
-      });
-      const coordinates = route.geometry?.coordinates ?? [];
-      const geometry = coordinates
-        .filter(
-          (pair): pair is [number, number] =>
-            Array.isArray(pair) &&
-            typeof pair[0] === 'number' &&
-            typeof pair[1] === 'number',
-        )
-        .map(([lng, lat]) => ({ lat, lng }));
-
-      return {
-        totalMiles: Math.round((totalMeters / METERS_PER_MILE) * 10) / 10,
-        totalMinutes: Math.round(totalSeconds / 60),
-        legs,
-        geometry,
-      };
     },
   });
 }

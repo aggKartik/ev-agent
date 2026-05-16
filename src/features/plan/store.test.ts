@@ -93,7 +93,10 @@ describe('usePlanFlowStore', () => {
         detail: 'Computing corridor',
       });
       expect(state.narration).toHaveLength(1);
-      expect(state.narration[0].text).toBe('→ Routing');
+      expect(state.narration[0]).toMatchObject({
+        text: '→ Routing',
+        kind: 'phase',
+      });
     });
   });
 
@@ -104,18 +107,76 @@ describe('usePlanFlowStore', () => {
 
       const state = usePlanFlowStore.getState();
       expect(state.narration.map((n) => n.text)).toEqual(['first', 'second']);
+      expect(state.narration.map((n) => n.kind)).toEqual([
+        'message',
+        'message',
+      ]);
       expect(state.narration[1].id).toBeGreaterThan(state.narration[0].id);
     });
 
-    it('caps the narration buffer (keeps only the latest entries)', () => {
+    it('classifies fallback and finalization lines for the planning log', () => {
+      usePlanFlowStore.getState().appendNarration('Using fallback corridor');
+      usePlanFlowStore.getState().appendNarration('Finalizing itinerary');
+
+      expect(usePlanFlowStore.getState().narration).toMatchObject([
+        { kind: 'warning', text: 'Using fallback corridor' },
+        { kind: 'finalization', text: 'Finalizing itinerary' },
+      ]);
+    });
+
+    it('caps the narration buffer across narration and tool entries', () => {
       // Default cap is 80; push 90 entries and assert the head was dropped.
       for (let i = 0; i < 90; i += 1) {
-        usePlanFlowStore.getState().appendNarration(`entry-${i}`);
+        if (i % 2 === 0) {
+          usePlanFlowStore.getState().appendNarration(`entry-${i}`);
+        } else {
+          usePlanFlowStore.getState().appendToolProgress({
+            tool: 'searchPlaces',
+            status: 'completed',
+            message: `entry-${i}`,
+          });
+        }
       }
       const state = usePlanFlowStore.getState();
       expect(state.narration.length).toBeLessThanOrEqual(80);
       expect(state.narration[0].text).not.toBe('entry-0');
-      expect(state.narration[state.narration.length - 1].text).toBe('entry-89');
+      expect(state.narration[state.narration.length - 1]).toMatchObject({
+        text: 'entry-89',
+        kind: 'tool',
+        tool: 'searchPlaces',
+        status: 'completed',
+      });
+    });
+  });
+
+  describe('appendToolProgress', () => {
+    it('appends structured tool progress metadata', () => {
+      usePlanFlowStore.getState().appendToolProgress({
+        tool: 'findChargingStations',
+        status: 'started',
+        message: 'Searching chargers near 37.000, -122.000 within 20 mi.',
+      });
+
+      expect(usePlanFlowStore.getState().narration[0]).toMatchObject({
+        kind: 'tool',
+        tool: 'findChargingStations',
+        status: 'started',
+        text: 'Searching chargers near 37.000, -122.000 within 20 mi.',
+      });
+    });
+
+    it('marks failed tool progress as a warning', () => {
+      usePlanFlowStore.getState().appendToolProgress({
+        tool: 'getDirections',
+        status: 'failed',
+        message: 'Direction finalization failed: upstream timeout',
+      });
+
+      expect(usePlanFlowStore.getState().narration[0]).toMatchObject({
+        kind: 'warning',
+        tool: 'getDirections',
+        status: 'failed',
+      });
     });
   });
 

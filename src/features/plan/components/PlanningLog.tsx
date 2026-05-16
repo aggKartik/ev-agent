@@ -1,5 +1,9 @@
 import { Box, Stack } from 'styled-system/jsx';
-import { useCurrentPhase, useNarration } from '#/features/plan/store';
+import {
+  type NarrationEntryKind,
+  useCurrentPhase,
+  useNarration,
+} from '#/features/plan/store';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import type { PlanRequest } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
@@ -62,12 +66,46 @@ const lineClass = css({
   '&[data-active=true]': {
     color: 'peach.300',
   },
+  '&[data-kind=phase]': {
+    color: 'peach.300',
+    fontWeight: 'semibold',
+  },
+  '&[data-kind=tool]': {
+    color: 'info.300',
+  },
+  '&[data-kind=warning]': {
+    color: 'warning.300',
+  },
+  '&[data-kind=finalization]': {
+    color: 'success.300',
+    fontWeight: 'semibold',
+  },
 });
 
 const detailClass = css({
   gridColumn: '2',
   color: 'cream.700',
 });
+
+const ENTRY_TOKENS: Record<NarrationEntryKind, string> = {
+  phase: '✓',
+  message: '·',
+  tool: '⌁',
+  warning: '⚠',
+  finalization: '◆',
+};
+
+const TOOL_STATUS_TOKENS = {
+  started: '↻',
+  completed: '✓',
+  failed: '⚠',
+} as const;
+
+function tokenForEntry(kind: NarrationEntryKind, status?: string): string {
+  return kind === 'tool' && status !== undefined && status in TOOL_STATUS_TOKENS
+    ? TOOL_STATUS_TOKENS[status as keyof typeof TOOL_STATUS_TOKENS]
+    : ENTRY_TOKENS[kind];
+}
 
 export default function PlanningLog({ request }: PlanningLogProps) {
   const narration = useNarration();
@@ -123,11 +161,17 @@ export default function PlanningLog({ request }: PlanningLogProps) {
           </Box>
         ))}
         {narration.map((entry) => {
-          const isPhase = entry.text.startsWith('→');
-          const token = isPhase ? '✓' : '·';
+          const isPhase = entry.kind === 'phase' || entry.text.startsWith('→');
+          const kind = isPhase ? 'phase' : entry.kind;
+          const token = tokenForEntry(kind, entry.status);
           const text = isPhase ? entry.text.slice(1).trim() : entry.text;
           return (
-            <Box key={entry.id} className={lineClass}>
+            <Box
+              key={entry.id}
+              className={lineClass}
+              data-kind={kind}
+              data-status={entry.status}
+            >
               <span>{token}</span>
               <span>{text}</span>
             </Box>

@@ -1,12 +1,22 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { env } from '#/lib/env';
+import type { PlanStreamEvent } from '#/shared/plan/contracts';
+import { fetchMapboxJson, requireMapboxToken } from './mapboxHttp';
+import { emitPlanToolProgress } from './toolProgress';
 
 type Deps = {
   signal?: AbortSignal;
+  emit?: (event: PlanStreamEvent) => void;
 };
 
 const MILES_PER_DEGREE_LAT = 69;
+
+type SearchInput = {
+  query: string;
+  near: { lat: number; lng: number };
+  radiusMiles: number;
+  category?: string;
+};
 
 type MapboxFeature = {
   properties?: {
@@ -42,14 +52,10 @@ function extractCoordinate(
     return { lat: geom[1], lng: geom[0] };
   }
   const propCoord = feature.properties?.coordinates;
-  if (
-    propCoord &&
-    typeof propCoord.latitude === 'number' &&
-    typeof propCoord.longitude === 'number'
-  ) {
-    return { lat: propCoord.latitude, lng: propCoord.longitude };
-  }
-  return null;
+  if (!propCoord) return null;
+  if (typeof propCoord.latitude !== 'number') return null;
+  if (typeof propCoord.longitude !== 'number') return null;
+  return { lat: propCoord.latitude, lng: propCoord.longitude };
 }
 
 function extractName(feature: MapboxFeature): string {
@@ -85,7 +91,69 @@ function featureToCandidate(feature: MapboxFeature): Candidate | null {
   };
 }
 
-export function makeSearchPlacesTool({ signal }: Deps) {
+function formatCoordinate({ lat, lng }: { lat: number; lng: number }): string {
+  return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+}
+
+function searchBbox({ near, radiusMiles }: SearchInput): string {
+  const dLat = radiusMiles / MILES_PER_DEGREE_LAT;
+  const dLng =
+    radiusMiles /
+    (MILES_PER_DEGREE_LAT *
+      Math.max(Math.cos((near.lat * Math.PI) / 180), 0.01));
+  return [
+    near.lng - dLng,
+    near.lat - dLat,
+    near.lng + dLng,
+    near.lat + dLat,
+  ].join(',');
+}
+
+function buildSearchUrl(input: SearchInput): string {
+  const params = new URLSearchParams({
+    q: input.category ? `${input.category} ${input.query}` : input.query,
+    access_token: requireMapboxToken('place search'),
+    proximity: `${input.near.lng},${input.near.lat}`,
+    bbox: searchBbox(input),
+    limit: '5',
+  });
+  return `https://api.mapbox.com/search/searchbox/v1/forward?${params.toString()}`;
+}
+
+function parseCandidates(data: MapboxResponse): Candidate[] {
+  const features = Array.isArray(data.features) ? data.features : [];
+  return features
+    .map(featureToCandidate)
+    .filter((candidate): candidate is Candidate => candidate !== null);
+}
+
+async function fetchCandidates(
+  input: SearchInput,
+  signal?: AbortSignal,
+): Promise<Candidate[]> {
+  const data = await fetchMapboxJson<MapboxResponse>(
+    buildSearchUrl(input),
+    'Mapbox search failed',
+    signal,
+  );
+  return parseCandidates(data);
+}
+
+function startedMessage({
+  query,
+  near,
+  radiusMiles,
+  category,
+}: SearchInput): string {
+  const categoryLabel = category ? ` (${category})` : '';
+  return `Searching places for “${query}” near ${formatCoordinate(near)} within ${radiusMiles} mi${categoryLabel}.`;
+}
+
+function completedMessage(query: string, count: number): string {
+  return `Found ${count} place candidate${count === 1 ? '' : 's'} for “${query}”.`;
+}
+
+export function makeSearchPlacesTool({ signal, emit }: Deps) {
   return tool({
     description:
       'Find real points of interest along a route. Pass a free-text query (e.g. "specialty coffee" or "scenic overlook") and a coordinate to search around. Returns up to 5 candidates with names + coordinates.',
@@ -101,50 +169,33 @@ export function makeSearchPlacesTool({ signal }: Deps) {
         .optional()
         .describe('Optional Mapbox category slug (e.g. "coffee", "park").'),
     }),
-    execute: async ({ query, near, radiusMiles, category }) => {
-      const token = env.MAPBOX_TOKEN;
-      if (!token) {
-        throw new Error(
-          'MAPBOX_TOKEN is not set. Configure it in .env to enable place search.',
+    execute: async (input) => {
+      emitPlanToolProgress(
+        emit,
+        'searchPlaces',
+        'started',
+        startedMessage(input),
+      );
+      try {
+        const candidates = await fetchCandidates(input, signal);
+        emitPlanToolProgress(
+          emit,
+          'searchPlaces',
+          'completed',
+          completedMessage(input.query, candidates.length),
         );
-      }
-
-      const dLat = radiusMiles / MILES_PER_DEGREE_LAT;
-      const dLng =
-        radiusMiles /
-        (MILES_PER_DEGREE_LAT *
-          Math.max(Math.cos((near.lat * Math.PI) / 180), 0.01));
-      const bbox = [
-        near.lng - dLng,
-        near.lat - dLat,
-        near.lng + dLng,
-        near.lat + dLat,
-      ].join(',');
-
-      const params = new URLSearchParams({
-        q: category ? `${category} ${query}` : query,
-        access_token: token,
-        proximity: `${near.lng},${near.lat}`,
-        bbox,
-        limit: '5',
-      });
-      const url = `https://api.mapbox.com/search/searchbox/v1/forward?${params.toString()}`;
-
-      const response = await fetch(url, { signal });
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(
-          `Mapbox search failed (${response.status}): ${body.slice(0, 200)}`,
+        return { candidates };
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Place search failed.';
+        emitPlanToolProgress(
+          emit,
+          'searchPlaces',
+          'failed',
+          `Place search failed for “${input.query}”: ${message}`,
         );
+        throw error;
       }
-      const data = (await response.json()) as MapboxResponse;
-      const features = Array.isArray(data.features) ? data.features : [];
-
-      const candidates = features
-        .map(featureToCandidate)
-        .filter((c): c is Candidate => c !== null);
-
-      return { candidates };
     },
   });
 }

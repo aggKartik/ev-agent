@@ -18,12 +18,49 @@ import {
   addressSuggestSchema,
   type PlanAddress,
   type PlanContextResponse,
+  type PlanRequest,
   type PlanStreamEvent,
   planRequestSchema,
 } from '#/shared/plan/contracts';
 import { getPlanActivityCatalog } from '#/shared/plan/helpers';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
+
+type Emit = (event: PlanStreamEvent) => void;
+
+function emitTomTomPrefetchResult(emit: Emit, evRoutePlan: EvRoutePlan): void {
+  const chargeCount = evRoutePlan.chargeStopCandidates.length;
+  const chargeNoun = chargeCount === 1 ? 'charge anchor' : 'charge anchors';
+  const roundedMiles = Math.round(evRoutePlan.totalDistanceMiles);
+  const message =
+    evRoutePlan.source === 'tomtom_ld_ev'
+      ? `TomTom prefetch complete: grounded ${chargeCount} ${chargeNoun} along ${roundedMiles} mi.`
+      : `TomTom prefetch skipped; using fallback corridor with ${chargeCount} ${chargeNoun}.`;
+  emit({ type: 'narration', message });
+}
+
+async function runAgentAfterPrefetch({
+  input,
+  signal,
+  emit,
+}: {
+  input: PlanRequest;
+  signal: AbortSignal;
+  emit: Emit;
+}) {
+  let evRoutePlan: EvRoutePlan | undefined;
+  try {
+    evRoutePlan = await computeEvRoute(input, signal);
+    emitTomTomPrefetchResult(emit, evRoutePlan);
+  } catch {
+    emit({
+      type: 'narration',
+      message:
+        'TomTom prefetch failed; falling back to map search and charger pairing.',
+    });
+  }
+  return runPlanAgent(input, emit, { signal, evRoutePlan });
+}
 
 export const planRouter = router({
   /**
@@ -99,21 +136,7 @@ export const planRouter = router({
         [signal, finished.signal, timeout].filter(Boolean) as AbortSignal[],
       );
 
-      const agentDone = (async () => {
-        let evRoutePlan: EvRoutePlan | undefined;
-        try {
-          evRoutePlan = await computeEvRoute(input, iterSignal);
-        } catch {
-          evRoutePlan = undefined;
-        }
-        return runPlanAgent(
-          input,
-          (event: PlanStreamEvent) => ee.emit('event', event),
-          { signal: iterSignal, evRoutePlan },
-        );
-      })()
-        .catch(() => undefined)
-        .finally(() => finished.abort());
+      const emit = (event: PlanStreamEvent) => ee.emit('event', event);
 
       let id = 0;
       id += 1;
@@ -128,6 +151,14 @@ export const planRouter = router({
         message:
           'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
       } satisfies PlanStreamEvent);
+
+      const agentDone = runAgentAfterPrefetch({
+        input,
+        signal: iterSignal,
+        emit,
+      })
+        .catch(() => undefined)
+        .finally(() => finished.abort());
 
       try {
         for await (const [event] of on(ee, 'event', { signal: iterSignal })) {

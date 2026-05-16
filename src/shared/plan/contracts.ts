@@ -216,9 +216,17 @@ export type PlanContextResponse<TProfile> = {
   liveBatteryPercent: number | null;
 };
 
+export type PlanToolProgressStatus = 'started' | 'completed' | 'failed';
+
 export type PlanStreamEvent =
   | { type: 'phase'; label: string; detail: string }
   | { type: 'narration'; message: string }
+  | {
+      type: 'toolProgress';
+      tool: string;
+      status: PlanToolProgressStatus;
+      message: string;
+    }
   | { type: 'stop'; stop: PlanStop }
   | { type: 'result'; result: PlanResult }
   | { type: 'error'; message: string };

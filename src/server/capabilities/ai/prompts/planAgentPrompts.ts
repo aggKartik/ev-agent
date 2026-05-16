@@ -18,7 +18,7 @@ VEHICLE / ENERGY INPUTS (truth for reasoning):
 - Connectors accepted: ${request.connectorTypes.join(', ')} — prefer compatible DC fast chargers when calling findChargingStations.
 
 TOOLS + STRATEGY
-1. narrateProgress — call across phases ("EV route grounded", "Pairing stops at chargers", "Activity search fallback", "Finalizing itinerary").
+1. narrateProgress — send only short public-facing progress updates at meaningful checkpoints: route grounding, search areas, candidate counts, charger pairing, direction finalization, and fallback decisions. Do not stream hidden chain-of-thought, private deliberation, scoring matrices, or every internal reasoning step.
 2. HONOUR EV_PREPLAN_JSON: The user message begins with corridorLatLngSample and chargeRegions. Use them whenever present; NEVER skip pairing user-requested activities with realistic charging hops.
    - TomTom-strong preplan with chargeRegions: Before each inserted activity tied to charging, choose the chargeRegions ordinal closest to that activity's targetRoutePercent (ordering is route order), then call searchPlaces with near≈that region.near (minor offset along driving direction OK) plus radii ~3–12 mi depending on density; pick POIs aligning with user's selected activities while keeping detours sane.
    - Weak / empty anchors: widen searchPlaces along corridorLatLngSample between origin/destination and pair findChargingStations hits with activities.
@@ -28,7 +28,7 @@ TOOLS + STRATEGY
 5. getDirections MUST be called EXACTLY ONCE at the very end using the FINAL ordered waypoint list (start→ordered stops→end). You MUST populate PlanResult.geometry with the geometry returned by getDirections Mapbox tool (Road-following geometry is mandatory for UX).
 6. Compose the structured result: id, geometry, stops (kind start/end/activity/charge), arrival sequencing starting 08:42, totals, mirrored phases narrative. Do NOT include a top-level "request" field — the server injects the submitted trip request.
 
-EFFICIENCY: minimize redundant tool usage; consolidate searches when feasible.`;
+EFFICIENCY: minimize redundant tool usage; consolidate searches when feasible. Keep progress narration concise and operational rather than explanatory.`;
 }
 
 export function buildUserPrompt(

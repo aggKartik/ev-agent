@@ -4,6 +4,7 @@ import type {
   PlanRequest,
   PlanResult,
   PlanStop,
+  PlanToolProgressStatus,
 } from '#/shared/plan/contracts';
 
 type PlanFlowStatus = 'draft' | 'planning' | 'ready';
@@ -16,10 +17,31 @@ function capNarrationEntries<T>(entries: T[], cap: number): T[] {
   return entries.slice(entries.length - cap);
 }
 
+export type NarrationEntryKind =
+  | 'phase'
+  | 'message'
+  | 'tool'
+  | 'warning'
+  | 'finalization';
+
 type NarrationEntry = {
   id: number;
   text: string;
+  kind: NarrationEntryKind;
+  tool?: string;
+  status?: PlanToolProgressStatus;
 };
+
+function classifyNarration(message: string): NarrationEntryKind {
+  const normalized = message.toLowerCase();
+  if (normalized.includes('fallback') || normalized.includes('skip')) {
+    return 'warning';
+  }
+  if (normalized.includes('final') || normalized.includes('directions ready')) {
+    return 'finalization';
+  }
+  return 'message';
+}
 
 type PlanFlowState = {
   status: PlanFlowStatus;
@@ -37,6 +59,11 @@ type PlanFlowState = {
 type PlanFlowActions = {
   startPlanning: (request: PlanRequest) => void;
   appendNarration: (message: string) => void;
+  appendToolProgress: (event: {
+    tool: string;
+    status: PlanToolProgressStatus;
+    message: string;
+  }) => void;
   setPhase: (phase: PlanPhase) => void;
   appendStop: (stop: PlanStop) => void;
   applyResult: (result: PlanResult) => void;
@@ -79,7 +106,28 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
       const { narration, narrationCounter } = get();
       const id = narrationCounter + 1;
       const next = capNarrationEntries(
-        [...narration, { id, text: message }],
+        [...narration, { id, text: message, kind: classifyNarration(message) }],
+        NARRATION_CAP,
+      );
+      set({ narration: next, narrationCounter: id });
+    },
+
+    appendToolProgress: ({ tool, status, message }) => {
+      const { narration, narrationCounter } = get();
+      const id = narrationCounter + 1;
+      const next = capNarrationEntries(
+        [
+          ...narration,
+          {
+            id,
+            text: message,
+            kind: (status === 'failed'
+              ? 'warning'
+              : 'tool') as NarrationEntryKind,
+            tool,
+            status,
+          },
+        ],
         NARRATION_CAP,
       );
       set({ narration: next, narrationCounter: id });
@@ -89,7 +137,10 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
       const { narration, narrationCounter } = get();
       const id = narrationCounter + 1;
       const next = capNarrationEntries(
-        [...narration, { id, text: `→ ${phase.label}` }],
+        [
+          ...narration,
+          { id, text: `→ ${phase.label}`, kind: 'phase' as const },
+        ],
         NARRATION_CAP,
       );
       set({ currentPhase: phase, narration: next, narrationCounter: id });
