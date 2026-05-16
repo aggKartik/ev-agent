@@ -11,6 +11,13 @@ type PlanFlowStatus = 'draft' | 'planning' | 'ready';
 export type PlanMapMode = 'preview' | 'building' | 'ready';
 
 const NARRATION_CAP = 80;
+const START_PROGRESS_PERCENT = 6;
+const COMPLETE_PROGRESS_PERCENT = 100;
+
+function clampProgressPercent(percent: number): number {
+  if (!Number.isFinite(percent)) return 0;
+  return Math.min(100, Math.max(0, Math.round(percent)));
+}
 
 function capNarrationEntries<T>(entries: T[], cap: number): T[] {
   if (entries.length <= cap) return entries;
@@ -51,6 +58,7 @@ type PlanFlowState = {
   narration: NarrationEntry[];
   narrationCounter: number;
   currentPhase: PlanPhase | null;
+  progressPercent: number;
   streamedStops: PlanStop[];
   /** Set when planning fails so the form can show a short reason. */
   lastPlanningError: string | null;
@@ -65,6 +73,7 @@ type PlanFlowActions = {
     message: string;
   }) => void;
   setPhase: (phase: PlanPhase) => void;
+  setProgress: (percent: number) => void;
   appendStop: (stop: PlanStop) => void;
   applyResult: (result: PlanResult) => void;
   failPlanning: (message?: string) => void;
@@ -81,6 +90,7 @@ const initialState: PlanFlowState = {
   narration: [],
   narrationCounter: 0,
   currentPhase: null,
+  progressPercent: 0,
   streamedStops: [],
   lastPlanningError: null,
 };
@@ -98,6 +108,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         narration: [],
         narrationCounter: 0,
         currentPhase: null,
+        progressPercent: START_PROGRESS_PERCENT,
         streamedStops: [],
         lastPlanningError: null,
       }),
@@ -146,6 +157,14 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
       set({ currentPhase: phase, narration: next, narrationCounter: id });
     },
 
+    setProgress: (percent) => {
+      const next = Math.max(
+        get().progressPercent,
+        clampProgressPercent(percent),
+      );
+      set({ progressPercent: next });
+    },
+
     appendStop: (stop) => {
       const existing = get().streamedStops;
       if (existing.some((s) => s.id === stop.id)) return;
@@ -166,6 +185,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         narration: [],
         narrationCounter: 0,
         currentPhase: null,
+        progressPercent: 0,
         streamedStops: [],
         lastPlanningError:
           message ?? 'Something went wrong while planning. Try again.',
@@ -177,7 +197,11 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         result?.stops.find((stop) => stop.kind === 'activity')?.id ??
         result?.stops[0]?.id ??
         null;
-      set({ status: 'ready', selectedStopId: firstStopId });
+      set({
+        status: 'ready',
+        selectedStopId: firstStopId,
+        progressPercent: COMPLETE_PROGRESS_PERCENT,
+      });
     },
 
     selectStop: (id) => set({ selectedStopId: id }),
@@ -194,6 +218,8 @@ export const useSelectedStopId = () =>
 export const useNarration = () => usePlanFlowStore((s) => s.narration);
 export const useCurrentPhase = () => usePlanFlowStore((s) => s.currentPhase);
 export const useStreamedStops = () => usePlanFlowStore((s) => s.streamedStops);
+export const useProgressPercent = () =>
+  usePlanFlowStore((s) => s.progressPercent);
 export const useLastPlanningError = () =>
   usePlanFlowStore((s) => s.lastPlanningError);
 

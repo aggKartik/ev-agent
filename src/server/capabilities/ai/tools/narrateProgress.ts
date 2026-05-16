@@ -6,7 +6,14 @@ type Deps = {
   emit: (event: PlanStreamEvent) => void;
 };
 
+function clampProgressPercent(percent: number): number {
+  if (!Number.isFinite(percent)) return 0;
+  return Math.min(100, Math.max(0, Math.round(percent)));
+}
+
 export function makeNarrateProgressTool({ emit }: Deps) {
+  let highestProgressPercent = 0;
+
   return tool({
     description:
       'Push a status update for the user-facing planning UI. Use `phase` + `detail` when starting a new high-level planning phase, or `message` for a single line of narration about what you are doing right now. Call this between phases to keep the user informed.',
@@ -28,8 +35,29 @@ export function makeNarrateProgressTool({ emit }: Deps) {
         .min(1)
         .optional()
         .describe('A standalone narration line shown in the live log.'),
+      progressPercent: z
+        .number()
+        .min(0)
+        .max(100)
+        .optional()
+        .describe(
+          'Optional completion percentage for this update. It is clamped server-side and must not move backward.',
+        ),
     }),
-    execute: async ({ phase, detail, message }) => {
+    execute: async ({ phase, detail, message, progressPercent }) => {
+      if (progressPercent !== undefined) {
+        highestProgressPercent = Math.max(
+          highestProgressPercent,
+          clampProgressPercent(progressPercent),
+        );
+        emit({
+          type: 'progress',
+          percent: highestProgressPercent,
+          label: phase,
+          detail,
+        });
+      }
+
       if (phase) {
         emit({
           type: 'phase',

@@ -24,6 +24,9 @@ export function dispatchStreamEvent(event: PlanStreamEvent) {
     case 'phase':
       store.setPhase({ label: event.label, detail: event.detail });
       return;
+    case 'progress':
+      store.setProgress(event.percent);
+      return;
     case 'narration':
       store.appendNarration(event.message);
       return;

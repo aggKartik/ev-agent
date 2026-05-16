@@ -79,6 +79,16 @@ describe('dispatchStreamEvent', () => {
     });
   });
 
+  it('progress: stores explicit stream progress', () => {
+    dispatchStreamEvent({
+      type: 'progress',
+      percent: 55,
+      label: 'Agent started',
+    });
+
+    expect(usePlanFlowStore.getState().progressPercent).toBe(55);
+  });
+
   it('narration: appends a single narration entry with the message', () => {
     dispatchStreamEvent({
       type: 'narration',
@@ -120,6 +130,7 @@ describe('dispatchStreamEvent', () => {
     const state = usePlanFlowStore.getState();
     expect(state.status).toBe('ready');
     expect(state.result).toBe(result);
+    expect(state.progressPercent).toBe(100);
   });
 
   it('error: routes through failPlanning with the supplied message', () => {

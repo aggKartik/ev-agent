@@ -3,6 +3,7 @@ import {
   type NarrationEntryKind,
   useCurrentPhase,
   useNarration,
+  useProgressPercent,
 } from '#/features/plan/store';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import type { PlanRequest } from '#/shared/plan/contracts';
@@ -13,8 +14,6 @@ import { progress } from '#/styled-system/recipes/progress';
 type PlanningLogProps = {
   request: PlanRequest;
 };
-
-const EXPECTED_PHASES = 5;
 
 const rootClass = css({
   width: 'full',
@@ -110,13 +109,7 @@ function tokenForEntry(kind: NarrationEntryKind, status?: string): string {
 export default function PlanningLog({ request }: PlanningLogProps) {
   const narration = useNarration();
   const currentPhase = useCurrentPhase();
-  const phasesSeen = narration.filter((entry) =>
-    entry.text.startsWith('→'),
-  ).length;
-  const pct = Math.min(
-    100,
-    Math.max(8, Math.round((phasesSeen / EXPECTED_PHASES) * 100)),
-  );
+  const pct = useProgressPercent();
   const progressClasses = progress({ size: 'terminal' });
   const headerLines = [
     { token: '→', message: 'boot :: ev-agent/0.4.2 · session 9f2c' },
