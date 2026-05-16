@@ -6,12 +6,14 @@ type UseLeafletMapResult = {
   mapRef: RefObject<Leaflet.Map | null>;
   leafletRef: RefObject<LeafletModule | null>;
   mapReady: boolean;
+  tilesReady: boolean;
 };
 
 /**
  * Mounts a Leaflet map into the provided container element ref and returns
- * mutable refs to the live map / leaflet module plus a `mapReady` boolean
- * once the async import and initial view setup have finished.
+ * mutable refs to the live map / leaflet module, a `mapReady` boolean
+ * once the async import and initial view setup have finished, and a
+ * `tilesReady` boolean once the primary dark base layer has visually loaded.
  */
 export function useLeafletMap(
   elRef: RefObject<HTMLDivElement | null>,
@@ -19,6 +21,7 @@ export function useLeafletMap(
   const mapRef = useRef<Leaflet.Map | null>(null);
   const leafletRef = useRef<LeafletModule | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [tilesReady, setTilesReady] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -38,17 +41,19 @@ export function useLeafletMap(
       });
       map.setView([36.7, -120.5], 6);
 
-      leaflet
-        .tileLayer(
-          'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-          {
-            subdomains: 'abcd',
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            className: 'evagent-tiles',
-          },
-        )
-        .addTo(map);
+      const baseTileLayer = leaflet.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+        {
+          subdomains: 'abcd',
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+          className: 'evagent-tiles',
+        },
+      );
+      baseTileLayer.once('load', () => {
+        if (!disposed) setTilesReady(true);
+      });
+      baseTileLayer.addTo(map);
       leaflet
         .tileLayer(
           'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
@@ -90,5 +95,5 @@ export function useLeafletMap(
     };
   }, [elRef]);
 
-  return { mapRef, leafletRef, mapReady };
+  return { mapRef, leafletRef, mapReady, tilesReady };
 }

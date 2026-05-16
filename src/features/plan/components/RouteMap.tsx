@@ -34,7 +34,7 @@ export default function RouteMap({
   onSelectStop,
 }: RouteMapProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
-  const { mapRef, leafletRef, mapReady } = useLeafletMap(elRef);
+  const { mapRef, leafletRef, mapReady, tilesReady } = useLeafletMap(elRef);
 
   const visibleStops = useMemo(() => {
     if (!result) return [];
@@ -86,9 +86,20 @@ export default function RouteMap({
         chromeClasses.root,
       )}
       aria-label={mapLabel}
+      data-map-ready={mapReady ? 'true' : 'false'}
+      data-tiles-ready={tilesReady ? 'true' : 'false'}
       role="region"
     >
-      <Box ref={elRef} className={chromeClasses.viewport} />
+      <Box
+        ref={elRef}
+        className={chromeClasses.viewport}
+        data-map-ready={mapReady ? 'true' : 'false'}
+      />
+      <Box
+        aria-hidden="true"
+        className={chromeClasses.loadingOverlay}
+        data-visible={tilesReady ? 'false' : 'true'}
+      />
       <Box className={chromeClasses.vignette} />
       {isReady && result ? (
         <MapTopBar result={result} classes={chromeClasses} onEdit={editPlan} />
