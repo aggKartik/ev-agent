@@ -25,6 +25,7 @@ export type CurrentLocation = {
   address: PlanAddress | null;
   source: CurrentLocationSource;
   asOf: string | null;
+  isPending: boolean;
 };
 
 export function useCurrentLocation(): CurrentLocation {
@@ -37,6 +38,7 @@ export function useCurrentLocation(): CurrentLocation {
     coordinate: { lat: number; lng: number };
     asOf: string;
   } | null>(null);
+  const [deviceLookupDone, setDeviceLookupDone] = useState(false);
 
   // Browser geolocation only fires when Tesla can't help. We don't prompt
   // the user proactively — the next tick after Tesla resolves to null we
@@ -47,7 +49,11 @@ export function useCurrentLocation(): CurrentLocation {
     if (teslaCurrent.isLoading) return;
     if (teslaCurrent.data) return;
     if (deviceCoord) return;
-    if (!navigator.geolocation) return;
+    if (deviceLookupDone) return;
+    if (!navigator.geolocation) {
+      setDeviceLookupDone(true);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setDeviceCoord({
@@ -57,14 +63,21 @@ export function useCurrentLocation(): CurrentLocation {
           },
           asOf: new Date(position.timestamp).toISOString(),
         });
+        setDeviceLookupDone(true);
       },
       () => {
         // Permission denied / unavailable — leave deviceCoord null so the
         // START field stays empty.
+        setDeviceLookupDone(true);
       },
       { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 },
     );
-  }, [teslaCurrent.isLoading, teslaCurrent.data, deviceCoord]);
+  }, [
+    teslaCurrent.isLoading,
+    teslaCurrent.data,
+    deviceCoord,
+    deviceLookupDone,
+  ]);
 
   const teslaCoord = teslaCurrent.data
     ? {
@@ -93,12 +106,16 @@ export function useCurrentLocation(): CurrentLocation {
     },
   );
 
+  const isPending =
+    teslaCurrent.isLoading ||
+    (!teslaCurrent.data && !deviceCoord && !deviceLookupDone);
+
   return useMemo<CurrentLocation>(() => {
-    if (!coord) return { address: null, source: null, asOf: null };
+    if (!coord) return { address: null, source: null, asOf: null, isPending };
     const address = reverse.data ?? {
       full: source === 'tesla' ? 'Tesla GPS fix' : 'Current location',
       coordinate: coord.coordinate,
     };
-    return { address, source, asOf: coord.asOf };
-  }, [coord, reverse.data, source]);
+    return { address, source, asOf: coord.asOf, isPending };
+  }, [coord, isPending, reverse.data, source]);
 }

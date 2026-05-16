@@ -5,6 +5,7 @@ import { Box, Flex, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import Icon from '#/components/ui/Icon';
 import { Text } from '#/components/ui/Text';
+import { useAutoFillCurrentLocation } from '#/features/plan/hooks/useAutoFillCurrentLocation';
 import { useCurrentLocation } from '#/features/plan/hooks/useCurrentLocation';
 import type { PlanForm as PlanFormApi } from '#/features/plan/hooks/usePlanForm';
 import { useSyncPlanVehicleFieldsFromContext } from '#/features/plan/hooks/useSyncPlanVehicleFieldsFromContext';
@@ -86,6 +87,7 @@ export default function PlanForm({
   const currentLocation = useCurrentLocation();
 
   useSyncPlanVehicleFieldsFromContext(context, form);
+  useAutoFillCurrentLocation(form, currentLocation);
 
   const canPlan = useMemo(
     () =>
@@ -145,6 +147,17 @@ export default function PlanForm({
                     : currentLocation.source === 'device'
                       ? 'AUTO · THIS DEVICE'
                       : null;
+                const currentLocationAddress = currentLocation.address;
+                const canUseCurrentLocation = Boolean(
+                  currentLocationAddress?.coordinate,
+                );
+                const showCurrentLocationAction =
+                  canUseCurrentLocation || currentLocation.isPending;
+                const useCurrentLocationLabel = currentLocation.isPending
+                  ? 'Locating car or device'
+                  : currentLocation.source === 'device'
+                    ? 'Use current device location'
+                    : 'Use car location';
                 return (
                   <PlanAddressField
                     label="START"
@@ -176,15 +189,18 @@ export default function PlanForm({
                       fromField.handleChange(address);
                     }}
                     onUseCar={
-                      currentLocation.address
+                      showCurrentLocationAction
                         ? () => {
                             const addr = currentLocation.address;
-                            if (!addr) return;
+                            if (!addr?.coordinate) return;
                             fromField.handleChange(addr);
                             lockedField.handleChange(true);
                           }
                         : undefined
                     }
+                    useCarDisabled={currentLocation.isPending}
+                    useCarLabel={useCurrentLocationLabel}
+                    useCarLoading={currentLocation.isPending}
                   />
                 );
               }}

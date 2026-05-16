@@ -5,9 +5,12 @@ import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-const config = defineConfig({
+const config = defineConfig(({ mode }) => ({
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       // Istanbul-format because fallow's CRAP scoring reads
@@ -18,19 +21,23 @@ const config = defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.ts',
+        'src/**/*.test.tsx',
         'src/test/**',
         'src/routeTree.gen.ts',
         'src/server/platform/db/migrations/**',
       ],
     },
   },
-  plugins: [
-    devtools(),
-    tsconfigPaths({ projects: ['./tsconfig.json'] }),
-    tanstackStart(),
-    nitro({ preset: 'bun' }),
-    viteReact(),
-  ],
-});
+  plugins:
+    mode === 'test'
+      ? [tsconfigPaths({ projects: ['./tsconfig.json'] }), viteReact()]
+      : [
+          devtools(),
+          tsconfigPaths({ projects: ['./tsconfig.json'] }),
+          tanstackStart(),
+          nitro({ preset: 'bun' }),
+          viteReact(),
+        ],
+}));
 
 export default config;
