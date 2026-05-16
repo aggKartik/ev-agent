@@ -6,19 +6,16 @@ import type {
   PlanStop,
   PlanToolProgressStatus,
 } from '#/shared/plan/contracts';
+import {
+  advancePlanProgress,
+  PLAN_COMPLETE_PROGRESS_PERCENT,
+  PLAN_START_PROGRESS_PERCENT,
+} from '#/shared/plan/progress';
 
 type PlanFlowStatus = 'draft' | 'planning' | 'ready';
 export type PlanMapMode = 'preview' | 'building' | 'ready';
 
 const NARRATION_CAP = 80;
-const START_PROGRESS_PERCENT = 6;
-const COMPLETE_PROGRESS_PERCENT = 100;
-
-function clampProgressPercent(percent: number): number {
-  if (!Number.isFinite(percent)) return 0;
-  return Math.min(100, Math.max(0, Math.round(percent)));
-}
-
 function capNarrationEntries<T>(entries: T[], cap: number): T[] {
   if (entries.length <= cap) return entries;
   return entries.slice(entries.length - cap);
@@ -108,7 +105,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
         narration: [],
         narrationCounter: 0,
         currentPhase: null,
-        progressPercent: START_PROGRESS_PERCENT,
+        progressPercent: PLAN_START_PROGRESS_PERCENT,
         streamedStops: [],
         lastPlanningError: null,
       }),
@@ -158,10 +155,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
     },
 
     setProgress: (percent) => {
-      const next = Math.max(
-        get().progressPercent,
-        clampProgressPercent(percent),
-      );
+      const next = advancePlanProgress(get().progressPercent, percent);
       set({ progressPercent: next });
     },
 
@@ -200,7 +194,7 @@ export const usePlanFlowStore = create<PlanFlowState & PlanFlowActions>(
       set({
         status: 'ready',
         selectedStopId: firstStopId,
-        progressPercent: COMPLETE_PROGRESS_PERCENT,
+        progressPercent: PLAN_COMPLETE_PROGRESS_PERCENT,
       });
     },
 

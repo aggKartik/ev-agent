@@ -5,9 +5,6 @@ import {
   reverseGeocodeViaMapbox,
 } from '#/server/capabilities/addresses/adapters/mapbox/retrieve';
 import { suggestAddressesViaMapbox } from '#/server/capabilities/addresses/adapters/mapbox/suggest';
-import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
-import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
-import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import { resolveEnergyProfile } from '#/server/capabilities/vehicles/domain/resolveEnergyProfile';
 import { getVehicle } from '#/server/capabilities/vehicles/store';
 import { liveBatteryPercentForPlanContext } from '#/server/modules/plan/liveBatteryForContext';
@@ -22,13 +19,14 @@ import {
   planRequestSchema,
 } from '#/shared/plan/contracts';
 import { getPlanActivityCatalog } from '#/shared/plan/helpers';
+import { PLAN_START_PROGRESS_PERCENT } from '#/shared/plan/progress';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
-
-function clampProgressPercent(percent: number): number {
-  if (!Number.isFinite(percent)) return 0;
-  return Math.min(100, Math.max(0, Math.round(percent)));
-}
+import {
+  createProgressEmitter,
+  PREFLIGHT_EVENTS,
+  runPlanAgentWithProgress,
+} from './streamProgress';
 
 export const planRouter = router({
   /**
@@ -104,101 +102,22 @@ export const planRouter = router({
         [signal, finished.signal, timeout].filter(Boolean) as AbortSignal[],
       );
 
-      let highestProgressPercent = 0;
-      let sawFirstStop = false;
-
       const emit = (event: PlanStreamEvent) => ee.emit('event', event);
-      const emitProgress = (
-        percent: number,
-        label?: string,
-        detail?: string,
-      ) => {
-        highestProgressPercent = Math.max(
-          highestProgressPercent,
-          clampProgressPercent(percent),
-        );
-        emit({
-          type: 'progress',
-          percent: highestProgressPercent,
-          label,
-          detail,
-        });
-      };
-      const emitAgentEvent = (event: PlanStreamEvent) => {
-        if (event.type === 'progress') {
-          emitProgress(event.percent, event.label, event.detail);
-          return;
-        }
-        if (event.type === 'stop' && !sawFirstStop) {
-          sawFirstStop = true;
-          emitProgress(
-            62,
-            'First stop streamed',
-            'The itinerary skeleton is now visible.',
-          );
-        }
-        if (event.type === 'result') {
-          emitProgress(
-            88,
-            'Directions and finalization',
-            'Final route geometry and itinerary totals are being sealed.',
-          );
-          emitProgress(100, 'Result complete', 'Your EV trip plan is ready.');
-          emit(event);
-          return;
-        }
-        emit(event);
-      };
+      const progress = createProgressEmitter(emit);
 
       let id = 0;
-      id += 1;
-      yield tracked(String(id), {
-        type: 'progress',
-        percent: 6,
-        label: 'Route preflight',
-        detail: 'Grounding EV corridor and charge anchors.',
-      } satisfies PlanStreamEvent);
-      id += 1;
-      yield tracked(String(id), {
-        type: 'phase',
-        label: 'Route preflight',
-        detail: 'Grounding EV corridor and charge anchors',
-      } satisfies PlanStreamEvent);
-      id += 1;
-      yield tracked(String(id), {
-        type: 'narration',
-        message:
-          'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
-      } satisfies PlanStreamEvent);
-      highestProgressPercent = 6;
+      for (const event of PREFLIGHT_EVENTS) {
+        id += 1;
+        yield tracked(String(id), event);
+      }
+      progress.seedProgress(PLAN_START_PROGRESS_PERCENT);
 
-      const agentDone = (async () => {
-        let evRoutePlan: EvRoutePlan | undefined;
-        try {
-          evRoutePlan = await computeEvRoute(input, iterSignal);
-          emitProgress(
-            28,
-            'EV route prefetch done',
-            'EV corridor and charge anchors are available to the agent.',
-          );
-        } catch {
-          evRoutePlan = undefined;
-          emitProgress(
-            28,
-            'EV route prefetch skipped',
-            'Continuing with the agent fallback routing tools.',
-          );
-        }
-        emitProgress(
-          40,
-          'Agent started',
-          'Planning agent is searching stops, chargers, and route geometry.',
-        );
-        return runPlanAgent(input, emitAgentEvent, {
-          signal: iterSignal,
-          evRoutePlan,
-        });
-      })()
+      const agentDone = runPlanAgentWithProgress({
+        request: input,
+        signal: iterSignal,
+        emitAgentEvent: progress.emitAgentEvent,
+        emitProgress: progress.emitProgress,
+      })
         .catch(() => undefined)
         .finally(() => finished.abort());
 

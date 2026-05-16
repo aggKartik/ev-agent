@@ -1,15 +1,11 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import type { PlanStreamEvent } from '#/shared/plan/contracts';
+import { advancePlanProgress } from '#/shared/plan/progress';
 
 type Deps = {
   emit: (event: PlanStreamEvent) => void;
 };
-
-function clampProgressPercent(percent: number): number {
-  if (!Number.isFinite(percent)) return 0;
-  return Math.min(100, Math.max(0, Math.round(percent)));
-}
 
 export function makeNarrateProgressTool({ emit }: Deps) {
   let highestProgressPercent = 0;
@@ -46,9 +42,9 @@ export function makeNarrateProgressTool({ emit }: Deps) {
     }),
     execute: async ({ phase, detail, message, progressPercent }) => {
       if (progressPercent !== undefined) {
-        highestProgressPercent = Math.max(
+        highestProgressPercent = advancePlanProgress(
           highestProgressPercent,
-          clampProgressPercent(progressPercent),
+          progressPercent,
         );
         emit({
           type: 'progress',
