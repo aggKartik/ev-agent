@@ -22,11 +22,11 @@ import { getPlanActivityCatalog } from '#/shared/plan/helpers';
 import { PLAN_START_PROGRESS_PERCENT } from '#/shared/plan/progress';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
+import { runPlanAgentWithProgress } from './streamProgress';
 import {
   createProgressEmitter,
   PREFLIGHT_EVENTS,
-  runPlanAgentWithProgress,
-} from './streamProgress';
+} from './streamProgressEvents';
 
 export const planRouter = router({
   /**
