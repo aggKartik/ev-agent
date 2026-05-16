@@ -1,5 +1,6 @@
 import { Crosshair, Flag, MapPin } from 'lucide-react';
 import {
+  type FocusEvent,
   type KeyboardEvent,
   useCallback,
   useEffect,
@@ -14,6 +15,7 @@ import Icon from '#/components/ui/Icon';
 import Input from '#/components/ui/Input';
 import type { Coordinate } from '#/lib/geoTypes';
 import { trpc } from '#/lib/trpc';
+import type { AddressSuggestion } from '#/server/capabilities/addresses/domain/types';
 import type { PlanAddress } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
 import { panel } from '#/styled-system/recipes/panel';
@@ -121,8 +123,13 @@ export function PlanAddressField({
   const inputId = useId();
   const listboxId = `${inputId}-suggestions`;
   const [focused, setFocused] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [debouncedQuery, setDebouncedQuery] = useState(value);
+  const [previousSuggestions, setPreviousSuggestions] = useState<
+    AddressSuggestion[]
+  >([]);
+  const displayedSuggestionKeyRef = useRef('');
   const sessionTokenRef = useRef<string>(generateSessionToken());
 
   // Debounce typing -> Mapbox suggest call so we don't bill on every keystroke.
@@ -133,7 +140,10 @@ export function PlanAddressField({
     return () => window.clearTimeout(handle);
   }, [value]);
 
-  const shouldFetchSuggestions = focused && debouncedQuery.trim().length >= 2;
+  const rawQueryReady = value.trim().length >= 2;
+  const debouncedQueryReady = debouncedQuery.trim().length >= 2;
+  const shouldFetchSuggestions =
+    focused && rawQueryReady && debouncedQueryReady;
 
   const suggestQuery = trpc.plan.suggestAddresses.useQuery(
     {
@@ -147,23 +157,59 @@ export function PlanAddressField({
     },
   );
 
-  const suggestions = useMemo(() => {
-    if (!shouldFetchSuggestions) return [];
-    return suggestQuery.data ?? [];
-  }, [shouldFetchSuggestions, suggestQuery.data]);
+  useEffect(() => {
+    if (!rawQueryReady) {
+      setPreviousSuggestions([]);
+      return;
+    }
 
-  const expanded = focused && suggestions.length > 0;
-  const resolvedActiveIndex = expanded
-    ? Math.min(Math.max(activeIndex, 0), suggestions.length - 1)
-    : -1;
+    if (suggestQuery.data) {
+      setPreviousSuggestions(suggestQuery.data);
+    }
+  }, [rawQueryReady, suggestQuery.data]);
+
+  useEffect(() => {
+    setDropdownOpen(focused && rawQueryReady);
+  }, [focused, rawQueryReady]);
+
+  const suggestions = useMemo(() => {
+    if (!dropdownOpen) return [];
+    if (suggestQuery.isFetching) return previousSuggestions;
+    return suggestQuery.data ?? [];
+  }, [
+    dropdownOpen,
+    previousSuggestions,
+    suggestQuery.data,
+    suggestQuery.isFetching,
+  ]);
+
+  const suggestionKey = useMemo(
+    () => suggestions.map((suggestion) => suggestion.providerId).join('\0'),
+    [suggestions],
+  );
+
+  const expanded = dropdownOpen;
+  const resolvedActiveIndex =
+    suggestions.length > 0
+      ? Math.min(Math.max(activeIndex, 0), suggestions.length - 1)
+      : -1;
   const activeSuggestionId =
     resolvedActiveIndex >= 0
       ? `${listboxId}-${resolvedActiveIndex}`
       : undefined;
 
   useEffect(() => {
-    setActiveIndex(expanded ? 0 : -1);
-  }, [expanded]);
+    if (!expanded) {
+      displayedSuggestionKeyRef.current = '';
+      setActiveIndex(-1);
+      return;
+    }
+
+    if (displayedSuggestionKeyRef.current === suggestionKey) return;
+
+    displayedSuggestionKeyRef.current = suggestionKey;
+    setActiveIndex(suggestions.length > 0 ? 0 : -1);
+  }, [expanded, suggestionKey, suggestions.length]);
 
   const utils = trpc.useUtils();
 
@@ -189,7 +235,14 @@ export function PlanAddressField({
   );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!expanded) return;
+    if (event.key === 'Escape' && expanded) {
+      setDropdownOpen(false);
+      setFocused(false);
+      event.currentTarget.blur();
+      return;
+    }
+
+    if (!expanded || suggestions.length === 0) return;
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
@@ -209,20 +262,25 @@ export function PlanAddressField({
       event.preventDefault();
       const target = suggestions[resolvedActiveIndex];
       void retrieveAndSelect(target.providerId);
+      setDropdownOpen(false);
       setFocused(false);
       return;
     }
+  };
 
-    if (event.key === 'Escape') {
-      event.currentTarget.blur();
-    }
+  const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocused = event.relatedTarget;
+    if (nextFocused && event.currentTarget.contains(nextFocused)) return;
+
+    setFocused(false);
+    setDropdownOpen(false);
   };
 
   const fieldHeaderClasses = sectionHeader({ marker: kind });
   const rowClasses = selectableRow({ variant: 'suggestion' });
 
   return (
-    <Box className={planAddressFieldRootClass}>
+    <Box className={planAddressFieldRootClass} onBlur={handleBlur}>
       <Box className={fieldHeaderClasses.label}>
         <Box className={fieldHeaderClasses.dot} />
         <span>{label}</span>
@@ -237,15 +295,19 @@ export function PlanAddressField({
               ? 'Address, place, or coordinates'
               : 'Where are you headed?'
           }
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 160)}
+          onFocus={() => {
+            setFocused(true);
+            setDropdownOpen(value.trim().length >= 2);
+          }}
           onChange={(event) => {
             // Treat typing as evidence of focus too — assistive tech and
             // some test runners can update the value without firing focus
             // events first, which would otherwise prevent the suggestions
             // dropdown from opening.
+            const nextValue = event.target.value;
             setFocused(true);
-            onChange(event.target.value);
+            setDropdownOpen(nextValue.trim().length >= 2);
+            onChange(nextValue);
           }}
           onKeyDown={handleKeyDown}
           role="combobox"
@@ -277,6 +339,11 @@ export function PlanAddressField({
           role="listbox"
           className={cx(panel({ variant: 'dropdown' }), dropdownPositionClass)}
         >
+          {suggestQuery.isFetching && suggestions.length === 0 ? (
+            <Box className={rowClasses.row} role="status">
+              <Box className={rowClasses.body}>Loading suggestions…</Box>
+            </Box>
+          ) : null}
           {suggestions.map((suggestion, index) => (
             <Button
               key={suggestion.providerId}
@@ -290,6 +357,7 @@ export function PlanAddressField({
               onMouseDown={(event) => {
                 event.preventDefault();
                 void retrieveAndSelect(suggestion.providerId);
+                setDropdownOpen(false);
                 setFocused(false);
               }}
               onMouseEnter={() => setActiveIndex(index)}
