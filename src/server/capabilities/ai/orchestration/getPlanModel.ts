@@ -1,32 +1,18 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { env } from '#/lib/env';
 
-const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
-const DEFAULT_MODEL = 'openai/gpt-oss-120b:free';
+const DEFAULT_MODEL = 'gemini-2.5-pro';
 
 export function getPlanModel() {
-  const apiKey = env.OPENAI_API_KEY.trim();
+  const apiKey = env.GEMINI_API_KEY.trim();
   if (!apiKey) {
     throw new Error(
-      'OPENAI_API_KEY is required for the plan agent. For OpenRouter (free tiers), create a key at https://openrouter.ai/keys',
+      'GEMINI_API_KEY is required for the plan agent. Create a Gemini API key in Google AI Studio: https://aistudio.google.com/app/apikey',
     );
   }
 
-  const baseURL = env.OPENAI_BASE_URL?.trim() || DEFAULT_BASE_URL;
-  const modelFromEnv = env.OPENAI_MODEL?.trim();
-  if (!modelFromEnv && baseURL !== DEFAULT_BASE_URL) {
-    throw new Error(
-      'OPENAI_MODEL is required when OPENAI_BASE_URL is not the default OpenRouter URL.',
-    );
-  }
-  const modelId = modelFromEnv || DEFAULT_MODEL;
+  const modelId = env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  const google = createGoogleGenerativeAI({ apiKey });
 
-  const openai = createOpenAI({
-    baseURL,
-    apiKey,
-  });
-
-  // Use `.chat()` so requests hit `/chat/completions` (OpenRouter); the default
-  // `openai(modelId)` uses the Responses API, which OpenRouter rejects here.
-  return openai.chat(modelId);
+  return google(modelId);
 }

@@ -33,7 +33,7 @@
 ## Trip planner APIs
 - `TOMTOM_API_KEY`: TomTom Long Distance EV Routing prefetch (`computeEvRoute` → `src/server/capabilities/evRouting/adapters/tomtom/longDistanceEv.ts`) supplies corridor geometry + charger-hint anchors for the plan agent.
 - `MAPBOX_TOKEN`: Mapbox Places + final `getDirections` polyline in plan agent tools (unchanged UX contract).
-- Plan LLM (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL` in `src/server/capabilities/ai/orchestration/getPlanModel.ts`): defaults target OpenRouter. If you see structured-output failures (*No object generated* / parse errors) after the agent’s jsonrepair + repair pass, switch `OPENAI_MODEL` to a stronger paid or hosted model; free-tier models are more likely to emit malformed or truncated JSON on long itineraries.
+- Plan LLM (`GEMINI_API_KEY`, optional `GEMINI_MODEL` in `src/server/capabilities/ai/orchestration/getPlanModel.ts`): defaults to a Pro-class Gemini model through `@ai-sdk/google`. If you see structured-output failures (*No object generated* / parse errors) after the agent’s jsonrepair + repair pass, keep `GEMINI_MODEL` on a strong Pro-class model rather than downgrading to a smaller/Flash model for long itineraries.
 
 ## Repo Conventions
 - Formatting/linting is Biome (`biome.json`): 2-space indent, single quotes, import organization via Biome.
