@@ -3,7 +3,7 @@ import { Box, Flex } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import { cleanPlanAddress } from '#/features/plan/utils/helpers';
 import {
-  navigatePlanBack,
+  navigateBackToDashboard,
   parsePlanSearch,
 } from '#/features/plan/utils/navigation';
 import type { PlanResult } from '#/shared/plan/contracts';
@@ -119,9 +119,7 @@ export default function ItineraryTopBar({
         className={backBtnClass}
         aria-label="Back"
         onClick={() => {
-          void navigatePlanBack((fallback) => navigate(fallback), {
-            from: planSearch.from,
-          });
+          void navigateBackToDashboard(navigate, planSearch.from);
         }}
       >
         ←

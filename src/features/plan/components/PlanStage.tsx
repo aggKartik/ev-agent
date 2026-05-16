@@ -15,7 +15,7 @@ import {
   useStreamedStops,
 } from '#/features/plan/store';
 import {
-  navigatePlanBack,
+  navigateBackToDashboard,
   parsePlanSearch,
 } from '#/features/plan/utils/navigation';
 import type { PlanContextResponse } from '#/shared/plan/contracts';
@@ -82,9 +82,7 @@ export default function PlanStage({
           form={form}
           disabled={isSubmitting}
           onBack={() => {
-            void navigatePlanBack((fallback) => navigate(fallback), {
-              from: planSearch.from,
-            });
+            void navigateBackToDashboard(navigate, planSearch.from);
           }}
         />
       )}
