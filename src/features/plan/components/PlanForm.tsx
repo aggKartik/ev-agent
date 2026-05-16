@@ -76,6 +76,38 @@ const vehicleInfoPanelClass = css({
   maxWidth: 'panel-form',
 });
 
+type CurrentLocationActionState = {
+  autoLabel: string | null;
+  canUseCurrentLocation: boolean;
+  showCurrentLocationAction: boolean;
+  useCurrentLocationLabel: string;
+};
+
+function getCurrentLocationActionState(
+  currentLocation: ReturnType<typeof useCurrentLocation>,
+): CurrentLocationActionState {
+  const canUseCurrentLocation = Boolean(currentLocation.address?.coordinate);
+  const sourceLabel =
+    currentLocation.source === 'tesla'
+      ? 'AUTO · FROM CAR'
+      : currentLocation.source === 'device'
+        ? 'AUTO · THIS DEVICE'
+        : null;
+  const useCurrentLocationLabel = currentLocation.isPending
+    ? 'Locating car or device'
+    : currentLocation.source === 'device'
+      ? 'Use current device location'
+      : 'Use car location';
+
+  return {
+    autoLabel: sourceLabel,
+    canUseCurrentLocation,
+    showCurrentLocationAction:
+      canUseCurrentLocation || currentLocation.isPending,
+    useCurrentLocationLabel,
+  };
+}
+
 export default function PlanForm({
   context,
   form,
@@ -141,23 +173,11 @@ export default function PlanForm({
           {(fromField) => (
             <form.Field name="fromLocked">
               {(lockedField) => {
-                const autoLabel =
-                  currentLocation.source === 'tesla'
-                    ? 'AUTO · FROM CAR'
-                    : currentLocation.source === 'device'
-                      ? 'AUTO · THIS DEVICE'
-                      : null;
-                const currentLocationAddress = currentLocation.address;
-                const canUseCurrentLocation = Boolean(
-                  currentLocationAddress?.coordinate,
-                );
-                const showCurrentLocationAction =
-                  canUseCurrentLocation || currentLocation.isPending;
-                const useCurrentLocationLabel = currentLocation.isPending
-                  ? 'Locating car or device'
-                  : currentLocation.source === 'device'
-                    ? 'Use current device location'
-                    : 'Use car location';
+                const {
+                  autoLabel,
+                  showCurrentLocationAction,
+                  useCurrentLocationLabel,
+                } = getCurrentLocationActionState(currentLocation);
                 return (
                   <PlanAddressField
                     label="START"

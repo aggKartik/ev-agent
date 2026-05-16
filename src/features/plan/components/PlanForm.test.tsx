@@ -71,6 +71,18 @@ function startInput() {
   return screen.getAllByRole('combobox')[0] as HTMLInputElement;
 }
 
+function setResolvedCurrentLocation(full: string) {
+  currentLocationMock.value = {
+    address: {
+      full,
+      coordinate: { lat: 37.492, lng: -121.944 },
+    },
+    source: 'tesla',
+    asOf: '2026-05-14T00:00:00.000Z',
+    isPending: false,
+  };
+}
+
 describe('PlanForm current location start field', () => {
   afterEach(() => {
     cleanup();
@@ -90,15 +102,7 @@ describe('PlanForm current location start field', () => {
 
     expect(startInput().value).toBe('');
 
-    currentLocationMock.value = {
-      address: {
-        full: '123 Auto Way, Fremont, CA',
-        coordinate: { lat: 37.492, lng: -121.944 },
-      },
-      source: 'tesla',
-      asOf: '2026-05-14T00:00:00.000Z',
-      isPending: false,
-    };
+    setResolvedCurrentLocation('123 Auto Way, Fremont, CA');
     rerender(<FormProbe />);
 
     await waitFor(() => {
@@ -116,15 +120,7 @@ describe('PlanForm current location start field', () => {
       expect(screen.getByTestId('from-locked').textContent).toBe('false');
     });
 
-    currentLocationMock.value = {
-      address: {
-        full: '123 Auto Way, Fremont, CA',
-        coordinate: { lat: 37.492, lng: -121.944 },
-      },
-      source: 'tesla',
-      asOf: '2026-05-14T00:00:00.000Z',
-      isPending: false,
-    };
+    setResolvedCurrentLocation('123 Auto Way, Fremont, CA');
     rerender(<FormProbe />);
 
     await waitFor(() => {
