@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -15,7 +14,6 @@ import Icon from '#/components/ui/Icon';
 import Input from '#/components/ui/Input';
 import type { Coordinate } from '#/lib/geoTypes';
 import { trpc } from '#/lib/trpc';
-import type { AddressSuggestion } from '#/server/capabilities/addresses/domain/types';
 import type { PlanAddress } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
 import { panel } from '#/styled-system/recipes/panel';
@@ -123,13 +121,8 @@ export function PlanAddressField({
   const inputId = useId();
   const listboxId = `${inputId}-suggestions`;
   const [focused, setFocused] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeProviderId, setActiveProviderId] = useState<string>();
   const [debouncedQuery, setDebouncedQuery] = useState(value);
-  const [previousSuggestions, setPreviousSuggestions] = useState<
-    AddressSuggestion[]
-  >([]);
-  const displayedSuggestionKeyRef = useRef('');
   const sessionTokenRef = useRef<string>(generateSessionToken());
 
   // Debounce typing -> Mapbox suggest call so we don't bill on every keystroke.
@@ -154,62 +147,31 @@ export function PlanAddressField({
     {
       enabled: shouldFetchSuggestions,
       staleTime: 60_000,
+      placeholderData: (previousData) => previousData,
     },
   );
 
-  useEffect(() => {
-    if (!rawQueryReady) {
-      setPreviousSuggestions([]);
-      return;
-    }
-
-    if (suggestQuery.data) {
-      setPreviousSuggestions(suggestQuery.data);
-    }
-  }, [rawQueryReady, suggestQuery.data]);
-
-  useEffect(() => {
-    setDropdownOpen(focused && rawQueryReady);
-  }, [focused, rawQueryReady]);
-
-  const suggestions = useMemo(() => {
-    if (!dropdownOpen) return [];
-    if (suggestQuery.isFetching) return previousSuggestions;
-    return suggestQuery.data ?? [];
-  }, [
-    dropdownOpen,
-    previousSuggestions,
-    suggestQuery.data,
-    suggestQuery.isFetching,
-  ]);
-
-  const suggestionKey = useMemo(
-    () => suggestions.map((suggestion) => suggestion.providerId).join('\0'),
-    [suggestions],
-  );
-
-  const expanded = dropdownOpen;
+  const expanded = focused && rawQueryReady;
+  const suggestions = expanded ? (suggestQuery.data ?? []) : [];
+  const activeProviderIndex = activeProviderId
+    ? suggestions.findIndex(
+        (suggestion) => suggestion.providerId === activeProviderId,
+      )
+    : -1;
   const resolvedActiveIndex =
     suggestions.length > 0
-      ? Math.min(Math.max(activeIndex, 0), suggestions.length - 1)
+      ? activeProviderIndex >= 0
+        ? activeProviderIndex
+        : 0
       : -1;
   const activeSuggestionId =
     resolvedActiveIndex >= 0
       ? `${listboxId}-${resolvedActiveIndex}`
       : undefined;
-
-  useEffect(() => {
-    if (!expanded) {
-      displayedSuggestionKeyRef.current = '';
-      setActiveIndex(-1);
-      return;
-    }
-
-    if (displayedSuggestionKeyRef.current === suggestionKey) return;
-
-    displayedSuggestionKeyRef.current = suggestionKey;
-    setActiveIndex(suggestions.length > 0 ? 0 : -1);
-  }, [expanded, suggestionKey, suggestions.length]);
+  const showLoadingRow =
+    expanded &&
+    suggestions.length === 0 &&
+    (suggestQuery.isFetching || debouncedQuery.trim() !== value.trim());
 
   const utils = trpc.useUtils();
 
@@ -236,7 +198,6 @@ export function PlanAddressField({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape' && expanded) {
-      setDropdownOpen(false);
       setFocused(false);
       event.currentTarget.blur();
       return;
@@ -246,14 +207,18 @@ export function PlanAddressField({
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((current) => (current + 1) % suggestions.length);
+      setActiveProviderId(
+        suggestions[(resolvedActiveIndex + 1) % suggestions.length].providerId,
+      );
       return;
     }
 
     if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActiveIndex(
-        (current) => (current - 1 + suggestions.length) % suggestions.length,
+      setActiveProviderId(
+        suggestions[
+          (resolvedActiveIndex - 1 + suggestions.length) % suggestions.length
+        ].providerId,
       );
       return;
     }
@@ -262,7 +227,6 @@ export function PlanAddressField({
       event.preventDefault();
       const target = suggestions[resolvedActiveIndex];
       void retrieveAndSelect(target.providerId);
-      setDropdownOpen(false);
       setFocused(false);
       return;
     }
@@ -273,7 +237,6 @@ export function PlanAddressField({
     if (nextFocused && event.currentTarget.contains(nextFocused)) return;
 
     setFocused(false);
-    setDropdownOpen(false);
   };
 
   const fieldHeaderClasses = sectionHeader({ marker: kind });
@@ -295,19 +258,14 @@ export function PlanAddressField({
               ? 'Address, place, or coordinates'
               : 'Where are you headed?'
           }
-          onFocus={() => {
-            setFocused(true);
-            setDropdownOpen(value.trim().length >= 2);
-          }}
+          onFocus={() => setFocused(true)}
           onChange={(event) => {
             // Treat typing as evidence of focus too — assistive tech and
             // some test runners can update the value without firing focus
             // events first, which would otherwise prevent the suggestions
             // dropdown from opening.
-            const nextValue = event.target.value;
             setFocused(true);
-            setDropdownOpen(nextValue.trim().length >= 2);
-            onChange(nextValue);
+            onChange(event.target.value);
           }}
           onKeyDown={handleKeyDown}
           role="combobox"
@@ -339,7 +297,7 @@ export function PlanAddressField({
           role="listbox"
           className={cx(panel({ variant: 'dropdown' }), dropdownPositionClass)}
         >
-          {suggestQuery.isFetching && suggestions.length === 0 ? (
+          {showLoadingRow ? (
             <Box className={rowClasses.row} role="status">
               <Box className={rowClasses.body}>Loading suggestions…</Box>
             </Box>
@@ -357,10 +315,9 @@ export function PlanAddressField({
               onMouseDown={(event) => {
                 event.preventDefault();
                 void retrieveAndSelect(suggestion.providerId);
-                setDropdownOpen(false);
                 setFocused(false);
               }}
-              onMouseEnter={() => setActiveIndex(index)}
+              onMouseEnter={() => setActiveProviderId(suggestion.providerId)}
             >
               <Box className={rowClasses.icon}>
                 <Icon icon={kind === 'start' ? MapPin : Flag} size="sm" />

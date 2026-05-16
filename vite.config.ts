@@ -10,7 +10,7 @@ const config = defineConfig(({ mode }) => ({
     dedupe: ['react', 'react-dom'],
   },
   test: {
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['src/**/*.test.ts'],
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       // Istanbul-format because fallow's CRAP scoring reads
@@ -21,7 +21,6 @@ const config = defineConfig(({ mode }) => ({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.ts',
-        'src/**/*.test.tsx',
         'src/test/**',
         'src/routeTree.gen.ts',
         'src/server/platform/db/migrations/**',

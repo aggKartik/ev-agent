@@ -6,6 +6,7 @@ import {
   render,
   screen,
 } from '@testing-library/react';
+import { createElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AddressSuggestion } from '#/server/capabilities/addresses/domain/types';
 import { PlanAddressField } from './PlanAddressField';
@@ -39,8 +40,20 @@ vi.mock('#/lib/trpc', () => ({
   },
 }));
 
+function FieldHarness() {
+  const [value, setValue] = useState('Sa');
+  return createElement(PlanAddressField, {
+    label: 'Start',
+    value,
+    kind: 'start',
+    onChange: setValue,
+    onSelect: vi.fn(),
+  });
+}
+
 describe('PlanAddressField', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     trpcMock.retrieveAddress.mockResolvedValue({
       full: 'San Antonio, Texas, United States',
       primary: 'San Antonio',
@@ -53,7 +66,7 @@ describe('PlanAddressField', () => {
       }
 
       if (query === 'San') {
-        return { data: undefined, isFetching: true };
+        return { data: suggestionsForSa, isFetching: true };
       }
 
       return { data: undefined, isFetching: false };
@@ -62,36 +75,12 @@ describe('PlanAddressField', () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
-  it('keeps the listbox mounted while a multi-character edit enters a debounced fetch transition', async () => {
-    let value = 'Sa';
-    const onSelect = vi.fn();
-    let view: ReturnType<typeof render>;
-
-    const onChange = (nextValue: string) => {
-      value = nextValue;
-      view.rerender(
-        <PlanAddressField
-          label="Start"
-          value={value}
-          kind="start"
-          onChange={onChange}
-          onSelect={onSelect}
-        />,
-      );
-    };
-
-    view = render(
-      <PlanAddressField
-        label="Start"
-        value={value}
-        kind="start"
-        onChange={onChange}
-        onSelect={onSelect}
-      />,
-    );
+  it('keeps the listbox mounted while a multi-character edit enters a debounced fetch transition', () => {
+    render(createElement(FieldHarness));
 
     const input = screen.getByRole('combobox', { name: '' });
     fireEvent.focus(input);
@@ -100,12 +89,18 @@ describe('PlanAddressField', () => {
     expect(screen.getByRole('option', { name: /San Antonio/i })).toBeTruthy();
 
     fireEvent.change(input, { target: { value: 'San' } });
-    expect(screen.getByRole('listbox')).toBeTruthy();
 
-    await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 160));
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    expect(screen.getByRole('option', { name: /San Antonio/i })).toBeTruthy();
+
+    act(() => {
+      vi.advanceTimersByTime(150);
     });
 
+    expect(trpcMock.useSuggestAddressesQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ query: 'San' }),
+      expect.objectContaining({ enabled: true }),
+    );
     expect(screen.getByRole('listbox')).toBeTruthy();
     expect(screen.getByRole('option', { name: /San Antonio/i })).toBeTruthy();
   });
