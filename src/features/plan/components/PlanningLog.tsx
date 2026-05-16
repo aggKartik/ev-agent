@@ -86,7 +86,7 @@ export default function PlanningLog({ request }: PlanningLogProps) {
     { token: '.', message: `target :: ${cleanPlanAddress(request.to.full)}` },
     ...request.activities.map((activity) => ({
       token: '.',
-      message: `want :: ${activity.id} · ${activity.dwellMinutes}m`,
+      message: `want :: ${activity.id} · ${activity.dwellMinutes}m · ${activity.targetRoutePercent}% route`,
     })),
   ];
 

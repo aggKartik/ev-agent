@@ -18,6 +18,7 @@ import type { PlanActivitySelection } from '#/shared/plan/contracts';
 import type { PlanActivityCatalogItem } from '#/shared/plan/data';
 import { selectableCard } from '#/styled-system/recipes/selectable-card';
 import ActivityDwellSlider from './ActivityDwellSlider';
+import ActivityRoutePositionSelector from './ActivityRoutePositionSelector';
 
 type ActivitySelectorProps = {
   catalog: PlanActivityCatalogItem[];
@@ -52,13 +53,18 @@ export default function ActivitySelector({
       onChange(value.filter((selection) => selection.id !== id));
       return;
     }
-    onChange([...value, { id, dwellMinutes: 45 }]);
+    onChange([...value, { id, dwellMinutes: 45, targetRoutePercent: 50 }]);
   };
 
-  const setDwell = (id: PlanActivityId, dwellMinutes: number) => {
+  const updateSelection = (
+    id: PlanActivityId,
+    patch: Partial<
+      Pick<PlanActivitySelection, 'dwellMinutes' | 'targetRoutePercent'>
+    >,
+  ) => {
     onChange(
       value.map((selection) =>
-        selection.id === id ? { ...selection, dwellMinutes } : selection,
+        selection.id === id ? { ...selection, ...patch } : selection,
       ),
     );
   };
@@ -97,12 +103,26 @@ export default function ActivitySelector({
               </Box>
             </Button>
             {selected ? (
-              <ActivityDwellSlider
-                label={activity.label}
-                color={activity.color}
-                value={selected.dwellMinutes}
-                onChange={(nextValue) => setDwell(activity.id, nextValue)}
-              />
+              <>
+                <ActivityDwellSlider
+                  label={activity.label}
+                  color={activity.color}
+                  value={selected.dwellMinutes}
+                  onChange={(nextValue) =>
+                    updateSelection(activity.id, { dwellMinutes: nextValue })
+                  }
+                />
+                <ActivityRoutePositionSelector
+                  label={activity.label}
+                  color={activity.color}
+                  value={selected.targetRoutePercent}
+                  onChange={(nextValue) =>
+                    updateSelection(activity.id, {
+                      targetRoutePercent: nextValue,
+                    })
+                  }
+                />
+              </>
             ) : null}
           </Box>
         );

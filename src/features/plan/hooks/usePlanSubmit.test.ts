@@ -27,7 +27,7 @@ function makeResult(): PlanResult {
         full: 'Destination',
         coordinate: { lat: 37.8, lng: -122.27 },
       },
-      activities: [{ id: 'coffee', dwellMinutes: 30 }],
+      activities: [{ id: 'coffee', dwellMinutes: 30, targetRoutePercent: 50 }],
       vehicleLabel: 'Test',
       usableRangeMiles: 250,
       startingSocPercent: 80,

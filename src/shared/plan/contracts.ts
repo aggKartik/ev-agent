@@ -54,6 +54,8 @@ const planAddressSchema = z.object({
 const planActivitySelectionSchema = z.object({
   id: planActivityIdSchema,
   dwellMinutes: z.number().int().min(15).max(180),
+  /** Preferred stop timing as an approximate percent into the driven route. */
+  targetRoutePercent: z.number().min(10).max(90).default(50),
 });
 
 const planArrivalTimeSchema = z

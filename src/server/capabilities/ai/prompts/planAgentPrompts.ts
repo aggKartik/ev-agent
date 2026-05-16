@@ -1,10 +1,69 @@
-import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
+import type {
+  EvChargeStopCandidate,
+  EvRoutePlan,
+} from '#/server/capabilities/evRouting/domain/types';
 import type { PlanRequest } from '#/shared/plan/contracts';
 import { PLAN_ACTIVITY_CATALOG } from '#/shared/plan/data';
 import {
   evPreplanPolicyBlock,
   formatEvGroundingBlock,
 } from './planAgentEvGrounding';
+
+function orderedChargeRegions(plan?: EvRoutePlan): EvChargeStopCandidate[] {
+  return [...(plan?.chargeStopCandidates ?? [])].sort(
+    (a, b) => a.ordinal - b.ordinal,
+  );
+}
+
+function approximateRegionPercent(index: number, total: number): number {
+  return Math.round(((index + 1) / (total + 1)) * 100);
+}
+
+function closestChargeRegionForTarget(
+  targetRoutePercent: number,
+  plan?: EvRoutePlan,
+): { ordinal: number; approximateRoutePercent: number } | null {
+  const regions = orderedChargeRegions(plan);
+  if (regions.length === 0) return null;
+
+  let closestIndex = 0;
+  let closestDistance = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < regions.length; index += 1) {
+    const regionPercent = approximateRegionPercent(index, regions.length);
+    const distance = Math.abs(regionPercent - targetRoutePercent);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  }
+
+  return {
+    ordinal: regions[closestIndex].ordinal,
+    approximateRoutePercent: approximateRegionPercent(
+      closestIndex,
+      regions.length,
+    ),
+  };
+}
+
+export function formatRequestedActivities(
+  request: PlanRequest,
+  evRoutePlan?: EvRoutePlan,
+): string {
+  return request.activities
+    .map((selection) => {
+      const catalog = PLAN_ACTIVITY_CATALOG.find((c) => c.id === selection.id);
+      const region = closestChargeRegionForTarget(
+        selection.targetRoutePercent,
+        evRoutePlan,
+      );
+      const regionHint = region
+        ? ` · prefer chargeRegion ordinal ${region.ordinal} (~${region.approximateRoutePercent}% corridor) before searchPlaces`
+        : '';
+      return `- ${selection.id} (${catalog?.label ?? selection.id}) · dwell ${selection.dwellMinutes} min · target ${selection.targetRoutePercent}% into route${regionHint}`;
+    })
+    .join('\n');
+}
 
 export function buildSystemPrompt(
   request: PlanRequest,
@@ -20,11 +79,11 @@ VEHICLE / ENERGY INPUTS (truth for reasoning):
 TOOLS + STRATEGY
 1. narrateProgress — call across phases ("EV route grounded", "Pairing stops at chargers", "Activity search fallback", "Finalizing itinerary").
 2. HONOUR EV_PREPLAN_JSON: The user message begins with corridorLatLngSample and chargeRegions. Use them whenever present; NEVER skip pairing user-requested activities with realistic charging hops.
-   - TomTom-strong preplan with chargeRegions: Before each inserted activity tied to charging, searchPlaces with near≈chargeRegions[i].near (minor offset along driving direction OK) plus radii ~3–12 mi depending on density; pick POIs aligning with user's selected activities while keeping detours sane.
+   - TomTom-strong preplan with chargeRegions: Before each inserted activity tied to charging, choose the chargeRegions ordinal closest to that activity's targetRoutePercent (ordering is route order), then call searchPlaces with near≈that region.near (minor offset along driving direction OK) plus radii ~3–12 mi depending on density; pick POIs aligning with user's selected activities while keeping detours sane.
    - Weak / empty anchors: widen searchPlaces along corridorLatLngSample between origin/destination and pair findChargingStations hits with activities.
    - Always cross-check nearby DCFC using findChargingStations (minPowerKw≥120 when plausible).
 3. Charging stops themselves: final coordinates must come from findChargingStations (or corroborated from search if incidental). Choose highest practical kW; dwellMinutes typically 22–38.
-4. Activities: honour each catalog activity id exactly once unless impossible—then narrate omission.
+4. Activities: honour each catalog activity id exactly once unless impossible—then narrate omission. If the driver gives no explicit timing preference, place activity stops near the midpoint-ish feasible charging region. If targetRoutePercent is provided, prefer the matching route-percent corridor / feasible charge region over a generic midpoint.
 5. getDirections MUST be called EXACTLY ONCE at the very end using the FINAL ordered waypoint list (start→ordered stops→end). You MUST populate PlanResult.geometry with the geometry returned by getDirections Mapbox tool (Road-following geometry is mandatory for UX).
 6. Compose the structured result: id, geometry, stops (kind start/end/activity/charge), arrival sequencing starting 08:42, totals, mirrored phases narrative. Do NOT include a top-level "request" field — the server injects the submitted trip request.
 
@@ -41,12 +100,7 @@ export function buildUserPrompt(
   const toCoord = request.to.coordinate
     ? ` (${request.to.coordinate.lat.toFixed(4)}, ${request.to.coordinate.lng.toFixed(4)})`
     : '';
-  const activities = request.activities
-    .map((selection) => {
-      const catalog = PLAN_ACTIVITY_CATALOG.find((c) => c.id === selection.id);
-      return `- ${selection.id} (${catalog?.label ?? selection.id}) · dwell ${selection.dwellMinutes} min`;
-    })
-    .join('\n');
+  const activities = formatRequestedActivities(request, evRoutePlan);
 
   return `${formatEvGroundingBlock(evRoutePlan)}
 
