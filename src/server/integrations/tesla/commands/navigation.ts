@@ -1,6 +1,6 @@
+import type { TeslaNavigationWaypoint } from '#/server/modules/tesla/sendItinerary/waypoints';
 import { OAuthError } from '#/server/oauth/errors';
 import { teslaCommandProxyUrl } from '../config';
-import type { TeslaNavigationWaypoint } from './itineraryWaypoints';
 
 export const TESLA_NAVIGATION_WAYPOINTS_COMMAND =
   'navigation_waypoints_request' as const;

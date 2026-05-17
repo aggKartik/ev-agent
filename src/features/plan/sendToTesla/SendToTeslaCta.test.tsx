@@ -2,20 +2,15 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { makePlanResult } from '#/shared/plan/testFactories';
-import ItineraryDrawer from './ItineraryDrawer';
+import SendToTeslaCta from './SendToTeslaCta';
 
-describe('ItineraryDrawer Send to Tesla action', () => {
+describe('SendToTeslaCta', () => {
   afterEach(() => cleanup());
 
   it('calls the send handler from the minimal CTA', () => {
     const onSendToTesla = vi.fn();
     render(
-      <ItineraryDrawer
-        result={makePlanResult()}
-        onSelectStop={vi.fn()}
-        onSendToTesla={onSendToTesla}
-      />,
+      <SendToTeslaCta onSendToTesla={onSendToTesla} sendToTeslaState="idle" />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /send to tesla/i }));
@@ -25,9 +20,7 @@ describe('ItineraryDrawer Send to Tesla action', () => {
 
   it('shows pending and success/error feedback from the send hook', () => {
     const { rerender } = render(
-      <ItineraryDrawer
-        result={makePlanResult()}
-        onSelectStop={vi.fn()}
+      <SendToTeslaCta
         onSendToTesla={vi.fn()}
         sendToTeslaState="pending"
         sendToTeslaMessage="Sending route"
@@ -41,9 +34,7 @@ describe('ItineraryDrawer Send to Tesla action', () => {
     expect(screen.getByText('Sending route')).toBeTruthy();
 
     rerender(
-      <ItineraryDrawer
-        result={makePlanResult()}
-        onSelectStop={vi.fn()}
+      <SendToTeslaCta
         onSendToTesla={vi.fn()}
         sendToTeslaState="success"
         sendToTeslaMessage="Sent 2 stops to Roadtrip Car."
@@ -53,9 +44,7 @@ describe('ItineraryDrawer Send to Tesla action', () => {
     expect(screen.getByText('Sent 2 stops to Roadtrip Car.')).toBeTruthy();
 
     rerender(
-      <ItineraryDrawer
-        result={makePlanResult()}
-        onSelectStop={vi.fn()}
+      <SendToTeslaCta
         onSendToTesla={vi.fn()}
         sendToTeslaState="error"
         sendToTeslaMessage="Tesla account not linked."

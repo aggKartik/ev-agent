@@ -2,7 +2,8 @@ import { Box } from 'styled-system/jsx';
 import ItineraryDrawer from '#/features/plan/components/ItineraryDrawer';
 import ItineraryTopBar from '#/features/plan/components/ItineraryTopBar';
 import RouteMap from '#/features/plan/components/RouteMap';
-import { useSendItineraryToTesla } from '#/features/plan/hooks/useSendItineraryToTesla';
+import SendToTeslaCta from '#/features/plan/sendToTesla/SendToTeslaCta';
+import { useSendItineraryToTesla } from '#/features/plan/sendToTesla/useSendItineraryToTesla';
 import {
   useActiveRequest,
   useMapMode,
@@ -66,9 +67,13 @@ export default function ItineraryStage() {
           result={result}
           selectedStopId={selectedStopId}
           onSelectStop={selectStop}
-          onSendToTesla={sendToTesla.send}
-          sendToTeslaState={sendToTesla.state}
-          sendToTeslaMessage={sendToTesla.message}
+          footer={
+            <SendToTeslaCta
+              onSendToTesla={sendToTesla.send}
+              sendToTeslaState={sendToTesla.state}
+              sendToTeslaMessage={sendToTesla.message}
+            />
+          }
         />
       </Box>
     </Box>

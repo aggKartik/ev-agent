@@ -8,6 +8,17 @@ export type SendItineraryToTeslaState =
   | 'success'
   | 'error';
 
+function mutationState(args: {
+  isPending: boolean;
+  isError: boolean;
+  successMessage: string | null;
+}): SendItineraryToTeslaState {
+  if (args.isPending) return 'pending';
+  if (args.isError) return 'error';
+  if (args.successMessage) return 'success';
+  return 'idle';
+}
+
 export function useSendItineraryToTesla(result: PlanResult | null) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const mutation = trpc.tesla.sendItinerary.useMutation({
@@ -26,13 +37,11 @@ export function useSendItineraryToTesla(result: PlanResult | null) {
     mutation.mutate({ result });
   }, [mutation, result]);
 
-  const state: SendItineraryToTeslaState = mutation.isPending
-    ? 'pending'
-    : mutation.isError
-      ? 'error'
-      : successMessage
-        ? 'success'
-        : 'idle';
+  const state = mutationState({
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    successMessage,
+  });
 
   const message = useMemo(() => {
     if (mutation.isError) return mutation.error.message;

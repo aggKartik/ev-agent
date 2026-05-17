@@ -4,7 +4,7 @@ import {
   makePlanStop,
   testPlanStop,
 } from '#/shared/plan/testFactories';
-import { itineraryStopsToTeslaWaypoints } from './itineraryWaypoints';
+import { itineraryStopsToTeslaWaypoints } from './waypoints';
 
 const endStop = makePlanStop({
   id: 'end',

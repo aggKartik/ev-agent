@@ -3,7 +3,7 @@ import type { OAuthError } from '#/server/oauth/errors';
 import {
   sendTeslaNavigationWaypoints,
   TESLA_NAVIGATION_WAYPOINTS_COMMAND,
-} from './vehicleCommands';
+} from './navigation';
 
 const fetchMock = vi.fn();
 
