@@ -27,6 +27,7 @@ export const TESLA_DEFAULT_SCOPES = [
   'openid',
   'offline_access',
   'vehicle_device_data',
+  'vehicle_cmds',
 ] as const;
 
 export type TeslaConfig = {
@@ -57,6 +58,14 @@ export function teslaRegion(): TeslaRegion {
 
 export function teslaFleetBaseUrl(region: TeslaRegion = teslaRegion()): string {
   return FLEET_API_BASE_URLS[region];
+}
+
+export function teslaCommandProxyUrl(): string | null {
+  return env.TESLA_COMMAND_PROXY_URL?.replace(/\/+$/, '') ?? null;
+}
+
+export function teslaSendItineraryEnabled(): boolean {
+  return env.TESLA_SEND_ITINERARY_ENABLED;
 }
 
 export function teslaAudience(region: TeslaRegion = teslaRegion()): string {

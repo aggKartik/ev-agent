@@ -81,29 +81,57 @@ in, otherwise Fleet API calls return `403`.
 
 ## 2. Scopes
 
-For the MVP (list vehicles + read odometer + read state-of-charge) the only
-scope that grants data access is `vehicle_device_data`. `openid` +
+The app reads vehicle state and sends finished Itinerary waypoints to the car.
+`vehicle_device_data` grants live vehicle reads, while `vehicle_cmds` grants
+navigation commands such as `navigation_waypoints_request`. `openid` +
 `offline_access` are required to receive an `id_token` and a `refresh_token`
-respectively. We deliberately do **not** request `vehicle_cmds`,
-`vehicle_charging_cmds`, or `user_data` — users see a shorter consent list
-and we avoid the virtual-key pairing step below.
+respectively. We still do **not** request `vehicle_charging_cmds` or
+`user_data`.
 
 Effective scope string:
 
 ```
-openid offline_access vehicle_device_data
+openid offline_access vehicle_device_data vehicle_cmds
 ```
 
 Source: [Authentication overview — Scopes](https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes) lists `vehicle_device_data` as
 _"Access vehicle information and state, such as vehicle_data / vehicle_state /
 charge_state"_.
 
-### Virtual key pairing (not needed for read-only)
+Existing users linked before `vehicle_cmds` was added must reconnect Tesla; a
+refresh token cannot silently grant newly requested scopes.
 
-Virtual keys are only required for the command scopes (`vehicle_cmds`,
-`vehicle_charging_cmds`). For read-only `vehicle_device_data` Tesla does not
-prompt the user for key pairing and we do not pass `show_keypair_step=true`
-on the authorize URL.
+### Virtual key pairing + command proxy
+
+Virtual keys are required for command scopes (`vehicle_cmds`,
+`vehicle_charging_cmds`). For "Send to Tesla", the vehicle must have this
+application's virtual key installed and the backend must send commands through
+Tesla's official vehicle-command proxy (or equivalent SDK integration) so
+requests are signed before reaching the Fleet API.
+
+Set `TESLA_COMMAND_PROXY_URL` to the HTTPS base URL of that proxy. The backend
+calls:
+
+```
+POST {TESLA_COMMAND_PROXY_URL}/api/1/vehicles/{vin}/command/navigation_waypoints_request
+```
+
+with the Driver's fresh Fleet API access token and the ordered itinerary
+waypoints. The proxy must be configured with the command private key matching
+the public key registered for the deployment domain.
+
+As of the current official `tesla/vehicle-command` proxy source, this exact
+waypoint command is documented by Fleet API but is not implemented by the proxy
+dispatcher. Keep `TESLA_SEND_ITINERARY_ENABLED=false` unless the deployment has
+verified a proxy image, fork, or SDK path that can actually handle
+`navigation_waypoints_request`. The UI and mutation both gate Send to Tesla on
+that opt-in.
+
+If `TESLA_COMMAND_PROXY_URL` is unset, read-only Tesla flows still work, but
+`tesla.sendItinerary` refuses to send commands and surfaces
+`missing_command_proxy` as a tRPC `PRECONDITION_FAILED` error. This is an
+intentional deployment guard: no backend should try to send unsigned vehicle
+commands directly to Fleet API.
 
 ## 3. Partner domain registration + public key
 
@@ -128,7 +156,19 @@ order:
    `POST /api/1/partner_accounts` with `{ "domain": "<hostname>" }`. Tesla
    fetches the PEM over HTTPS to validate; localhost and `.local` hosts are
    rejected by the script because Tesla cannot validate them.
-4. **User OAuth** can proceed after the above succeeds.
+4. **Configure the command proxy.** Run a Vehicle Command Proxy or equivalent
+   SDK path with the private key matching the public key above, expose it behind
+   HTTPS, and set `TESLA_COMMAND_PROXY_URL` to that HTTPS base URL. Enable
+   `TESLA_SEND_ITINERARY_ENABLED=true` only after verifying support for
+   `POST /api/1/vehicles/{vin}/command/navigation_waypoints_request`.
+5. **Pair the virtual key to each vehicle.** After the user has authorized the
+   app with `vehicle_device_data` and `vehicle_cmds`, direct them to
+   `https://tesla.com/_ak/<developer-domain>` in the Tesla mobile app. For a
+   specific car, append `?vin=<VIN>` to the link. The app can render the link
+   directly or as a QR code.
+6. **User OAuth** can proceed after partner registration succeeds, but Send to
+   Tesla only succeeds after both proxy configuration and vehicle key pairing
+   are complete.
 
 Implementation references: `src/server/integrations/tesla/fleet/partner.ts`,
 `scripts/tesla/register-partner.ts`, and the route file
@@ -156,6 +196,9 @@ Our strategy:
 - **Never wake sleeping vehicles on behalf of the UI.** If a vehicle is
   `offline`, we fall back to the `/vehicles` list entry and render it with
   null telemetry rather than issuing a wake command.
+- **Commands only on explicit click.** Sending navigation is one user-initiated
+  command attempt. We do not auto-wake, poll for command completion, or retry
+  failed command responses.
 
 ## 5. Refresh-token rotation
 
@@ -190,6 +233,16 @@ Our implementation (see `src/server/tesla/client.ts`):
 | Fleet API **412** ([precondition](https://developer.tesla.com/docs/fleet-api/getting-started/conventions): unregistered partner / PEM URL) | tRPC `PRECONDITION_REQUIRED` + message to fix PEM + run `bun run tesla:register-partner` |
 | Fleet API **421** (wrong region vs account) | Per Tesla: user/account not in this region — set `TESLA_REGION` to `na` or `eu` to match the account and token `audience`. |
 | Fleet API 5xx                        | tRPC `BAD_GATEWAY`; React Query retries with backoff         |
+| `TESLA_SEND_ITINERARY_ENABLED` unset / false | Send to Tesla CTA is disabled and `tesla.sendItinerary` returns tRPC `PRECONDITION_FAILED`; verify waypoint command support before opting in. |
+| `TESLA_COMMAND_PROXY_URL` unset      | `tesla.sendItinerary` returns tRPC `PRECONDITION_FAILED` with `missing_command_proxy`; configure the HTTPS command proxy before enabling Send to Tesla. |
+| `navigation_waypoints_request` missing virtual key / missing command scope / 401 / 403 | tRPC `PRECONDITION_FAILED`; user or operator must pair the virtual key, reconnect with `vehicle_cmds`, or fix proxy credentials. |
+| `navigation_waypoints_request` vehicle rejection (`result: false`, offline, unsupported state, malformed waypoints) | tRPC `BAD_GATEWAY` with Tesla's reason; do not auto-retry without user action because the vehicle rejected the command. |
+| Command proxy timeout / DNS / network / **502** / **503** / **504** | tRPC `BAD_GATEWAY`; one automatic retry is acceptable for transient infrastructure failures, then surface the error. |
+
+Retry rule for commands: do **not** auto-retry 4xx validation/auth failures or
+vehicle-level command rejections. A single retry is acceptable only when the
+request did not receive a definitive vehicle rejection, such as command proxy
+timeout, DNS/network failure, or proxy **502/503/504**.
 
 ## 7. Security considerations for token storage
 

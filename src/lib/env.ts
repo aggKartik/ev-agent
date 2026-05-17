@@ -29,6 +29,28 @@ export const envSchema = z.object({
   TESLA_REGION: z.enum(['na', 'eu']).default('na'),
   /** EC public key PEM served at `/.well-known/appspecific/com.tesla.3p.public-key.pem` for Fleet partner registration. */
   TESLA_FLEET_PUBLIC_KEY_PEM: z.string().optional(),
+  /** HTTPS URL for Tesla's official vehicle-command proxy, used for signed vehicle commands. */
+  TESLA_COMMAND_PROXY_URL: z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          return new URL(url).protocol === 'https:';
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: 'TESLA_COMMAND_PROXY_URL must use https://.',
+      },
+    )
+    .optional(),
+  /** Enables Send to Tesla after the configured command proxy is verified to support navigation_waypoints_request. */
+  TESLA_SEND_ITINERARY_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 
   // Plan agent LLM. Gemini provider; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.

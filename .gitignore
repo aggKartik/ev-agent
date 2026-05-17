@@ -17,3 +17,6 @@ styled-system
 styled-system-studio
 .fallow/
 coverage/
+
+## Local Tesla command proxy secrets/certs
+tesla-proxy-config/

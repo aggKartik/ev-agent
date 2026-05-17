@@ -1,6 +1,5 @@
-import { ArrowRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Box, Grid, Stack } from 'styled-system/jsx';
-import Button from '#/components/ui/Button';
 import { formatPlanMinutes } from '#/features/plan/utils/helpers';
 import type { PlanResult } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
@@ -11,7 +10,7 @@ type ItineraryDrawerProps = {
   result: PlanResult;
   selectedStopId?: string | null;
   onSelectStop: (id: string) => void;
-  onStartNavigation?: () => void;
+  footer?: ReactNode;
 };
 
 const rootClass = css({
@@ -82,49 +81,23 @@ const timelineWrapClass = css({
   py: '2.5',
 });
 
-const ctaClass = css({
-  flexShrink: 0,
-  px: '4',
-  py: '3.5',
-  borderTopWidth: 'hair',
-  borderTopColor: 'alpha.cream-12',
-});
-
-const ctaButtonClass = css({
-  width: 'full',
-  justifyContent: 'center',
-  fontSize: 'ui',
-  fontWeight: 'semibold',
-  gap: '2.5',
-});
-
-const ctaSubClass = css({
-  mt: '2',
-  fontFamily: 'mono',
-  fontSize: '2xs',
-  lineHeight: 'close',
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  textAlign: 'center',
-  color: 'cream.600',
-});
+function formatTotalDuration(minutes: number): string {
+  if (minutes < 60) return formatPlanMinutes(minutes);
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (remainder === 0) return `${hours}h`;
+  return `${hours}h ${remainder}m`;
+}
 
 export default function ItineraryDrawer({
   result,
   selectedStopId,
   onSelectStop,
-  onStartNavigation,
+  footer,
 }: ItineraryDrawerProps) {
   const { totals } = result;
   const totalDuration = totals.driveMinutes + totals.dwellMinutes;
-  const hours = Math.floor(totalDuration / 60);
-  const mins = totalDuration % 60;
-  const totalHours =
-    totalDuration >= 60
-      ? mins === 0
-        ? `${hours}h`
-        : `${hours}h ${mins}m`
-      : formatPlanMinutes(totalDuration);
+  const totalHours = formatTotalDuration(totalDuration);
 
   return (
     <Box className={cx(panel({ variant: 'drawer' }), rootClass)}>
@@ -149,20 +122,7 @@ export default function ItineraryDrawer({
         />
       </Box>
 
-      <Box className={ctaClass}>
-        <Button
-          type="button"
-          className={ctaButtonClass}
-          trailingIcon={<ArrowRight size={16} />}
-          onClick={onStartNavigation}
-          disabled={!onStartNavigation}
-        >
-          Start navigation
-        </Button>
-        <Box className={ctaSubClass}>
-          We&apos;ll sync to your car and start routing.
-        </Box>
-      </Box>
+      {footer}
     </Box>
   );
 }
