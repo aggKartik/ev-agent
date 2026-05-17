@@ -220,6 +220,7 @@ export type PlanToolProgressStatus = 'started' | 'completed' | 'failed';
 
 export type PlanStreamEvent =
   | { type: 'phase'; label: string; detail: string }
+  | { type: 'progress'; percent: number; label?: string; detail?: string }
   | { type: 'narration'; message: string }
   | {
       type: 'toolProgress';

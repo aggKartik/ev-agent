@@ -57,26 +57,29 @@ beforeEach(() => {
 
 describe('dispatchStreamEvent', () => {
   it('phase: updates currentPhase and appends a narration line', () => {
-    const phaseEvent = {
-      type: 'phase' as const,
-      label: 'Routing',
-      detail: 'Computing corridor',
-    };
-
-    dispatchStreamEvent(phaseEvent);
-
-    expect(usePlanFlowStore.getState()).toMatchObject({
-      currentPhase: {
-        label: phaseEvent.label,
-        detail: phaseEvent.detail,
-      },
-      narration: [
-        {
-          kind: 'phase',
-          text: `→ ${phaseEvent.label}`,
-        },
-      ],
+    dispatchStreamEvent({
+      type: 'phase',
+      label: 'Dispatch routing',
+      detail: 'Dispatching corridor update',
     });
+    const state = usePlanFlowStore.getState();
+    expect(state.currentPhase).toEqual({
+      label: 'Dispatch routing',
+      detail: 'Dispatching corridor update',
+    });
+    expect(state.narration).toHaveLength(1);
+    expect(state.narration[0].kind).toBe('phase');
+    expect(state.narration[0].text).toBe('→ Dispatch routing');
+  });
+
+  it('progress: stores explicit stream progress', () => {
+    dispatchStreamEvent({
+      type: 'progress',
+      percent: 55,
+      label: 'Agent started',
+    });
+
+    expect(usePlanFlowStore.getState().progressPercent).toBe(55);
   });
 
   it('narration: appends a single narration entry with the message', () => {
@@ -120,6 +123,7 @@ describe('dispatchStreamEvent', () => {
     const state = usePlanFlowStore.getState();
     expect(state.status).toBe('ready');
     expect(state.result).toBe(result);
+    expect(state.progressPercent).toBe(100);
   });
 
   it('error: routes through failPlanning with the supplied message', () => {

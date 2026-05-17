@@ -77,6 +77,7 @@ describe('usePlanFlowStore', () => {
       expect(next.narration).toEqual([]);
       expect(next.streamedStops).toEqual([]);
       expect(next.lastPlanningError).toBeNull();
+      expect(next.progressPercent).toBe(6);
     });
   });
 
@@ -180,6 +181,21 @@ describe('usePlanFlowStore', () => {
     });
   });
 
+  describe('setProgress', () => {
+    it('clamps progress and never lets it move backward', () => {
+      usePlanFlowStore.getState().startPlanning(baseRequest);
+
+      usePlanFlowStore.getState().setProgress(42.6);
+      expect(usePlanFlowStore.getState().progressPercent).toBe(43);
+
+      usePlanFlowStore.getState().setProgress(20);
+      expect(usePlanFlowStore.getState().progressPercent).toBe(43);
+
+      usePlanFlowStore.getState().setProgress(150);
+      expect(usePlanFlowStore.getState().progressPercent).toBe(100);
+    });
+  });
+
   describe('appendStop', () => {
     it('appends a stop and ignores duplicates by id', () => {
       const stop = makeStop('s1');
@@ -203,6 +219,7 @@ describe('usePlanFlowStore', () => {
       expect(state.result).toBe(result);
       // First activity stop should be selected.
       expect(state.selectedStopId).toBe('act-1');
+      expect(state.progressPercent).toBe(100);
     });
 
     it('falls back to the first stop when no activity stop exists', () => {
@@ -224,6 +241,7 @@ describe('usePlanFlowStore', () => {
       expect(state.activeRequest).toBeNull();
       expect(state.result).toBeNull();
       expect(state.lastPlanningError).toBe('boom');
+      expect(state.progressPercent).toBe(0);
     });
 
     it('uses a default message when none is provided', () => {
@@ -248,6 +266,7 @@ describe('usePlanFlowStore', () => {
       expect(state.narration).toEqual([]);
       expect(state.streamedStops).toEqual([]);
       expect(state.lastPlanningError).toBeNull();
+      expect(state.progressPercent).toBe(0);
     });
   });
 });

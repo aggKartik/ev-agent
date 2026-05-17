@@ -5,9 +5,6 @@ import {
   reverseGeocodeViaMapbox,
 } from '#/server/capabilities/addresses/adapters/mapbox/retrieve';
 import { suggestAddressesViaMapbox } from '#/server/capabilities/addresses/adapters/mapbox/suggest';
-import { runPlanAgent } from '#/server/capabilities/ai/orchestration/planAgent';
-import { computeEvRoute } from '#/server/capabilities/evRouting/domain/computeEvRoute';
-import type { EvRoutePlan } from '#/server/capabilities/evRouting/domain/types';
 import { resolveEnergyProfile } from '#/server/capabilities/vehicles/domain/resolveEnergyProfile';
 import { getVehicle } from '#/server/capabilities/vehicles/store';
 import { liveBatteryPercentForPlanContext } from '#/server/modules/plan/liveBatteryForContext';
@@ -18,49 +15,18 @@ import {
   addressSuggestSchema,
   type PlanAddress,
   type PlanContextResponse,
-  type PlanRequest,
   type PlanStreamEvent,
   planRequestSchema,
 } from '#/shared/plan/contracts';
 import { getPlanActivityCatalog } from '#/shared/plan/helpers';
+import { PLAN_START_PROGRESS_PERCENT } from '#/shared/plan/progress';
 import type { VehicleEnergyProfile } from '#/shared/vehicles/contracts';
 import { acquirePlanStreamSlot, PLAN_STREAM_TIMEOUT_MS } from './streamGuards';
-
-type Emit = (event: PlanStreamEvent) => void;
-
-function emitTomTomPrefetchResult(emit: Emit, evRoutePlan: EvRoutePlan): void {
-  const chargeCount = evRoutePlan.chargeStopCandidates.length;
-  const chargeNoun = chargeCount === 1 ? 'charge anchor' : 'charge anchors';
-  const roundedMiles = Math.round(evRoutePlan.totalDistanceMiles);
-  const message =
-    evRoutePlan.source === 'tomtom_ld_ev'
-      ? `TomTom prefetch complete: grounded ${chargeCount} ${chargeNoun} along ${roundedMiles} mi.`
-      : `TomTom prefetch skipped; using fallback corridor with ${chargeCount} ${chargeNoun}.`;
-  emit({ type: 'narration', message });
-}
-
-async function runAgentAfterPrefetch({
-  input,
-  signal,
-  emit,
-}: {
-  input: PlanRequest;
-  signal: AbortSignal;
-  emit: Emit;
-}) {
-  let evRoutePlan: EvRoutePlan | undefined;
-  try {
-    evRoutePlan = await computeEvRoute(input, signal);
-    emitTomTomPrefetchResult(emit, evRoutePlan);
-  } catch {
-    emit({
-      type: 'narration',
-      message:
-        'TomTom prefetch failed; falling back to map search and charger pairing.',
-    });
-  }
-  return runPlanAgent(input, emit, { signal, evRoutePlan });
-}
+import { runPlanAgentWithProgress } from './streamProgress';
+import {
+  createProgressEmitter,
+  PREFLIGHT_EVENTS,
+} from './streamProgressEvents';
 
 export const planRouter = router({
   /**
@@ -137,25 +103,20 @@ export const planRouter = router({
       );
 
       const emit = (event: PlanStreamEvent) => ee.emit('event', event);
+      const progress = createProgressEmitter(emit);
 
       let id = 0;
-      id += 1;
-      yield tracked(String(id), {
-        type: 'phase',
-        label: 'Route preflight',
-        detail: 'Grounding EV corridor and charge anchors',
-      } satisfies PlanStreamEvent);
-      id += 1;
-      yield tracked(String(id), {
-        type: 'narration',
-        message:
-          'Computing EV route corridor (TomTom prefetch may take a few seconds)…',
-      } satisfies PlanStreamEvent);
+      for (const event of PREFLIGHT_EVENTS) {
+        id += 1;
+        yield tracked(String(id), event);
+      }
+      progress.seedProgress(PLAN_START_PROGRESS_PERCENT);
 
-      const agentDone = runAgentAfterPrefetch({
-        input,
+      const agentDone = runPlanAgentWithProgress({
+        request: input,
         signal: iterSignal,
-        emit,
+        emitAgentEvent: progress.emitAgentEvent,
+        emitProgress: progress.emitProgress,
       })
         .catch(() => undefined)
         .finally(() => finished.abort());
