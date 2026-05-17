@@ -321,6 +321,9 @@ function AddressInputRow(props: {
   kind: AddressFieldKind;
   listboxId: string;
   onUseCar: (() => void) | undefined;
+  useCarDisabled: boolean;
+  useCarLabel: string;
+  useCarLoading: boolean;
   value: string;
 }) {
   const {
@@ -331,6 +334,9 @@ function AddressInputRow(props: {
     kind,
     listboxId,
     onUseCar,
+    useCarDisabled,
+    useCarLabel,
+    useCarLoading,
     value,
   } = props;
   return (
@@ -352,20 +358,39 @@ function AddressInputRow(props: {
         aria-controls={expanded ? listboxId : undefined}
         aria-activedescendant={activeSuggestionId}
       />
-      {onUseCar ? <UseCarButton onUseCar={onUseCar} /> : null}
+      {onUseCar ? (
+        <UseCarButton
+          disabled={useCarDisabled}
+          label={useCarLabel}
+          loading={useCarLoading}
+          onUseCar={onUseCar}
+        />
+      ) : null}
     </Box>
   );
 }
 
-function UseCarButton({ onUseCar }: { onUseCar: () => void }) {
+function UseCarButton({
+  disabled,
+  label,
+  loading,
+  onUseCar,
+}: {
+  disabled: boolean;
+  label: string;
+  loading: boolean;
+  onUseCar: () => void;
+}) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="sm"
       iconOnly
-      aria-label="Use car location"
+      aria-label={label}
       className={addrActionClass}
+      disabled={disabled}
+      loading={loading}
       onClick={onUseCar}
     >
       <Icon icon={Crosshair} size="sm" />
@@ -520,6 +545,9 @@ export function PlanAddressField({
         kind={kind}
         listboxId={listboxId}
         onUseCar={onUseCar}
+        useCarDisabled={useCarDisabled}
+        useCarLabel={useCarLabel}
+        useCarLoading={useCarLoading}
         value={value}
       />
       {suggestionState.expanded ? (

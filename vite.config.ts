@@ -10,7 +10,7 @@ const config = defineConfig(({ mode }) => ({
     dedupe: ['react', 'react-dom'],
   },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       // Istanbul-format because fallow's CRAP scoring reads
@@ -20,7 +20,7 @@ const config = defineConfig(({ mode }) => ({
       reportsDirectory: 'coverage',
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'src/**/*.test.ts',
+        'src/**/*.test.{ts,tsx}',
         'src/test/**',
         'src/routeTree.gen.ts',
         'src/server/platform/db/migrations/**',
