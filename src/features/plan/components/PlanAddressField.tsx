@@ -1,10 +1,10 @@
 import { Crosshair, Flag, MapPin } from 'lucide-react';
 import {
+  type FocusEvent,
   type KeyboardEvent,
   useCallback,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -14,6 +14,7 @@ import Icon from '#/components/ui/Icon';
 import Input from '#/components/ui/Input';
 import type { Coordinate } from '#/lib/geoTypes';
 import { trpc } from '#/lib/trpc';
+import type { AddressSuggestion } from '#/server/capabilities/addresses/domain/types';
 import type { PlanAddress } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
 import { panel } from '#/styled-system/recipes/panel';
@@ -105,6 +106,396 @@ export type PlanAddressFieldProps = {
   useCarLabel?: string;
 };
 
+type AddressFieldKind = PlanAddressFieldProps['kind'];
+
+type SuggestionState = {
+  expanded: boolean;
+  suggestions: AddressSuggestion[];
+  resolvedActiveIndex: number;
+  activeSuggestionId: string | undefined;
+  showLoadingRow: boolean;
+};
+
+type FieldEventHandlers = {
+  onBlur: (event: FocusEvent<HTMLDivElement>) => void;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus: () => void;
+  onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+};
+
+function useDebouncedQuery(value: string): string {
+  const [debouncedQuery, setDebouncedQuery] = useState(value);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedQuery(value);
+    }, SUGGEST_DEBOUNCE_MS);
+    return () => window.clearTimeout(handle);
+  }, [value]);
+
+  return debouncedQuery;
+}
+
+function useRetrieveAddress(onSelect: (address: PlanAddress) => void) {
+  const utils = trpc.useUtils();
+  const sessionTokenRef = useRef<string>(generateSessionToken());
+
+  const retrieveAndSelect = useCallback(
+    async (providerId: string) => {
+      const sessionToken = sessionTokenRef.current;
+      try {
+        const address = await utils.plan.retrieveAddress.fetch({
+          providerId,
+          sessionToken,
+        });
+        // Mapbox bills `retrieve` per session — rotate the token after the
+        // session closes so the next focus opens a new (free) suggest run.
+        sessionTokenRef.current = generateSessionToken();
+        if (address) onSelect(address);
+      } catch (err) {
+        console.error('plan.retrieveAddress failed', err);
+      }
+    },
+    [onSelect, utils.plan.retrieveAddress],
+  );
+
+  return { retrieveAndSelect, sessionTokenRef };
+}
+
+function resolveActiveIndex(
+  suggestions: AddressSuggestion[],
+  activeProviderId: string | undefined,
+): number {
+  if (suggestions.length === 0) return -1;
+  const activeProviderIndex = activeProviderId
+    ? suggestions.findIndex(
+        (suggestion) => suggestion.providerId === activeProviderId,
+      )
+    : -1;
+  return activeProviderIndex >= 0 ? activeProviderIndex : 0;
+}
+
+function useAddressSuggestions(args: {
+  activeProviderId: string | undefined;
+  debouncedQuery: string;
+  focused: boolean;
+  listboxId: string;
+  proximity: Coordinate | undefined;
+  sessionToken: string;
+  value: string;
+}): SuggestionState {
+  const {
+    activeProviderId,
+    debouncedQuery,
+    focused,
+    listboxId,
+    proximity,
+    sessionToken,
+    value,
+  } = args;
+  const rawQueryReady = value.trim().length >= 2;
+  const debouncedQueryReady = debouncedQuery.trim().length >= 2;
+  const expanded = focused && rawQueryReady;
+  const suggestQuery = trpc.plan.suggestAddresses.useQuery(
+    { query: debouncedQuery, sessionToken, proximity },
+    {
+      enabled: expanded && debouncedQueryReady,
+      staleTime: 60_000,
+      placeholderData: (previousData) => previousData,
+    },
+  );
+  const suggestions = expanded ? (suggestQuery.data ?? []) : [];
+  const resolvedActiveIndex = resolveActiveIndex(suggestions, activeProviderId);
+  const activeSuggestionId =
+    resolvedActiveIndex >= 0
+      ? `${listboxId}-${resolvedActiveIndex}`
+      : undefined;
+  const showLoadingRow =
+    expanded &&
+    suggestions.length === 0 &&
+    (suggestQuery.isFetching || debouncedQuery.trim() !== value.trim());
+
+  return {
+    expanded,
+    suggestions,
+    resolvedActiveIndex,
+    activeSuggestionId,
+    showLoadingRow,
+  };
+}
+
+function useFieldEventHandlers(args: {
+  expanded: boolean;
+  onChange: (value: string) => void;
+  resolvedActiveIndex: number;
+  retrieveAndSelect: (providerId: string) => void;
+  setActiveProviderId: (providerId: string) => void;
+  setFocused: (focused: boolean) => void;
+  suggestions: AddressSuggestion[];
+}): FieldEventHandlers {
+  const {
+    expanded,
+    onChange,
+    resolvedActiveIndex,
+    retrieveAndSelect,
+    setActiveProviderId,
+    setFocused,
+    suggestions,
+  } = args;
+  const onBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocused = event.relatedTarget;
+    if (nextFocused && event.currentTarget.contains(nextFocused)) return;
+    setFocused(false);
+  };
+  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFocused(true);
+    onChange(event.target.value);
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape' && expanded) {
+      setFocused(false);
+      event.currentTarget.blur();
+      return;
+    }
+    handleSuggestionKey(event, {
+      resolvedActiveIndex,
+      retrieveAndSelect,
+      setActiveProviderId,
+      setFocused,
+      suggestions,
+    });
+  };
+
+  return {
+    onBlur,
+    onChange: onInputChange,
+    onFocus: () => setFocused(true),
+    onKeyDown,
+  };
+}
+
+function handleSuggestionKey(
+  event: KeyboardEvent<HTMLInputElement>,
+  args: {
+    resolvedActiveIndex: number;
+    retrieveAndSelect: (providerId: string) => void;
+    setActiveProviderId: (providerId: string) => void;
+    setFocused: (focused: boolean) => void;
+    suggestions: AddressSuggestion[];
+  },
+) {
+  const {
+    resolvedActiveIndex,
+    retrieveAndSelect,
+    setActiveProviderId,
+    setFocused,
+    suggestions,
+  } = args;
+  if (suggestions.length === 0) return;
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    setActiveProviderId(
+      suggestions[(resolvedActiveIndex + 1) % suggestions.length].providerId,
+    );
+  }
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    setActiveProviderId(
+      suggestions[
+        (resolvedActiveIndex - 1 + suggestions.length) % suggestions.length
+      ].providerId,
+    );
+  }
+  if (event.key === 'Enter' && resolvedActiveIndex >= 0) {
+    event.preventDefault();
+    void retrieveAndSelect(suggestions[resolvedActiveIndex].providerId);
+    setFocused(false);
+  }
+}
+
+function AddressInputRow(props: {
+  activeSuggestionId: string | undefined;
+  expanded: boolean;
+  focused: boolean;
+  handlers: FieldEventHandlers;
+  kind: AddressFieldKind;
+  listboxId: string;
+  onUseCar: (() => void) | undefined;
+  useCarDisabled: boolean;
+  useCarLabel: string;
+  useCarLoading: boolean;
+  value: string;
+}) {
+  const {
+    activeSuggestionId,
+    expanded,
+    focused,
+    handlers,
+    kind,
+    listboxId,
+    onUseCar,
+    useCarDisabled,
+    useCarLabel,
+    useCarLoading,
+    value,
+  } = props;
+  return (
+    <Box className={planFormInputWrapClass} data-focused={focused}>
+      <Input
+        value={value}
+        className={planFormTextInputClass}
+        placeholder={
+          kind === 'start'
+            ? 'Address, place, or coordinates'
+            : 'Where are you headed?'
+        }
+        onFocus={handlers.onFocus}
+        onChange={handlers.onChange}
+        onKeyDown={handlers.onKeyDown}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={expanded}
+        aria-controls={expanded ? listboxId : undefined}
+        aria-activedescendant={activeSuggestionId}
+      />
+      {onUseCar ? (
+        <UseCarButton
+          disabled={useCarDisabled}
+          label={useCarLabel}
+          loading={useCarLoading}
+          onUseCar={onUseCar}
+        />
+      ) : null}
+    </Box>
+  );
+}
+
+function UseCarButton({
+  disabled,
+  label,
+  loading,
+  onUseCar,
+}: {
+  disabled: boolean;
+  label: string;
+  loading: boolean;
+  onUseCar: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      iconOnly
+      aria-label={label}
+      className={addrActionClass}
+      disabled={disabled}
+      loading={loading}
+      onClick={onUseCar}
+    >
+      <Icon icon={Crosshair} size="sm" />
+    </Button>
+  );
+}
+
+function SuggestionsDropdown(props: {
+  kind: AddressFieldKind;
+  listboxId: string;
+  onActivate: (providerId: string) => void;
+  onHighlight: (providerId: string) => void;
+  resolvedActiveIndex: number;
+  showLoadingRow: boolean;
+  suggestions: AddressSuggestion[];
+}) {
+  const {
+    kind,
+    listboxId,
+    onActivate,
+    onHighlight,
+    resolvedActiveIndex,
+    showLoadingRow,
+    suggestions,
+  } = props;
+  const rowClasses = selectableRow({ variant: 'suggestion' });
+  return (
+    <Box
+      id={listboxId}
+      role="listbox"
+      className={cx(panel({ variant: 'dropdown' }), dropdownPositionClass)}
+    >
+      {showLoadingRow ? <LoadingSuggestionRow rowClasses={rowClasses} /> : null}
+      {suggestions.map((suggestion, index) => (
+        <SuggestionOption
+          key={suggestion.providerId}
+          id={`${listboxId}-${index}`}
+          kind={kind}
+          rowClasses={rowClasses}
+          selected={resolvedActiveIndex === index}
+          suggestion={suggestion}
+          onActivate={onActivate}
+          onHighlight={onHighlight}
+        />
+      ))}
+    </Box>
+  );
+}
+
+function LoadingSuggestionRow({
+  rowClasses,
+}: {
+  rowClasses: ReturnType<typeof selectableRow>;
+}) {
+  return (
+    <Box className={rowClasses.row} role="status">
+      <Box className={rowClasses.body}>Loading suggestions…</Box>
+    </Box>
+  );
+}
+
+function SuggestionOption(props: {
+  id: string;
+  kind: AddressFieldKind;
+  onActivate: (providerId: string) => void;
+  onHighlight: (providerId: string) => void;
+  rowClasses: ReturnType<typeof selectableRow>;
+  selected: boolean;
+  suggestion: AddressSuggestion;
+}) {
+  const {
+    id,
+    kind,
+    onActivate,
+    onHighlight,
+    rowClasses,
+    selected,
+    suggestion,
+  } = props;
+  return (
+    <Button
+      type="button"
+      unstyled
+      contentMode="custom"
+      id={id}
+      role="option"
+      className={rowClasses.row}
+      aria-selected={selected}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        onActivate(suggestion.providerId);
+      }}
+      onMouseEnter={() => onHighlight(suggestion.providerId)}
+    >
+      <Box className={rowClasses.icon}>
+        <Icon icon={kind === 'start' ? MapPin : Flag} size="sm" />
+      </Box>
+      <Box className={rowClasses.body}>
+        <Box className={rowClasses.primary}>{suggestion.primary}</Box>
+        <Box className={rowClasses.secondary}>{suggestion.secondary}</Box>
+      </Box>
+    </Button>
+  );
+}
+
 export function PlanAddressField({
   label,
   value,
@@ -121,192 +512,76 @@ export function PlanAddressField({
   const inputId = useId();
   const listboxId = `${inputId}-suggestions`;
   const [focused, setFocused] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const [debouncedQuery, setDebouncedQuery] = useState(value);
-  const sessionTokenRef = useRef<string>(generateSessionToken());
-
-  // Debounce typing -> Mapbox suggest call so we don't bill on every keystroke.
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      setDebouncedQuery(value);
-    }, SUGGEST_DEBOUNCE_MS);
-    return () => window.clearTimeout(handle);
-  }, [value]);
-
-  const shouldFetchSuggestions = focused && debouncedQuery.trim().length >= 2;
-
-  const suggestQuery = trpc.plan.suggestAddresses.useQuery(
-    {
-      query: debouncedQuery,
-      sessionToken: sessionTokenRef.current,
-      proximity,
-    },
-    {
-      enabled: shouldFetchSuggestions,
-      staleTime: 60_000,
-    },
-  );
-
-  const suggestions = useMemo(() => {
-    if (!shouldFetchSuggestions) return [];
-    return suggestQuery.data ?? [];
-  }, [shouldFetchSuggestions, suggestQuery.data]);
-
-  const expanded = focused && suggestions.length > 0;
-  const resolvedActiveIndex = expanded
-    ? Math.min(Math.max(activeIndex, 0), suggestions.length - 1)
-    : -1;
-  const activeSuggestionId =
-    resolvedActiveIndex >= 0
-      ? `${listboxId}-${resolvedActiveIndex}`
-      : undefined;
-
-  useEffect(() => {
-    setActiveIndex(expanded ? 0 : -1);
-  }, [expanded]);
-
-  const utils = trpc.useUtils();
-
-  const retrieveAndSelect = useCallback(
-    async (providerId: string) => {
-      const sessionToken = sessionTokenRef.current;
-      try {
-        const address = await utils.plan.retrieveAddress.fetch({
-          providerId,
-          sessionToken,
-        });
-        // Mapbox bills `retrieve` per session — rotate the token after the
-        // session closes so the next focus opens a new (free) suggest run.
-        sessionTokenRef.current = generateSessionToken();
-        if (address) {
-          onSelect(address);
-        }
-      } catch (err) {
-        console.error('plan.retrieveAddress failed', err);
-      }
-    },
-    [onSelect, utils.plan.retrieveAddress],
-  );
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!expanded) return;
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setActiveIndex((current) => (current + 1) % suggestions.length);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setActiveIndex(
-        (current) => (current - 1 + suggestions.length) % suggestions.length,
-      );
-      return;
-    }
-
-    if (event.key === 'Enter' && resolvedActiveIndex >= 0) {
-      event.preventDefault();
-      const target = suggestions[resolvedActiveIndex];
-      void retrieveAndSelect(target.providerId);
-      setFocused(false);
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.currentTarget.blur();
-    }
-  };
-
-  const fieldHeaderClasses = sectionHeader({ marker: kind });
-  const rowClasses = selectableRow({ variant: 'suggestion' });
+  const [activeProviderId, setActiveProviderId] = useState<string>();
+  const debouncedQuery = useDebouncedQuery(value);
+  const { retrieveAndSelect, sessionTokenRef } = useRetrieveAddress(onSelect);
+  const suggestionState = useAddressSuggestions({
+    activeProviderId,
+    debouncedQuery,
+    focused,
+    listboxId,
+    proximity,
+    sessionToken: sessionTokenRef.current,
+    value,
+  });
+  const handlers = useFieldEventHandlers({
+    expanded: suggestionState.expanded,
+    onChange,
+    resolvedActiveIndex: suggestionState.resolvedActiveIndex,
+    retrieveAndSelect,
+    setActiveProviderId,
+    setFocused,
+    suggestions: suggestionState.suggestions,
+  });
 
   return (
-    <Box className={planAddressFieldRootClass}>
-      <Box className={fieldHeaderClasses.label}>
-        <Box className={fieldHeaderClasses.dot} />
-        <span>{label}</span>
-        {action}
-      </Box>
-      <Box className={planFormInputWrapClass} data-focused={focused}>
-        <Input
-          value={value}
-          className={planFormTextInputClass}
-          placeholder={
-            kind === 'start'
-              ? 'Address, place, or coordinates'
-              : 'Where are you headed?'
-          }
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 160)}
-          onChange={(event) => {
-            // Treat typing as evidence of focus too — assistive tech and
-            // some test runners can update the value without firing focus
-            // events first, which would otherwise prevent the suggestions
-            // dropdown from opening.
-            setFocused(true);
-            onChange(event.target.value);
+    <Box className={planAddressFieldRootClass} onBlur={handlers.onBlur}>
+      <FieldLabel action={action} kind={kind} label={label} />
+      <AddressInputRow
+        activeSuggestionId={suggestionState.activeSuggestionId}
+        expanded={suggestionState.expanded}
+        focused={focused}
+        handlers={handlers}
+        kind={kind}
+        listboxId={listboxId}
+        onUseCar={onUseCar}
+        useCarDisabled={useCarDisabled}
+        useCarLabel={useCarLabel}
+        useCarLoading={useCarLoading}
+        value={value}
+      />
+      {suggestionState.expanded ? (
+        <SuggestionsDropdown
+          kind={kind}
+          listboxId={listboxId}
+          onActivate={(providerId) => {
+            void retrieveAndSelect(providerId);
+            setFocused(false);
           }}
-          onKeyDown={handleKeyDown}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={expanded}
-          aria-controls={expanded ? listboxId : undefined}
-          aria-activedescendant={activeSuggestionId}
+          onHighlight={setActiveProviderId}
+          resolvedActiveIndex={suggestionState.resolvedActiveIndex}
+          showLoadingRow={suggestionState.showLoadingRow}
+          suggestions={suggestionState.suggestions}
         />
-        {onUseCar ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            iconOnly
-            aria-label={useCarLabel}
-            className={addrActionClass}
-            disabled={useCarDisabled}
-            loading={useCarLoading}
-            onClick={onUseCar}
-          >
-            <Icon icon={Crosshair} size="sm" />
-          </Button>
-        ) : null}
-      </Box>
-
-      {expanded ? (
-        <Box
-          id={listboxId}
-          role="listbox"
-          className={cx(panel({ variant: 'dropdown' }), dropdownPositionClass)}
-        >
-          {suggestions.map((suggestion, index) => (
-            <Button
-              key={suggestion.providerId}
-              type="button"
-              unstyled
-              contentMode="custom"
-              id={`${listboxId}-${index}`}
-              role="option"
-              className={rowClasses.row}
-              aria-selected={resolvedActiveIndex === index}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                void retrieveAndSelect(suggestion.providerId);
-                setFocused(false);
-              }}
-              onMouseEnter={() => setActiveIndex(index)}
-            >
-              <Box className={rowClasses.icon}>
-                <Icon icon={kind === 'start' ? MapPin : Flag} size="sm" />
-              </Box>
-              <Box className={rowClasses.body}>
-                <Box className={rowClasses.primary}>{suggestion.primary}</Box>
-                <Box className={rowClasses.secondary}>
-                  {suggestion.secondary}
-                </Box>
-              </Box>
-            </Button>
-          ))}
-        </Box>
       ) : null}
+    </Box>
+  );
+}
+function FieldLabel({
+  action,
+  kind,
+  label,
+}: {
+  action: React.ReactNode;
+  kind: AddressFieldKind;
+  label: string;
+}) {
+  const fieldHeaderClasses = sectionHeader({ marker: kind });
+  return (
+    <Box className={fieldHeaderClasses.label}>
+      <Box className={fieldHeaderClasses.dot} />
+      <span>{label}</span>
+      {action}
     </Box>
   );
 }
