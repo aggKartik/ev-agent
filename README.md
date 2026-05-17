@@ -200,6 +200,44 @@ Stop it with:
 docker compose -f docker-compose.dev.yml down
 ```
 
+### Tesla Command Proxy
+
+Send to Tesla uses Tesla's official vehicle-command proxy because supported
+vehicle commands must be signed with this app's enrolled virtual key before the
+car will execute them. The proxy is not hosted by Tesla for us; run it locally
+or deploy it behind your own HTTPS URL, then point `TESLA_COMMAND_PROXY_URL` at
+that base URL.
+
+The repo includes a Docker Compose file for Tesla's official image:
+
+```bash
+docker compose -f docker-compose.tesla-proxy.yml up -d
+```
+
+It expects local proxy material in `tesla-proxy-config/`:
+
+```txt
+tesla-proxy-config/
+├── fleet-key.pem
+├── tls-cert.pem
+└── tls-key.pem
+```
+
+`fleet-key.pem` is the command private key whose public key is registered with
+Tesla for this app's developer domain. The TLS files are the certificate and key
+served by the proxy. For local development, the proxy listens on
+`https://localhost:4443`, so set:
+
+```bash
+TESLA_COMMAND_PROXY_URL=https://localhost:4443
+```
+
+Stop the local proxy with:
+
+```bash
+docker compose -f docker-compose.tesla-proxy.yml down
+```
+
 ## 🔧 Adding New Features
 
 ### Adding a New tRPC Router
