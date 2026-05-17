@@ -13,6 +13,12 @@
       "skillPath": "skills/engineering/diagnose/SKILL.md",
       "computedHash": "15939a26f86edec2d4862042b8564e5a062cb81d04e047a0cea6305c8830b5f5"
     },
+    "fallow": {
+      "source": "fallow-rs/fallow-skills",
+      "sourceType": "github",
+      "skillPath": "fallow/skills/fallow/SKILL.md",
+      "computedHash": "588971b1378fc929e6cbfa9553fbdae781e5d958b93701f1cbe6ac20ad07dfe3"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
