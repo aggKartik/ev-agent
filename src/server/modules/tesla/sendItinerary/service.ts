@@ -8,6 +8,7 @@ import { getFreshAccessToken, getLinkedStatus } from '#/server/oauth/store';
 import { pickTeslaVehicleForIdentity } from '#/shared/vehicles/teslaPick';
 import { loadTeslaFleetVehiclesProtected } from '../loadFleetTrpc';
 import type { TeslaAuthedContext } from '../types';
+import { getSendItineraryCapability } from './capability';
 import type { SendItineraryInput, SendItineraryResult } from './contracts';
 import { mapTeslaCommandError } from './errors';
 import { itineraryStopsToTeslaWaypoints } from './waypoints';
@@ -71,6 +72,16 @@ export async function sendItineraryToTesla(
   ctx: TeslaAuthedContext,
   input: SendItineraryInput,
 ): Promise<SendItineraryResult> {
+  const capability = getSendItineraryCapability();
+  if (!capability.available) {
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message:
+        capability.reason ??
+        'Send to Tesla is not enabled for this deployment.',
+    });
+  }
+
   await assertTeslaCommandScope(ctx);
   const target = await resolveCommandVehicle(ctx, input.vehicleId);
   const waypoints = itineraryStopsToTeslaWaypoints(input.result);

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { trpc } from '#/lib/trpc';
 import type { PlanResult } from '#/shared/plan/contracts';
 
@@ -7,6 +7,18 @@ export type SendItineraryToTeslaState =
   | 'pending'
   | 'success'
   | 'error';
+
+type CapabilityState = {
+  available: boolean;
+  reason: string | null;
+} | null;
+
+type SendMutation = {
+  error: { message: string } | null;
+  isError: boolean;
+  isPending: boolean;
+  mutate: (input: { result: PlanResult }) => void;
+};
 
 function mutationState(args: {
   isPending: boolean;
@@ -19,8 +31,47 @@ function mutationState(args: {
   return 'idle';
 }
 
+function canSendToTesla(capability: CapabilityState): boolean {
+  return capability?.available === true;
+}
+
+function mutationErrorMessage(
+  mutation: Pick<SendMutation, 'error' | 'isError'>,
+): string | null {
+  if (!mutation.isError) return null;
+  return mutation.error?.message ?? null;
+}
+
+function capabilityReason(capability: CapabilityState): string | null {
+  return capability?.reason ?? null;
+}
+
+function sendToTeslaMessage(args: {
+  capabilityReason: string | null;
+  mutationErrorMessage: string | null;
+  successMessage: string | null;
+}): string {
+  return (
+    args.mutationErrorMessage ??
+    args.capabilityReason ??
+    args.successMessage ??
+    'Send this itinerary to your linked Tesla.'
+  );
+}
+
+function submitItineraryToTesla(
+  result: PlanResult | null,
+  mutation: Pick<SendMutation, 'isPending' | 'mutate'>,
+): void {
+  if (!result || mutation.isPending) return;
+  mutation.mutate({ result });
+}
+
 export function useSendItineraryToTesla(result: PlanResult | null) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const capability = trpc.tesla.sendItineraryCapability.useQuery(undefined, {
+    staleTime: 60_000,
+  });
   const mutation = trpc.tesla.sendItinerary.useMutation({
     onMutate: () => {
       setSuccessMessage(null);
@@ -33,8 +84,7 @@ export function useSendItineraryToTesla(result: PlanResult | null) {
   });
 
   const send = useCallback(() => {
-    if (!result || mutation.isPending) return;
-    mutation.mutate({ result });
+    submitItineraryToTesla(result, mutation);
   }, [mutation, result]);
 
   const state = mutationState({
@@ -43,13 +93,15 @@ export function useSendItineraryToTesla(result: PlanResult | null) {
     successMessage,
   });
 
-  const message = useMemo(() => {
-    if (mutation.isError) return mutation.error.message;
-    return successMessage ?? 'Send this itinerary to your linked Tesla.';
-  }, [mutation.error, mutation.isError, successMessage]);
+  const message = sendToTeslaMessage({
+    capabilityReason: capabilityReason(capability.data ?? null),
+    mutationErrorMessage: mutationErrorMessage(mutation),
+    successMessage,
+  });
 
   return {
     send,
+    canSend: canSendToTesla(capability.data ?? null),
     state,
     message,
     isPending: mutation.isPending,

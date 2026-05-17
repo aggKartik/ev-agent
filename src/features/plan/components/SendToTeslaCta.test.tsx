@@ -18,6 +18,30 @@ describe('SendToTeslaCta', () => {
     expect(onSendToTesla).toHaveBeenCalledOnce();
   });
 
+  it('disables the CTA when no send handler is available', () => {
+    const onSendToTesla = vi.fn();
+    render(
+      <SendToTeslaCta
+        sendToTeslaState="idle"
+        sendToTeslaMessage="Send to Tesla is disabled until this deployment verifies command proxy support for navigation waypoints."
+      />,
+    );
+
+    const button = screen.getByRole('button', {
+      name: /send to tesla/i,
+    }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+
+    fireEvent.click(button);
+
+    expect(onSendToTesla).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(
+        'Send to Tesla is disabled until this deployment verifies command proxy support for navigation waypoints.',
+      ),
+    ).toBeTruthy();
+  });
+
   it('shows pending and success/error feedback from the send hook', () => {
     const { rerender } = render(
       <SendToTeslaCta

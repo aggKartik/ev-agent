@@ -64,6 +64,10 @@ export function teslaCommandProxyUrl(): string | null {
   return env.TESLA_COMMAND_PROXY_URL?.replace(/\/+$/, '') ?? null;
 }
 
+export function teslaSendItineraryEnabled(): boolean {
+  return env.TESLA_SEND_ITINERARY_ENABLED;
+}
+
 export function teslaAudience(region: TeslaRegion = teslaRegion()): string {
   return teslaFleetBaseUrl(region);
 }

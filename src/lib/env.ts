@@ -46,6 +46,11 @@ export const envSchema = z.object({
       },
     )
     .optional(),
+  /** Enables Send to Tesla after the configured command proxy is verified to support navigation_waypoints_request. */
+  TESLA_SEND_ITINERARY_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 
   // Plan agent LLM. Gemini provider; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.

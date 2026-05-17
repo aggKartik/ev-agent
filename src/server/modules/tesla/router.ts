@@ -5,6 +5,7 @@ import {
   listTeslaVehicles,
   refreshTeslaVehicles,
 } from './fleetProcedures';
+import { getSendItineraryCapability } from './sendItinerary/capability';
 import { sendItineraryInputSchema } from './sendItinerary/contracts';
 import { sendItineraryToTesla } from './sendItinerary/service';
 
@@ -19,6 +20,10 @@ export const teslaRouter = router({
 
   vehiclePrefill: protectedProcedure.query(({ ctx }) =>
     getTeslaVehiclePrefill(ctx),
+  ),
+
+  sendItineraryCapability: protectedProcedure.query(() =>
+    getSendItineraryCapability(),
   ),
 
   sendItinerary: protectedProcedure

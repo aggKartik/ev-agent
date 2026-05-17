@@ -69,7 +69,7 @@ export default function ItineraryStage() {
           onSelectStop={selectStop}
           footer={
             <SendToTeslaCta
-              onSendToTesla={sendToTesla.send}
+              onSendToTesla={sendToTesla.canSend ? sendToTesla.send : undefined}
               sendToTeslaState={sendToTesla.state}
               sendToTeslaMessage={sendToTesla.message}
             />

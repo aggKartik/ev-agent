@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   getLinkedStatus: vi.fn(),
   getFreshAccessToken: vi.fn(),
   sendWaypoints: vi.fn(),
+  getCapability: vi.fn(),
 }));
 
 vi.mock('#/server/capabilities/vehicles/store', () => ({
@@ -31,6 +32,10 @@ vi.mock('#/server/integrations/tesla/commands/navigation', () => ({
   sendTeslaNavigationWaypoints: mocks.sendWaypoints,
 }));
 
+vi.mock('./capability', () => ({
+  getSendItineraryCapability: mocks.getCapability,
+}));
+
 function ctx() {
   return {
     clerkUserId: 'clerk_123',
@@ -48,7 +53,12 @@ describe('sendItineraryToTesla', () => {
     mocks.getLinkedStatus.mockReset();
     mocks.getFreshAccessToken.mockReset();
     mocks.sendWaypoints.mockReset();
+    mocks.getCapability.mockReset();
 
+    mocks.getCapability.mockReturnValue({
+      available: true,
+      reason: null,
+    });
     mocks.getLinkedStatus.mockResolvedValue({
       linked: true,
       scope: 'openid offline_access vehicle_device_data vehicle_cmds',
@@ -69,6 +79,25 @@ describe('sendItineraryToTesla', () => {
     mocks.sendWaypoints.mockResolvedValue({
       command: 'navigation_waypoints_request',
     });
+  });
+
+  it('rejects before dispatch when Send to Tesla is disabled', async () => {
+    mocks.getCapability.mockReturnValue({
+      available: false,
+      reason:
+        'Send to Tesla is disabled until this deployment verifies command proxy support for navigation waypoints.',
+    });
+
+    await expect(
+      sendItineraryToTesla(ctx(), { result: makePlanResult() }),
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message:
+        'Send to Tesla is disabled until this deployment verifies command proxy support for navigation waypoints.',
+    } satisfies Partial<TRPCError>);
+
+    expect(mocks.getLinkedStatus).not.toHaveBeenCalled();
+    expect(mocks.sendWaypoints).not.toHaveBeenCalled();
   });
 
   it('rejects unlinked Tesla accounts', async () => {

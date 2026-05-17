@@ -76,6 +76,28 @@ describe('envSchema', () => {
     ).toThrow('TESLA_COMMAND_PROXY_URL must use https://.');
   });
 
+  it('defaults Send to Tesla itinerary commands to disabled', () => {
+    const parsed = envSchema.parse(baseEnv);
+    expect(parsed.TESLA_SEND_ITINERARY_ENABLED).toBe(false);
+  });
+
+  it('parses explicit Send to Tesla itinerary enablement', () => {
+    const parsed = envSchema.parse({
+      ...baseEnv,
+      TESLA_SEND_ITINERARY_ENABLED: 'true',
+    });
+    expect(parsed.TESLA_SEND_ITINERARY_ENABLED).toBe(true);
+  });
+
+  it('rejects invalid Send to Tesla itinerary enablement values', () => {
+    expect(() =>
+      envSchema.parse({
+        ...baseEnv,
+        TESLA_SEND_ITINERARY_ENABLED: 'yes',
+      }),
+    ).toThrow();
+  });
+
   it('treats GEMINI_MODEL and OPENCHARGEMAP_KEY as optional', () => {
     const parsed = envSchema.parse(baseEnv);
     expect(parsed.GEMINI_MODEL).toBeUndefined();
