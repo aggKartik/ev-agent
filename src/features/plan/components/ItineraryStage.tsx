@@ -2,6 +2,7 @@ import { Box } from 'styled-system/jsx';
 import ItineraryDrawer from '#/features/plan/components/ItineraryDrawer';
 import ItineraryTopBar from '#/features/plan/components/ItineraryTopBar';
 import RouteMap from '#/features/plan/components/RouteMap';
+import { useSendItineraryToTesla } from '#/features/plan/hooks/useSendItineraryToTesla';
 import {
   useActiveRequest,
   useMapMode,
@@ -44,6 +45,7 @@ export default function ItineraryStage() {
   const mapMode = useMapMode();
   const selectStop = usePlanFlowStore((s) => s.selectStop);
   const editPlan = usePlanFlowStore((s) => s.editPlan);
+  const sendToTesla = useSendItineraryToTesla(result);
 
   if (!result) return null;
 
@@ -64,6 +66,9 @@ export default function ItineraryStage() {
           result={result}
           selectedStopId={selectedStopId}
           onSelectStop={selectStop}
+          onSendToTesla={sendToTesla.send}
+          sendToTeslaState={sendToTesla.state}
+          sendToTeslaMessage={sendToTesla.message}
         />
       </Box>
     </Box>

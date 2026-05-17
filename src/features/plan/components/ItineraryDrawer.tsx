@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { Box, Grid, Stack } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
+import type { SendItineraryToTeslaState } from '#/features/plan/hooks/useSendItineraryToTesla';
 import { formatPlanMinutes } from '#/features/plan/utils/helpers';
 import type { PlanResult } from '#/shared/plan/contracts';
 import { css, cx } from '#/styled-system/css';
@@ -11,7 +12,9 @@ type ItineraryDrawerProps = {
   result: PlanResult;
   selectedStopId?: string | null;
   onSelectStop: (id: string) => void;
-  onStartNavigation?: () => void;
+  onSendToTesla?: () => void;
+  sendToTeslaState?: SendItineraryToTeslaState;
+  sendToTeslaMessage?: string | null;
 };
 
 const rootClass = css({
@@ -109,11 +112,42 @@ const ctaSubClass = css({
   color: 'cream.600',
 });
 
+function SendToTeslaCta({
+  onSendToTesla,
+  sendToTeslaState,
+  sendToTeslaMessage,
+}: {
+  onSendToTesla?: () => void;
+  sendToTeslaState: SendItineraryToTeslaState;
+  sendToTeslaMessage?: string | null;
+}) {
+  return (
+    <Box className={ctaClass}>
+      <Button
+        type="button"
+        className={ctaButtonClass}
+        trailingIcon={<ArrowRight size={16} />}
+        onClick={onSendToTesla}
+        disabled={!onSendToTesla}
+        loading={sendToTeslaState === 'pending'}
+        loadingText="Sending"
+      >
+        Send to Tesla
+      </Button>
+      <Box className={ctaSubClass}>
+        {sendToTeslaMessage ?? 'Send this itinerary to your linked Tesla.'}
+      </Box>
+    </Box>
+  );
+}
+
 export default function ItineraryDrawer({
   result,
   selectedStopId,
   onSelectStop,
-  onStartNavigation,
+  onSendToTesla,
+  sendToTeslaState = 'idle',
+  sendToTeslaMessage,
 }: ItineraryDrawerProps) {
   const { totals } = result;
   const totalDuration = totals.driveMinutes + totals.dwellMinutes;
@@ -149,20 +183,11 @@ export default function ItineraryDrawer({
         />
       </Box>
 
-      <Box className={ctaClass}>
-        <Button
-          type="button"
-          className={ctaButtonClass}
-          trailingIcon={<ArrowRight size={16} />}
-          onClick={onStartNavigation}
-          disabled={!onStartNavigation}
-        >
-          Start navigation
-        </Button>
-        <Box className={ctaSubClass}>
-          We&apos;ll sync to your car and start routing.
-        </Box>
-      </Box>
+      <SendToTeslaCta
+        onSendToTesla={onSendToTesla}
+        sendToTeslaState={sendToTeslaState}
+        sendToTeslaMessage={sendToTeslaMessage}
+      />
     </Box>
   );
 }
