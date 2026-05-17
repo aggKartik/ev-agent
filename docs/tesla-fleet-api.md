@@ -81,29 +81,44 @@ in, otherwise Fleet API calls return `403`.
 
 ## 2. Scopes
 
-For the MVP (list vehicles + read odometer + read state-of-charge) the only
-scope that grants data access is `vehicle_device_data`. `openid` +
+The app reads vehicle state and sends finished Itinerary waypoints to the car.
+`vehicle_device_data` grants live vehicle reads, while `vehicle_cmds` grants
+navigation commands such as `navigation_waypoints_request`. `openid` +
 `offline_access` are required to receive an `id_token` and a `refresh_token`
-respectively. We deliberately do **not** request `vehicle_cmds`,
-`vehicle_charging_cmds`, or `user_data` — users see a shorter consent list
-and we avoid the virtual-key pairing step below.
+respectively. We still do **not** request `vehicle_charging_cmds` or
+`user_data`.
 
 Effective scope string:
 
 ```
-openid offline_access vehicle_device_data
+openid offline_access vehicle_device_data vehicle_cmds
 ```
 
 Source: [Authentication overview — Scopes](https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes) lists `vehicle_device_data` as
 _"Access vehicle information and state, such as vehicle_data / vehicle_state /
 charge_state"_.
 
-### Virtual key pairing (not needed for read-only)
+Existing users linked before `vehicle_cmds` was added must reconnect Tesla; a
+refresh token cannot silently grant newly requested scopes.
 
-Virtual keys are only required for the command scopes (`vehicle_cmds`,
-`vehicle_charging_cmds`). For read-only `vehicle_device_data` Tesla does not
-prompt the user for key pairing and we do not pass `show_keypair_step=true`
-on the authorize URL.
+### Virtual key pairing + command proxy
+
+Virtual keys are required for command scopes (`vehicle_cmds`,
+`vehicle_charging_cmds`). For "Send to Tesla", the vehicle must have this
+application's virtual key installed and the backend must send commands through
+Tesla's official vehicle-command proxy (or equivalent SDK integration) so
+requests are signed before reaching the Fleet API.
+
+Set `TESLA_COMMAND_PROXY_URL` to the HTTPS base URL of that proxy. The backend
+calls:
+
+```
+POST {TESLA_COMMAND_PROXY_URL}/api/1/vehicles/{vin}/command/navigation_waypoints_request
+```
+
+with the Driver's fresh Fleet API access token and the ordered itinerary
+waypoints. The proxy must be configured with the command private key matching
+the public key registered for the deployment domain.
 
 ## 3. Partner domain registration + public key
 
@@ -156,6 +171,9 @@ Our strategy:
 - **Never wake sleeping vehicles on behalf of the UI.** If a vehicle is
   `offline`, we fall back to the `/vehicles` list entry and render it with
   null telemetry rather than issuing a wake command.
+- **Commands only on explicit click.** Sending navigation is one user-initiated
+  command attempt. We do not auto-wake, poll for command completion, or retry
+  failed command responses.
 
 ## 5. Refresh-token rotation
 
