@@ -5,6 +5,8 @@ import { teslaCommandProxyUrl } from '../config';
 export const TESLA_NAVIGATION_WAYPOINTS_COMMAND =
   'navigation_waypoints_request' as const;
 
+export const TESLA_COMMAND_PROXY_TIMEOUT_MS = 10_000;
+
 type FleetCommandResponse<T> = {
   response?: T;
   error?: string;
@@ -54,30 +56,52 @@ function commandErrorMessage(body: FleetCommandResponse<TeslaCommandResult>) {
   return messages[0] ?? 'Tesla command was rejected.';
 }
 
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && err.name === 'AbortError';
+}
+
 export async function sendTeslaNavigationWaypoints(args: {
   accessToken: string;
   proxyUrl?: string;
   vin: string;
   waypoints: TeslaNavigationWaypoint[];
 }): Promise<SendNavigationWaypointsResult> {
-  const proxyUrl = (args.proxyUrl ?? requireTeslaCommandProxyUrl()).replace(
-    /\/+$/,
-    '',
+  const proxyUrl =
+    args.proxyUrl?.replace(/\/+$/, '') ?? requireTeslaCommandProxyUrl();
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    TESLA_COMMAND_PROXY_TIMEOUT_MS,
   );
-  const response = await fetch(
-    `${proxyUrl}/api/1/vehicles/${encodeURIComponent(
-      args.vin,
-    )}/command/${TESLA_NAVIGATION_WAYPOINTS_COMMAND}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${args.accessToken}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${proxyUrl}/api/1/vehicles/${encodeURIComponent(
+        args.vin,
+      )}/command/${TESLA_NAVIGATION_WAYPOINTS_COMMAND}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${args.accessToken}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ waypoints: args.waypoints }),
+        signal: controller.signal,
       },
-      body: JSON.stringify({ waypoints: args.waypoints }),
-    },
-  );
+    );
+  } catch (err) {
+    if (isAbortError(err)) {
+      throw new OAuthError(
+        'command_proxy_timeout',
+        'Tesla command proxy timed out while sending navigation waypoints.',
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const text = await response.text();
   const body = parseCommandResponse<TeslaCommandResult>(text, response.status);

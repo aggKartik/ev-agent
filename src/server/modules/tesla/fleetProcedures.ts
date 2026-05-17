@@ -10,17 +10,11 @@ import { pickTeslaVehicleForIdentity } from '#/shared/vehicles/teslaPick';
 import { loadTeslaFleetVehiclesProtected } from './loadFleetTrpc';
 import type { TeslaAuthedContext } from './types';
 
-async function loadVehicles(
-  ctx: TeslaAuthedContext,
-): Promise<TeslaVehicleSummary[]> {
-  return loadTeslaFleetVehiclesProtected(ctx);
-}
-
 async function loadVehiclesOrNullWhenUnlinked(
   ctx: TeslaAuthedContext,
 ): Promise<TeslaVehicleSummary[] | null> {
   try {
-    return await loadVehicles(ctx);
+    return await loadTeslaFleetVehiclesProtected(ctx);
   } catch (err) {
     if (err instanceof TRPCError && err.code === 'PRECONDITION_FAILED') {
       return null;
@@ -50,13 +44,13 @@ function hasVehicleLocation(
 }
 
 export async function listTeslaVehicles(ctx: TeslaAuthedContext) {
-  const list = await loadVehicles(ctx);
+  const list = await loadTeslaFleetVehiclesProtected(ctx);
   return list.map(fleetVehicleWithOnboardingIdentity);
 }
 
 export async function refreshTeslaVehicles(ctx: TeslaAuthedContext) {
   invalidate(ctx.userId);
-  const vehicles = await loadVehicles(ctx);
+  const vehicles = await loadTeslaFleetVehiclesProtected(ctx);
   return {
     vehicles: vehicles.map(fleetVehicleWithOnboardingIdentity),
     refreshedAt: new Date().toISOString(),

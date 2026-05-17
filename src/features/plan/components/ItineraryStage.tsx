@@ -2,8 +2,8 @@ import { Box } from 'styled-system/jsx';
 import ItineraryDrawer from '#/features/plan/components/ItineraryDrawer';
 import ItineraryTopBar from '#/features/plan/components/ItineraryTopBar';
 import RouteMap from '#/features/plan/components/RouteMap';
-import SendToTeslaCta from '#/features/plan/sendToTesla/SendToTeslaCta';
-import { useSendItineraryToTesla } from '#/features/plan/sendToTesla/useSendItineraryToTesla';
+import SendToTeslaCta from '#/features/plan/components/SendToTeslaCta';
+import { useSendItineraryToTesla } from '#/features/plan/hooks/useSendItineraryToTesla';
 import {
   useActiveRequest,
   useMapMode,

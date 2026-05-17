@@ -30,7 +30,22 @@ export const envSchema = z.object({
   /** EC public key PEM served at `/.well-known/appspecific/com.tesla.3p.public-key.pem` for Fleet partner registration. */
   TESLA_FLEET_PUBLIC_KEY_PEM: z.string().optional(),
   /** HTTPS URL for Tesla's official vehicle-command proxy, used for signed vehicle commands. */
-  TESLA_COMMAND_PROXY_URL: z.string().url().optional(),
+  TESLA_COMMAND_PROXY_URL: z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          return new URL(url).protocol === 'https:';
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: 'TESLA_COMMAND_PROXY_URL must use https://.',
+      },
+    )
+    .optional(),
 
   // Plan agent LLM. Gemini provider; see
   // `src/server/capabilities/ai/orchestration/getPlanModel.ts`.

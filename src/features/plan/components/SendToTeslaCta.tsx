@@ -2,7 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import { Box } from 'styled-system/jsx';
 import Button from '#/components/ui/Button';
 import { css } from '#/styled-system/css';
-import type { SendItineraryToTeslaState } from './useSendItineraryToTesla';
+import type { SendItineraryToTeslaState } from '../hooks/useSendItineraryToTesla';
 
 type SendToTeslaCtaProps = {
   onSendToTesla?: () => void;

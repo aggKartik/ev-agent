@@ -120,6 +120,12 @@ with the Driver's fresh Fleet API access token and the ordered itinerary
 waypoints. The proxy must be configured with the command private key matching
 the public key registered for the deployment domain.
 
+If `TESLA_COMMAND_PROXY_URL` is unset, read-only Tesla flows still work, but
+`tesla.sendItinerary` refuses to send commands and surfaces
+`missing_command_proxy` as a tRPC `PRECONDITION_FAILED` error. This is an
+intentional deployment guard: no backend should try to send unsigned vehicle
+commands directly to Fleet API.
+
 ## 3. Partner domain registration + public key
 
 Every **deployment host** that serves OAuth (`OAUTH_BASE_URL`) must complete
@@ -143,7 +149,17 @@ order:
    `POST /api/1/partner_accounts` with `{ "domain": "<hostname>" }`. Tesla
    fetches the PEM over HTTPS to validate; localhost and `.local` hosts are
    rejected by the script because Tesla cannot validate them.
-4. **User OAuth** can proceed after the above succeeds.
+4. **Configure the command proxy.** Run Tesla's Vehicle Command Proxy with the
+   private key matching the public key above, expose it behind HTTPS, and set
+   `TESLA_COMMAND_PROXY_URL` to that HTTPS base URL.
+5. **Pair the virtual key to each vehicle.** After the user has authorized the
+   app with `vehicle_device_data` and `vehicle_cmds`, direct them to
+   `https://tesla.com/_ak/<developer-domain>` in the Tesla mobile app. For a
+   specific car, append `?vin=<VIN>` to the link. The app can render the link
+   directly or as a QR code.
+6. **User OAuth** can proceed after partner registration succeeds, but Send to
+   Tesla only succeeds after both proxy configuration and vehicle key pairing
+   are complete.
 
 Implementation references: `src/server/integrations/tesla/fleet/partner.ts`,
 `scripts/tesla/register-partner.ts`, and the route file
@@ -208,6 +224,15 @@ Our implementation (see `src/server/tesla/client.ts`):
 | Fleet API **412** ([precondition](https://developer.tesla.com/docs/fleet-api/getting-started/conventions): unregistered partner / PEM URL) | tRPC `PRECONDITION_REQUIRED` + message to fix PEM + run `bun run tesla:register-partner` |
 | Fleet API **421** (wrong region vs account) | Per Tesla: user/account not in this region — set `TESLA_REGION` to `na` or `eu` to match the account and token `audience`. |
 | Fleet API 5xx                        | tRPC `BAD_GATEWAY`; React Query retries with backoff         |
+| `TESLA_COMMAND_PROXY_URL` unset      | `tesla.sendItinerary` returns tRPC `PRECONDITION_FAILED` with `missing_command_proxy`; configure the HTTPS command proxy before enabling Send to Tesla. |
+| `navigation_waypoints_request` missing virtual key / missing command scope / 401 / 403 | tRPC `PRECONDITION_FAILED`; user or operator must pair the virtual key, reconnect with `vehicle_cmds`, or fix proxy credentials. |
+| `navigation_waypoints_request` vehicle rejection (`result: false`, offline, unsupported state, malformed waypoints) | tRPC `BAD_GATEWAY` with Tesla's reason; do not auto-retry without user action because the vehicle rejected the command. |
+| Command proxy timeout / DNS / network / **502** / **503** / **504** | tRPC `BAD_GATEWAY`; one automatic retry is acceptable for transient infrastructure failures, then surface the error. |
+
+Retry rule for commands: do **not** auto-retry 4xx validation/auth failures or
+vehicle-level command rejections. A single retry is acceptable only when the
+request did not receive a definitive vehicle rejection, such as command proxy
+timeout, DNS/network failure, or proxy **502/503/504**.
 
 ## 7. Security considerations for token storage
 
