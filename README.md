@@ -1,410 +1,129 @@
-# ev-agent
+# ev/agent
 
-A modern full-stack React application built with cutting-edge technologies for type-safe, performant web development.
+ev/agent finds chargers along your road trip near the things you love doing.
 
-## 🚀 Tech Stack
+![ev/agent welcome screen](docs/images/welcome.png)
 
-- **[TanStack Start](https://tanstack.com/start)** - Full-stack React framework with file-based routing and SSR
-- **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager  
-- **[tRPC](https://trpc.io)** - End-to-end type-safe API layer
-- **[Kysely](https://kysely.dev)** - Type-safe SQL query builder
-- **[PostgreSQL](https://www.postgresql.org)** - Relational database
-- **[TanStack Query](https://tanstack.com/query)** - Powerful data fetching and caching
-- **[Ark UI](https://ark-ui.com)** - Headless component library for accessible UI primitives
-- **[Panda CSS](https://panda-css.com)** - CSS-in-JS with zero runtime overhead
-- **[Biome](https://biomejs.dev)** - Fast linting and formatting
+Pick where you're going and what you want to do along the way. The planner brings activities, charging stops, and driving directions into a single day-trip itinerary, with a map and a stop-by-stop timeline.
 
-## 📂 Project Structure
+## The app
 
-```
-ev-agent/
-├── src/
-│   ├── routes/                    # File-based routing
-│   │   ├── __root.tsx             # Root layout with providers
-│   │   ├── index.tsx              # Home page
-│   │   ├── about.tsx              # About page
-│   │   └── -api.trpc.$trpc.ts     # tRPC API handler (ignored by route tree)
-│   ├── server/                    # Server-side code
-│   │   ├── platform/              # Infra + tRPC wiring
-│   │   │   ├── trpc/              # Root router + procedures
-│   │   │   └── context.ts         # Request context creator
-│   │   ├── modules/               # Feature-based tRPC routers
-│   │   └── capabilities/          # Cross-cutting server capabilities
-│   ├── lib/                       # Shared utilities
-│   │   ├── trpc.ts                # Client-side tRPC setup
-│   │   └── env.ts                 # Type-safe environment variables
-│   ├── components/                # React components
-│   │   ├── Header.tsx
-│   │   ├── Footer.tsx
-│   │   └── ThemeToggle.tsx
-│   ├── styles/                    # Panda CSS config
-│   │   ├── recipes/               # Component style recipes
-│   │   │   ├── button.ts
-│   │   │   └── index.ts
-│   │   └── global.css             # Global styles (Panda layers)
-│   └── router.tsx                 # Router configuration
-├── styled-system/                 # Panda CSS generated output (gitignored)
-├── public/                        # Static assets
-├── .env.example                   # Environment variables template
-├── .env                           # Local environment (gitignored)
-├── biome.json                     # Biome configuration
-├── panda.config.ts                # Panda CSS configuration
-├── postcss.config.cjs             # PostCSS configuration
-├── tsconfig.json                  # TypeScript configuration
-├── vite.config.ts                 # Vite configuration
-└── package.json                   # Dependencies & scripts
+![ev/agent dashboard with trip planning and Tesla connection](docs/images/dashboard.png)
+
+- **Plan around your interests.** Choose activities such as coffee, hiking, and tacos, how long you want to stay, and roughly when you'd like to stop.
+- **Bring your vehicle into the plan.** Planning uses battery capacity, consumption, starting charge, connectors, and your preferred arrival charge. A linked Tesla can supply the starting battery level.
+- **Watch the itinerary take shape.** Planning progress and stops stream to the interface as the agent searches for places, chargers, and directions.
+- **Explore the result.** Select stops on the map or timeline to see the route, arrival times, and time spent at each stop.
+- **Connect Tesla.** Link an account through OAuth to see available battery, range, and odometer readings on the dashboard.
+
+## How it works
+
+TomTom supplies an initial EV route and suggested charging areas. Gemini uses that context to search for activities and charging stations, then calls Mapbox for the final driving directions.
+
+```mermaid
+flowchart TD
+    Driver[Destination, activities, and vehicle settings] --> API[Authenticated tRPC subscription]
+    API --> EV[TomTom EV routing]
+    EV --> Agent[Gemini plan agent]
+    Agent --> Places[Mapbox place search]
+    Agent --> Chargers[OpenChargeMap station search]
+    Agent --> Directions[Mapbox directions]
+    Agent --> Output[Validated itinerary]
+    Output --> UI[Leaflet map and stop timeline]
+    API -. Progress and stops .-> UI
 ```
 
-## 🏁 Getting Started
+### Technical design
 
-### Prerequisites
+- **External data gives the agent something concrete to work with.** The EV preplan contains a route corridor, charging guidance, and vehicle energy inputs. The agent's tools look up real places, stations, and driving geometry.
+- **Model output has a defined contract.** Zod schemas validate the structured itinerary and individual streamed stops. If structured generation fails, the server attempts JSON repair and then a model repair pass before returning an error.
+- **Long-running work has limits.** Plan subscriptions support cancellation and a 90-second timeout. Per-process guards allow one active stream per Driver and five starts per minute.
+- **Vehicle defaults stay current.** Energy settings are resolved from saved overrides, the vehicle catalog, and platform defaults. Only overrides are stored, so catalog updates can flow through.
+- **State has clear ownership.** TanStack Form owns form values, TanStack Query owns fetched data, and Zustand owns the planning workflow. Hooks handle subscriptions and other side effects.
+- **Identity and integrations stay separate.** Clerk handles sign-in. Internal database IDs own vehicle and provider records; provider access and refresh tokens are encrypted with AES-256-GCM.
 
-- [Bun](https://bun.sh) (v1.2+)
+Read the [technical design](docs/technical-design.md) for the request lifecycle, failure handling, and code entry points.
 
-### Installation
+### Stack
 
-1. Install dependencies:
+| Area | Tools |
+| --- | --- |
+| App | React, TypeScript, TanStack Start and Router |
+| UI | Panda CSS, Ark UI, Leaflet |
+| State | TanStack Form, TanStack Query, Zustand |
+| API and data | tRPC, Zod, Kysely, PostgreSQL |
+| Planning | Gemini through the Vercel AI SDK, TomTom, Mapbox, OpenChargeMap |
+| Identity and vehicle data | Clerk, Tesla Fleet API |
+| Development | Bun, Vite, Biome, Vitest, Testing Library, fallow |
+
+## Project status
+
+The current scope is day-trip planning with one saved vehicle per Driver. The vehicle catalog and onboarding focus on Tesla.
+
+Some dashboard elements are still in progress: the free-text prompt opens the planning form but doesn't yet populate it; saved places, trip history, and the activity feed aren't persisted. Preconditioning and unlock controls are placeholders.
+
+Send to Tesla has an implementation, but is disabled by default until the deployment has verified command-proxy support for navigation waypoints. See the [command proxy setup](docs/tesla-command-proxy.md).
+
+## Run locally
+
+You'll need Bun, Docker with the daemon running, and credentials for Clerk and the planning APIs.
+
 ```bash
 bun install
+cp .env.example .env
 ```
 
-2. Generate Panda CSS styled-system:
+Fill in `.env` before starting:
+
+| Variables | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection; the template matches local Docker Compose |
+| `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Clerk development instance |
+| `GEMINI_API_KEY` | Plan generation; `GEMINI_MODEL` can override the default |
+| `MAPBOX_TOKEN` | Address search, places, and driving directions |
+| `TOMTOM_API_KEY` | EV route prefetch; required by environment validation |
+| `OPENCHARGEMAP_KEY` | Optional authentication for charging station searches |
+| `OAUTH_TOKEN_ENCRYPTION_KEY`, `OAUTH_BASE_URL`, `TESLA_CLIENT_ID`, `TESLA_CLIENT_SECRET` | Tesla account linking; see [Tesla Fleet setup](docs/tesla-fleet-api.md) |
+
 ```bash
+bun run db:start
+bun run db:migrate
 bun run prepare
-```
-
-3. Start the development server:
-```bash
 bun dev
 ```
 
-4. Open your browser and navigate to:
-```
-http://localhost:3000
-```
+Open [localhost:3000](http://localhost:3000).
 
-## 📜 Available Scripts
+For local email-code authentication, use a Clerk development test address such as `devin+clerk_test@example.com` and code `424242`. Create the account through `/sign-up` first if it doesn't exist in your Clerk instance. Set `VITE_TEST_USER_EMAIL` to that address to prefill the form in development. Email verification code authentication must be enabled in Clerk.
 
-- `bun dev` - Start development server on port 3000
-- `bun run build` - Build for production
-- `bun run preview` - Preview production build
-- `bun run start` - Run Bun-native production server
-- `bun run prepare` - Generate Panda CSS styled-system
-- `bun run lint` - Run Biome linter
-- `bun run format` - Format code with Biome
-- `bun run check` - Run all Biome checks (lint + format)
-- `bun test` - Run tests with Vitest
+Stop the dev process with Ctrl+C and the database with `bun run db:stop`.
 
-## 🎯 Key Features
-
-### Type-Safe API with tRPC
-
-The application includes a fully configured tRPC setup with:
-- Feature-based router organization (`src/server/modules/`)
-- End-to-end type safety from server to client
-- Integration with TanStack Query for data fetching
-- Example procedures for queries and mutations
-
-Example usage:
-```tsx
-import { trpc } from "#/lib/trpc";
-
-function MyComponent() {
-  const hello = trpc.example.hello.useQuery({ name: "World" });
-  
-  return <div>{hello.data}</div>;
-}
-```
-
-### Styling with Panda CSS
-
-Panda CSS provides:
-- Zero-runtime CSS-in-JS
-- Type-safe styling
-- Automatic style generation
-- Recipe system for component variants
-
-Example:
-```tsx
-import { css } from "../../styled-system/css";
-
-function Button() {
-  return (
-    <button className={css({
-      bg: "blue.500",
-      color: "white",
-      px: "4",
-      py: "2",
-      borderRadius: "md"
-    })}>
-      Click me
-    </button>
-  );
-}
-```
-
-### Component Recipes
-
-Create reusable component styles in `src/styles/recipes/`:
-```tsx
-import { defineSlotRecipe } from "@pandacss/dev";
-
-export const buttonRecipe = defineSlotRecipe({
-  className: "button",
-  slots: [],
-  base: {},
-  variants: {
-    variant: {
-      primary: { /* ... */ },
-      secondary: { /* ... */ }
-    }
-  }
-});
-```
-
-### Environment Variables
-
-Type-safe environment variables are configured in `src/lib/env.ts` using Zod:
-```tsx
-import { env } from "#/lib/env";
-
-// Usage
-console.log(env.NODE_ENV); // Fully typed!
-```
-
-Add new variables to `.env` and update the schema in `src/lib/env.ts`.
-
-For Postgres, configure:
+### Checks and builds
 
 ```bash
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ev_agent
+bun run check         # TypeScript, Biome, coverage tests, and fallow audit
+bun test              # Vitest
+bun run smoke:tools   # Planning API smoke checks without an LLM call
+bun run build         # Generate styles and build for production
+bun run start         # Run the production server
 ```
 
-The database client is initialized in `src/server/platform/db/index.ts` and injected into tRPC context via `src/server/platform/context.ts`.
+CI runs the checks and tests on every pull request and pushes to `main`. Fallow compares findings against saved baselines to flag newly introduced issues.
 
-Run migrations:
+### Find your way around
 
-```bash
-bun run db:migrate
+```text
+src/
+├── routes/                 Route composition and auth gates
+├── features/               Product UI, forms, workflow state, and hooks
+├── components/             Shared UI, layout, and branding
+├── server/
+│   ├── modules/            Domain tRPC routers
+│   ├── capabilities/       Planning, EV routing, addresses, and vehicles
+│   ├── integrations/       Vendor clients, including Tesla Fleet
+│   ├── oauth/              Shared OAuth and token storage
+│   └── platform/           Database, request context, and tRPC wiring
+└── shared/                 Request/result schemas and pure helpers
 ```
 
-For a lightweight local Postgres using Docker Compose:
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-Stop it with:
-
-```bash
-docker compose -f docker-compose.dev.yml down
-```
-
-### Tesla Command Proxy
-
-Send to Tesla uses a vehicle-command proxy because supported vehicle commands
-must be signed with this app's enrolled virtual key before the car will execute
-them. The current official `tesla/vehicle-command` proxy does not implement
-`navigation_waypoints_request`, so Send to Tesla is disabled by default. Only set
-`TESLA_SEND_ITINERARY_ENABLED=true` after your deployed proxy or SDK path has
-been verified to support:
-
-```txt
-POST /api/1/vehicles/{vin}/command/navigation_waypoints_request
-```
-
-The proxy is not hosted by Tesla for us; run it locally or deploy it behind your
-own HTTPS URL, then point `TESLA_COMMAND_PROXY_URL` at that base URL.
-
-The repo includes a Docker Compose file for Tesla's official image:
-
-```bash
-docker compose -f docker-compose.tesla-proxy.yml up -d
-```
-
-It expects local proxy material in `tesla-proxy-config/`:
-
-```txt
-tesla-proxy-config/
-├── fleet-key.pem
-├── tls-cert.pem
-└── tls-key.pem
-```
-
-`fleet-key.pem` is the command private key whose public key is registered with
-Tesla for this app's developer domain. The TLS files are the certificate and key
-served by the proxy. For local development, the proxy listens on
-`https://localhost:4443`, so set:
-
-```bash
-TESLA_COMMAND_PROXY_URL=https://localhost:4443
-```
-
-Node's `fetch()` does not trust a self-signed local proxy certificate by
-default. For local app runs or checks that call the proxy, either trust
-`tesla-proxy-config/tls-cert.pem` in your OS trust store or pass it to Node:
-
-```bash
-NODE_EXTRA_CA_CERTS=tesla-proxy-config/tls-cert.pem bun dev
-```
-
-Keep `TESLA_SEND_ITINERARY_ENABLED=false` unless this local proxy image has been
-patched or replaced with one that supports `navigation_waypoints_request`.
-
-Stop the local proxy with:
-
-```bash
-docker compose -f docker-compose.tesla-proxy.yml down
-```
-
-## 🔧 Adding New Features
-
-### Adding a New tRPC Router
-
-1. Create a new router file in `src/server/modules/`:
-```tsx
-// src/server/modules/users/router.ts
-import { z } from "zod";
-import { router, publicProcedure } from "#/server/platform/trpc/procedures";
-
-export const usersRouter = router({
-  getAll: publicProcedure.query(() => {
-    // Your logic here
-  }),
-  
-  getById: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(({ input }) => {
-      // Your logic here
-    }),
-});
-```
-
-2. Add it to the root router in `src/server/platform/trpc/router.ts`:
-```tsx
-import { usersRouter } from "#/server/modules/users/router";
-
-export const appRouter = router({
-  users: usersRouter,  // Add here
-});
-```
-
-### Adding a New Route
-
-Create a new file in `src/routes/`:
-```tsx
-// src/routes/dashboard.tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/dashboard")({
-  component: Dashboard,
-});
-
-function Dashboard() {
-  return <div>Dashboard Page</div>;
-}
-```
-
-### Styling with Ark UI
-
-Ark UI provides headless, accessible components:
-```tsx
-import * as Accordion from "@ark-ui/react/accordion";
-import { css } from "../../styled-system/css";
-
-function MyAccordion() {
-  return (
-    <Accordion.Root>
-      <Accordion.Item value="item-1">
-        <Accordion.ItemTrigger className={css({ p: "4" })}>
-          What is Ark UI?
-        </Accordion.ItemTrigger>
-        <Accordion.ItemContent>
-          Headless component library for building accessible UIs.
-        </Accordion.ItemContent>
-      </Accordion.Item>
-    </Accordion.Root>
-  );
-}
-```
-
-## 🧪 Testing
-
-The project is set up with Vitest and Testing Library:
-```bash
-bun test
-```
-
-## 📦 Building for Production
-
-```bash
-bun run build
-```
-
-The production build will be output to the `dist/` directory.
-
-Run the production server with Bun:
-
-```bash
-bun run start
-```
-
-## 🔍 Code Quality
-
-This project uses Biome for:
-- Fast linting (replaces ESLint)
-- Fast formatting (replaces Prettier)
-- Import organization
-- Tab indentation with double quotes
-
-Run checks:
-```bash
-bun run check
-```
-
-Auto-fix issues:
-```bash
-bun run check --write
-```
-
-## 🌐 Deployment
-
-The application can be deployed to various platforms:
-- **Vercel** - Native support for TanStack Start
-- **Netlify** - Configure with the Netlify adapter
-- **Cloudflare Pages** - Use the Cloudflare adapter
-- **Railway** - Use the Railway adapter
-
-Configure deployment adapter in `package.json` or during build.
-
-## 📝 Notes
-
-- The `styled-system/` directory is auto-generated by Panda CSS and should not be edited manually
-- The `.env` file is gitignored - use `.env.example` as a template
-- API routes use the `.api.` prefix pattern for TanStack Start
-- All tRPC procedures have full type safety across client and server
-
-## 🤝 Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Run `bun run check --write` to format code
-4. Submit a pull request
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 🔗 Resources
-
-- [TanStack Start Docs](https://tanstack.com/start)
-- [tRPC Docs](https://trpc.io/docs)
-- [Panda CSS Docs](https://panda-css.com)
-- [Ark UI Docs](https://ark-ui.com)
-- [TanStack Query Docs](https://tanstack.com/query)
-- [Biome Docs](https://biomejs.dev)
-- [Bun Docs](https://bun.sh/docs)
-
----
-
-Built with ❤️ using modern web technologies
+[Domain model](CONTEXT.md) · [Vehicle energy profile decision](docs/adr/0001-vehicle-as-derived-profile.md) · [Technical design](docs/technical-design.md)
